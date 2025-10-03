@@ -9,6 +9,11 @@ const runExecutor: PromiseExecutor<PublishExecutorSchema> = async (
   context: ExecutorContext
 ) => {
   const projectRoot = options.packageRoot;
+  if (!projectRoot) {
+    logger.error('packageRoot option is required');
+    return { success: false };
+  }
+
   const workspaceRoot = context.root;
   const absolutePackageRoot = join(workspaceRoot, projectRoot);
 
