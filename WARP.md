@@ -217,11 +217,16 @@ git commit -m "feat(@the-code-fixer-23/<pkg-name>): add new package"
 For libraries intended for JSR (JavaScript Registry) publishing, use the **nx-jsr plugin**:
 
 ```sh
-# Generate JSR library
+# Generate JSR library (will prompt for bundler choice)
 npx nx g @the-code-fixer-23/nx-jsr:library <pkg-name> \
   --importPath=@scope/pkg-name \
   --description="Package description" \
   --directory=packages
+
+# Or specify bundler explicitly
+npx nx g @the-code-fixer-23/nx-jsr:library <pkg-name> \
+  --importPath=@scope/pkg-name \
+  --bundler=none
 
 # Install dependencies
 pnpm install
@@ -236,6 +241,20 @@ npx nx typecheck <pkg-name>
 npx nx publish <pkg-name> --dryRun
 npx nx publish <pkg-name> --token=<your-jsr-token>
 ```
+
+#### Bundler Options
+
+The nx-jsr plugin supports **three bundlers**:
+
+| Bundler  | Command Flag       | Best For                          | Notes                        |
+| -------- | ------------------ | --------------------------------- | ---------------------------- |
+| `none`   | `--bundler=none`   | JSR-first projects (recommended)  | TypeScript source only, fastest |
+| `esbuild`| `--bundler=esbuild`| Performance-critical builds       | Fast bundling, minimal config |
+| `tsup`   | `--bundler=tsup`   | Modern library development        | Best DX, auto .d.ts generation |
+
+**Default:** `none` (TypeScript source only)
+
+**Recommendation:** Use `--bundler=none` for JSR-exclusive libraries, as JSR was designed to work directly with TypeScript source.
 
 #### JSR Library Structure
 

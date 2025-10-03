@@ -29,13 +29,14 @@ npx nx g @the-code-fixer-23/nx-jsr:library my-lib --importPath=@scope/my-lib
 
 #### Options
 
-| Option        | Type    | Required | Description                                                  |
-| ------------- | ------- | -------- | ------------------------------------------------------------ |
-| `name`        | string  | Yes      | Library name (kebab-case)                                    |
-| `importPath`  | string  | Yes      | JSR import path (e.g., `@scope/package-name`)                |
-| `directory`   | string  | No       | Directory where library will be created (default: `packages`) |
-| `description` | string  | No       | Package description                                          |
-| `skipFormat`  | boolean | No       | Skip formatting files (default: `false`)                     |
+| Option        | Type                          | Required | Description                                                  |
+| ------------- | ----------------------------- | -------- | ------------------------------------------------------------ |
+| `name`        | string                        | Yes      | Library name (kebab-case)                                    |
+| `importPath`  | string                        | Yes      | JSR import path (e.g., `@scope/package-name`)                |
+| `bundler`     | `'none'` \| `'esbuild'` \| `'tsup'` | No       | Bundler to use (default: `'none'`)                           |
+| `directory`   | string                        | No       | Directory where library will be created (default: `packages`) |
+| `description` | string                        | No       | Package description                                          |
+| `skipFormat`  | boolean                       | No       | Skip formatting files (default: `false`)                     |
 
 #### What Gets Generated
 
@@ -172,6 +173,160 @@ You can customize the exports to expose multiple entry points:
   }
 }
 ```
+
+## Bundler Options
+
+The plugin supports **three bundler configurations** to match different project needs:
+
+### Choosing a Bundler
+
+| Bundler    | Best For                          | Build Speed | Bundle Size | DX       |
+| ---------- | --------------------------------- | ----------- | ----------- | -------- |
+| **none**   | JSR-first projects, simple libs   | ⚡⚡⚡       | N/A         | Simple   |
+| **esbuild**| Performance-critical builds       | ⚡⚡⚡       | Small       | Minimal  |
+| **tsup**   | Modern library development        | ⚡⚡        | Small       | Excellent|
+
+### `none` (TypeScript Source Only)
+
+**Recommended for JSR** - JSR was designed to work directly with TypeScript source code.
+
+```sh
+npx nx g @the-code-fixer-23/nx-jsr:library my-lib \
+  --importPath=@scope/my-lib \
+  --bundler=none
+```
+
+**Characteristics:**
+- Uses `@nx/js:tsc` executor
+- No bundling, just TypeScript compilation
+- Fastest build times
+- No additional dependencies
+- Perfect for JSR's TypeScript-first approach
+
+**Build target:**
+```json
+{
+  "executor": "@nx/js:tsc",
+  "options": {
+    "outputPath": "dist/packages/my-lib",
+    "main": "packages/my-lib/src/index.ts",
+    "tsConfig": "packages/my-lib/tsconfig.lib.json"
+  }
+}
+```
+
+### `esbuild` (Fast Bundling)
+
+**Best for performance-critical builds** where speed matters most.
+
+```sh
+npx nx g @the-code-fixer-23/nx-jsr:library my-lib \
+  --importPath=@scope/my-lib \
+  --bundler=esbuild
+```
+
+**Characteristics:**
+- Uses `@nx/esbuild:esbuild` executor
+- Extremely fast bundling
+- Minimal configuration
+- Generates `esbuild.config.js`
+- Adds `esbuild` as dev dependency
+
+**Generated `esbuild.config.js`:**
+```javascript
+const { build } = require('esbuild');
+
+build({
+  entryPoints: ['./src/index.ts'],
+  bundle: true,
+  outfile: './dist/index.js',
+  format: 'esm',
+  platform: 'neutral',
+  target: 'es2022',
+  sourcemap: true,
+  minify: false,
+  external: [],
+}).catch(() => process.exit(1));
+```
+
+**Build target:**
+```json
+{
+  "executor": "@nx/esbuild:esbuild",
+  "options": {
+    "outputPath": "dist/packages/my-lib",
+    "main": "packages/my-lib/src/index.ts",
+    "format": ["esm"],
+    "platform": "neutral",
+    "target": "es2022"
+  }
+}
+```
+
+### `tsup` (Modern Library Bundler)
+
+**Best for modern library development** with excellent developer experience.
+
+```sh
+npx nx g @the-code-fixer-23/nx-jsr:library my-lib \
+  --importPath=@scope/my-lib \
+  --bundler=tsup
+```
+
+**Characteristics:**
+- Uses `nx:run-commands` to run `tsup`
+- Built on esbuild with better defaults
+- Automatic `.d.ts` generation
+- JSR-friendly configuration
+- Generates `tsup.config.ts`
+- Adds `tsup` as dev dependency
+
+**Generated `tsup.config.ts`:**
+```typescript
+import { defineConfig } from 'tsup';
+
+export default defineConfig({
+  entry: ['src/index.ts'],
+  format: ['esm'],
+  dts: true,              // Generates .d.ts files
+  sourcemap: true,
+  clean: true,
+  minify: false,
+  target: 'es2022',
+  platform: 'neutral',
+});
+```
+
+**Build target:**
+```json
+{
+  "executor": "nx:run-commands",
+  "options": {
+    "command": "tsup",
+    "cwd": "packages/my-lib"
+  }
+}
+```
+
+### Decision Guide
+
+**Choose `none` if:**
+- Publishing exclusively to JSR
+- Want fastest build times
+- Prefer simplicity
+- Don't need bundling
+
+**Choose `esbuild` if:**
+- Need fast bundling
+- Want minimal configuration
+- Building performance-critical libraries
+- Comfortable with manual config tweaks
+
+**Choose `tsup` if:**
+- Want modern DX
+- Need automatic `.d.ts` generation
+- Prefer zero-config approach
+- Building libraries for multiple registries
 
 ## TypeScript Configuration
 
