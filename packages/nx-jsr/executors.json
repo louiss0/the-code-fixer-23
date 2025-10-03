@@ -4,6 +4,11 @@
       "implementation": "./dist/executors/publish/publish",
       "schema": "./dist/executors/publish/schema.json",
       "description": "publish executor"
+    },
+    "version": {
+      "implementation": "./dist/executors/version/version",
+      "schema": "./dist/executors/version/schema.json",
+      "description": "version executor"
     }
   }
 }

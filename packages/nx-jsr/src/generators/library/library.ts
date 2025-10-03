@@ -84,6 +84,12 @@ function getProjectTargets(projectRoot: string, testRunner: TestRunner) {
         packageRoot: projectRoot,
       },
     },
+    version: {
+      executor: '@the-code-fixer-23/nx-jsr:version',
+      options: {
+        packageRoot: projectRoot,
+      },
+    },
   };
 
   if (testRunner === 'vitest') {
