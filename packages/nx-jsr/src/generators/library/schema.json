@@ -36,26 +36,26 @@
       "description": "Skip formatting files",
       "default": false
     },
-    "bundler": {
+    "testRunner": {
       "type": "string",
-      "description": "Bundler to use for building the library",
-      "enum": ["none", "esbuild", "tsup"],
-      "default": "none",
+      "description": "Test runner to use for the library",
+      "enum": ["vitest", "jest", "none"],
+      "default": "vitest",
       "x-prompt": {
-        "message": "Which bundler would you like to use?",
+        "message": "Which test runner would you like to use?",
         "type": "list",
         "items": [
           {
+            "value": "vitest",
+            "label": "Vitest (Modern, Vite-powered testing - recommended)"
+          },
+          {
+            "value": "jest",
+            "label": "Jest (Stable, mature testing framework)"
+          },
+          {
             "value": "none",
-            "label": "None (TypeScript source only - recommended for JSR)"
-          },
-          {
-            "value": "esbuild",
-            "label": "esbuild (Fast bundling with minimal configuration)"
-          },
-          {
-            "value": "tsup",
-            "label": "tsup (esbuild with better DX and JSR-friendly defaults)"
+            "label": "None (Skip test setup)"
           }
         ]
       }

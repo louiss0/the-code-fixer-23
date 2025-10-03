@@ -1,4 +1,4 @@
-export type Bundler = 'none' | 'esbuild' | 'tsup';
+export type TestRunner = 'vitest' | 'jest' | 'none';
 
 export interface LibraryGeneratorSchema {
   name: string;
@@ -6,5 +6,5 @@ export interface LibraryGeneratorSchema {
   importPath: string;
   description?: string;
   skipFormat?: boolean;
-  bundler?: Bundler;
+  testRunner?: TestRunner;
 }
