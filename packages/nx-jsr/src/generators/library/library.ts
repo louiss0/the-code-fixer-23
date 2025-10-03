@@ -7,7 +7,7 @@ import {
   offsetFromRoot,
 } from '@nx/devkit';
 import * as path from 'path';
-import { LibraryGeneratorSchema } from './schema';
+import { Bundler, LibraryGeneratorSchema } from './schema';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -16,22 +16,16 @@ export async function libraryGenerator(
   const directory = options.directory || 'packages';
   const projectRoot = `${directory}/${options.name}`;
   const parsedNames = names(options.name);
+  const bundler = options.bundler || 'none';
+
+  const buildTarget = getBuildTarget(projectRoot, bundler);
 
   addProjectConfiguration(tree, options.name, {
     root: projectRoot,
     projectType: 'library',
     sourceRoot: `${projectRoot}/src`,
     targets: {
-      build: {
-        executor: '@nx/js:tsc',
-        outputs: ['{options.outputPath}'],
-        options: {
-          outputPath: `dist/${projectRoot}`,
-          main: `${projectRoot}/src/index.ts`,
-          tsConfig: `${projectRoot}/tsconfig.lib.json`,
-          assets: [`${projectRoot}/*.md`, `${projectRoot}/jsr.json`],
-        },
-      },
+      build: buildTarget,
       typecheck: {
         executor: '@nx/js:tsc',
         options: {
@@ -64,12 +58,95 @@ export async function libraryGenerator(
 
   createJsrJson(tree, projectRoot, options);
   createTsConfig(tree, projectRoot, options);
-  createPackageJson(tree, projectRoot, options);
-  createReadme(tree, projectRoot, options);
+  createPackageJson(tree, projectRoot, options, bundler);
+  createReadme(tree, projectRoot, options, bundler);
+
+  if (bundler === 'esbuild') {
+    createEsbuildConfig(tree, projectRoot);
+  } else if (bundler === 'tsup') {
+    createTsupConfig(tree, projectRoot);
+  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
+}
+
+function getBuildTarget(projectRoot: string, bundler: Bundler) {
+  switch (bundler) {
+    case 'esbuild':
+      return {
+        executor: '@nx/esbuild:esbuild',
+        outputs: ['{options.outputPath}'],
+        options: {
+          outputPath: `dist/${projectRoot}`,
+          main: `${projectRoot}/src/index.ts`,
+          tsConfig: `${projectRoot}/tsconfig.lib.json`,
+          assets: [`${projectRoot}/*.md`, `${projectRoot}/jsr.json`],
+          format: ['esm'],
+          platform: 'neutral',
+          target: 'es2022',
+        },
+      };
+    case 'tsup':
+      return {
+        executor: 'nx:run-commands',
+        outputs: ['{projectRoot}/dist'],
+        options: {
+          command: 'tsup',
+          cwd: projectRoot,
+        },
+      };
+    case 'none':
+    default:
+      return {
+        executor: '@nx/js:tsc',
+        outputs: ['{options.outputPath}'],
+        options: {
+          outputPath: `dist/${projectRoot}`,
+          main: `${projectRoot}/src/index.ts`,
+          tsConfig: `${projectRoot}/tsconfig.lib.json`,
+          assets: [`${projectRoot}/*.md`, `${projectRoot}/jsr.json`],
+        },
+      };
+  }
+}
+
+function createEsbuildConfig(tree: Tree, projectRoot: string) {
+  const content = `const { build } = require('esbuild');
+
+build({
+  entryPoints: ['./src/index.ts'],
+  bundle: true,
+  outfile: './dist/index.js',
+  format: 'esm',
+  platform: 'neutral',
+  target: 'es2022',
+  sourcemap: true,
+  minify: false,
+  external: [],
+}).catch(() => process.exit(1));
+`;
+
+  tree.write(`${projectRoot}/esbuild.config.js`, content);
+}
+
+function createTsupConfig(tree: Tree, projectRoot: string) {
+  const content = `import { defineConfig } from 'tsup';
+
+export default defineConfig({
+  entry: ['src/index.ts'],
+  format: ['esm'],
+  dts: true,
+  sourcemap: true,
+  clean: true,
+  minify: false,
+  target: 'es2022',
+  platform: 'neutral',
+});
+`;
+
+  tree.write(`${projectRoot}/tsup.config.ts`, content);
 }
 
 function createJsrJson(
@@ -123,14 +200,27 @@ function createTsConfig(
 function createPackageJson(
   tree: Tree,
   projectRoot: string,
-  options: LibraryGeneratorSchema
+  options: LibraryGeneratorSchema,
+  bundler: Bundler
 ) {
-  const packageJson = {
+  const devDependencies: Record<string, string> = {};
+
+  if (bundler === 'esbuild') {
+    devDependencies.esbuild = '^0.20.0';
+  } else if (bundler === 'tsup') {
+    devDependencies.tsup = '^8.0.0';
+  }
+
+  const packageJson: any = {
     name: options.importPath,
     version: '0.1.0',
     description: options.description || '',
     type: 'module',
   };
+
+  if (Object.keys(devDependencies).length > 0) {
+    packageJson.devDependencies = devDependencies;
+  }
 
   tree.write(
     `${projectRoot}/package.json`,
@@ -141,11 +231,16 @@ function createPackageJson(
 function createReadme(
   tree: Tree,
   projectRoot: string,
-  options: LibraryGeneratorSchema
+  options: LibraryGeneratorSchema,
+  bundler: Bundler
 ) {
+  const bundlerInfo = bundler !== 'none' ? ` (using ${bundler})` : '';
+  
   const content = `# ${options.importPath}
 
 ${options.description || 'A TypeScript library for JSR'}
+
+**Build tool**: ${bundler === 'none' ? 'TypeScript compiler (tsc)' : bundler}${bundlerInfo}
 
 ## Installation
 

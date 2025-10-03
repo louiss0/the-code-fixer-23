@@ -35,6 +35,30 @@
       "type": "boolean",
       "description": "Skip formatting files",
       "default": false
+    },
+    "bundler": {
+      "type": "string",
+      "description": "Bundler to use for building the library",
+      "enum": ["none", "esbuild", "tsup"],
+      "default": "none",
+      "x-prompt": {
+        "message": "Which bundler would you like to use?",
+        "type": "list",
+        "items": [
+          {
+            "value": "none",
+            "label": "None (TypeScript source only - recommended for JSR)"
+          },
+          {
+            "value": "esbuild",
+            "label": "esbuild (Fast bundling with minimal configuration)"
+          },
+          {
+            "value": "tsup",
+            "label": "tsup (esbuild with better DX and JSR-friendly defaults)"
+          }
+        ]
+      }
     }
   },
   "required": ["name", "importPath"]
