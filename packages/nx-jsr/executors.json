@@ -1,0 +1,9 @@
+{
+  "executors": {
+    "publish": {
+      "implementation": "./dist/executors/publish/publish",
+      "schema": "./dist/executors/publish/schema.json",
+      "description": "publish executor"
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "name": "@the-code-fixer-23/nx-jsr",
+  "version": "0.0.1",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "@the-code-fixer-23/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo",
+    "generators.json",
+    "executors.json"
+  ],
+  "nx": {
+    "targets": {
+      "build": {
+        "executor": "@nx/js:tsc",
+        "outputs": [
+          "{options.outputPath}"
+        ],
+        "options": {
+          "outputPath": "packages/nx-jsr/dist",
+          "main": "packages/nx-jsr/src/index.ts",
+          "tsConfig": "packages/nx-jsr/tsconfig.lib.json",
+          "rootDir": "packages/nx-jsr/src",
+          "generatePackageJson": false,
+          "assets": [
+            {
+              "input": "./packages/nx-jsr/src",
+              "glob": "**/!(*.ts)",
+              "output": "."
+            },
+            {
+              "input": "./packages/nx-jsr/src",
+              "glob": "**/*.d.ts",
+              "output": "."
+            }
+          ]
+        }
+      }
+    }
+  },
+  "dependencies": {
+    "@nx/devkit": "21.6.3",
+    "tslib": "^2.3.0"
+  },
+  "generators": "./generators.json",
+  "executors": "./executors.json"
+}
