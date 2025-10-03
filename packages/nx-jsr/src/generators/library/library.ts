@@ -73,7 +73,10 @@ function getProjectTargets(projectRoot: string, testRunner: TestRunner) {
     },
     typecheck: {
       executor: '@nx/js:tsc',
+      outputs: ['{options.outputPath}'],
       options: {
+        outputPath: `dist/${projectRoot}`,
+        main: `${projectRoot}/src/index.ts`,
         tsConfig: `${projectRoot}/tsconfig.lib.json`,
         noEmit: true,
       },

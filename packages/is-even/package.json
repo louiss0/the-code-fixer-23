@@ -1,0 +1,11 @@
+{
+  "name": "@the-code-fixer-23/is-even",
+  "version": "0.1.0",
+  "description": "",
+  "type": "module",
+  "devDependencies": {
+    "vitest": "^2.0.0",
+    "@vitest/ui": "^2.0.0",
+    "happy-dom": "^15.0.0"
+  }
+}

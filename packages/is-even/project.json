@@ -1,0 +1,47 @@
+{
+  "name": "is-even",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/is-even/src",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/is-even",
+        "main": "packages/is-even/src/index.ts",
+        "tsConfig": "packages/is-even/tsconfig.lib.json",
+        "assets": ["packages/is-even/*.md", "packages/is-even/jsr.json"]
+      }
+    },
+    "typecheck": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/is-even",
+        "main": "packages/is-even/src/index.ts",
+        "tsConfig": "packages/is-even/tsconfig.lib.json",
+        "noEmit": true
+      }
+    },
+    "publish": {
+      "executor": "@the-code-fixer-23/nx-jsr:publish",
+      "options": {
+        "packageRoot": "packages/is-even"
+      }
+    },
+    "version": {
+      "executor": "@the-code-fixer-23/nx-jsr:version",
+      "options": {
+        "packageRoot": "packages/is-even"
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{projectRoot}/coverage"],
+      "options": {
+        "config": "packages/is-even/vitest.config.ts"
+      }
+    }
+  }
+}
