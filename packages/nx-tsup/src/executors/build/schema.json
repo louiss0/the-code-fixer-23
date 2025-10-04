@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "version": 2,
+  "title": "Tsup Build Executor",
+  "description": "Build a TypeScript library using Tsup bundler",
+  "type": "object",
+  "properties": {
+    "outputPath": {
+      "type": "string",
+      "description": "Output path for built files"
+    },
+    "main": {
+      "type": "string",
+      "description": "Entry point file"
+    },
+    "tsConfig": {
+      "type": "string",
+      "description": "Path to tsconfig file"
+    },
+    "assets": {
+      "type": "array",
+      "description": "Additional assets to copy",
+      "items": {
+        "type": "string"
+      }
+    },
+    "format": {
+      "type": "array",
+      "description": "Output formats",
+      "items": {
+        "type": "string",
+        "enum": ["esm", "cjs", "iife"]
+      },
+      "default": ["esm"]
+    },
+    "dts": {
+      "type": "boolean",
+      "description": "Generate declaration files",
+      "default": true
+    },
+    "clean": {
+      "type": "boolean",
+      "description": "Clean output directory before build",
+      "default": true
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Watch mode",
+      "default": false
+    },
+    "minify": {
+      "type": "boolean",
+      "description": "Minify output",
+      "default": false
+    },
+    "sourcemap": {
+      "type": "boolean",
+      "description": "Generate sourcemaps",
+      "default": false
+    }
+  },
+  "required": ["outputPath", "main", "tsConfig"]
+}

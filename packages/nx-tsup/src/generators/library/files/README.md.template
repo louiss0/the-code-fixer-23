@@ -1,0 +1,34 @@
+# <%= name %>
+
+<%= description || 'A TypeScript library built with Tsup.' %>
+
+## Installation
+
+```bash
+pnpm add <%= importPath %>
+# or JPD if available
+```
+
+## Usage
+
+```ts
+import { hello } from '<%= importPath %>';
+
+console.log(hello());
+```
+
+## Development
+
+- Build: `pnpm nx build <%= name %>`
+- Typecheck: `pnpm -w tsc -p tsconfig.lib.json --noEmit`
+<% if (testRunner === 'vitest') { %>- Test: `pnpm vitest run`<% } %>
+<% if (testRunner === 'jest') { %>- Test: `pnpm jest`<% } %>
+
+<% if (linter === 'eslint') { %>
+## Linting
+This package uses ESLint (flat config).
+<% } %>
+<% if (linter === 'biome') { %>
+## Linting/Formatting
+This package uses Biome.
+<% } %>
