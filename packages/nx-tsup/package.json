@@ -71,7 +71,6 @@
         "executor": "@nx/vite:test",
         "outputs": ["{projectRoot}/coverage"],
         "options": {
-          "config": "packages/nx-tsup/vitest.config.ts",
           "passWithNoTests": true
         }
       }
