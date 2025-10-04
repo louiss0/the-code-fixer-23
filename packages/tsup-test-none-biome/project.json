@@ -1,0 +1,47 @@
+{
+  "name": "tsup-test-none-biome",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/tsup-test-none-biome/src",
+  "targets": {
+    "build": {
+      "executor": "@the-code-fixer-23/nx-tsup:build",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "packages/tsup-test-none-biome/dist",
+        "main": "packages/tsup-test-none-biome/src/index.ts",
+        "tsConfig": "packages/tsup-test-none-biome/tsconfig.lib.json",
+        "format": [
+          "esm"
+        ],
+        "dts": true,
+        "clean": true,
+        "sourcemap": false,
+        "minify": false
+      }
+    },
+    "typecheck": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/packages/tsup-test-none-biome",
+        "main": "packages/tsup-test-none-biome/src/index.ts",
+        "tsConfig": "packages/tsup-test-none-biome/tsconfig.lib.json",
+        "noEmit": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/workspace:run-commands",
+      "options": {
+        "commands": [
+          "biome lint packages/tsup-test-none-biome"
+        ]
+      }
+    }
+  },
+  "tags": []
+}
