@@ -1,17 +1,18 @@
 # @the-code-fixer-23/is-even
 
-A simple, fast utility to check if a number is even.
+A simple, lightweight utility to check if a number is even. Because sometimes you just need to know! 😄
 
-**Testing**: vitest | **Linting**: eslint
+**Testing**: vitest  
+**Coverage**: 100%
 
 ## Installation
 
 ```sh
-# Using pnpm
-pnpm add @the-code-fixer-23/is-even
+# Using JSR
+npx jsr add @the-code-fixer-23/is-even
 
-# Or using JPD if available
-jpd add @the-code-fixer-23/is-even
+# Using Deno
+import { isEven } from "jsr:@the-code-fixer-23/is-even";
 ```
 
 ## Usage
@@ -19,30 +20,39 @@ jpd add @the-code-fixer-23/is-even
 ```typescript
 import { isEven } from '@the-code-fixer-23/is-even';
 
-console.log(isEven(2));   // true
-console.log(isEven(3));   // false
-console.log(isEven(0));   // true
-console.log(isEven(-4));  // true
+// Check positive numbers
+isEven(2);    // true
+isEven(3);    // false
+
+// Works with zero
+isEven(0);    // true
+
+// Works with negative numbers
+isEven(-4);   // true
+isEven(-7);   // false
+
+// Handles large numbers
+isEven(1000); // true
 ```
 
 ## API
 
 ### `isEven(num: number): boolean`
 
-Returns `true` if the number is even, `false` otherwise.
+Checks if a number is even.
 
-- **Parameters:**
-  - `num` - The number to check
-- **Returns:** `boolean` - true if even, false if odd
+**Parameters:**
+- `num` (number): The number to check
 
-## Features
+**Returns:**
+- `boolean`: `true` if the number is even, `false` otherwise
 
-- ✅ TypeScript support with full type definitions
-- ✅ Zero dependencies
-- ✅ ESM module format
-- ✅ Works with positive, negative, and zero
-- ✅ Fully tested
-- ✅ Lightweight (~100 bytes)
+**Example:**
+```typescript
+const numbers = [1, 2, 3, 4, 5];
+const evenNumbers = numbers.filter(isEven);
+console.log(evenNumbers); // [2, 4]
+```
 
 ## Development
 
@@ -55,6 +65,6 @@ npx nx typecheck is-even
 # Run tests
 npx nx test is-even
 
-# Lint
-npx nx lint is-even
+# Publish to JSR
+npx nx publish is-even
 ```

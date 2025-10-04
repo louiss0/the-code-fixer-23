@@ -1,0 +1,5 @@
+{
+  "name": "@the-code-fixer-23/is-even",
+  "version": "0.1.0",
+  "exports": "./src/index.ts"
+}

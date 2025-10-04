@@ -5,17 +5,13 @@
   "sourceRoot": "packages/is-even/src",
   "targets": {
     "build": {
-      "executor": "@the-code-fixer-23/nx-tsup:build",
+      "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "packages/is-even/dist",
+        "outputPath": "dist/packages/is-even",
         "main": "packages/is-even/src/index.ts",
         "tsConfig": "packages/is-even/tsconfig.lib.json",
-        "format": ["esm"],
-        "dts": true,
-        "clean": true,
-        "sourcemap": false,
-        "minify": false
+        "assets": ["packages/is-even/*.md", "packages/is-even/jsr.json"]
       }
     },
     "typecheck": {
@@ -28,19 +24,24 @@
         "noEmit": true
       }
     },
+    "publish": {
+      "executor": "@the-code-fixer-23/nx-jsr:publish",
+      "options": {
+        "packageRoot": "packages/is-even"
+      }
+    },
+    "version": {
+      "executor": "@the-code-fixer-23/nx-jsr:version",
+      "options": {
+        "packageRoot": "packages/is-even"
+      }
+    },
     "test": {
       "executor": "@nx/vite:test",
       "outputs": ["{projectRoot}/coverage"],
       "options": {
         "config": "packages/is-even/vitest.config.ts"
       }
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "options": {
-        "lintFilePatterns": ["packages/is-even/**/*.ts"]
-      }
     }
-  },
-  "tags": []
+  }
 }

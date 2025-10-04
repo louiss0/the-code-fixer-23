@@ -196,6 +196,8 @@ Workspace is connected to Nx Cloud (ID: `68e0102b19999567fd36b781`):
 
 ## Adding New Packages
 
+### Standard Nx TypeScript Library
+
 When creating a new package:
 
 ```sh
@@ -209,6 +211,111 @@ pnpm install
 git add .
 git commit -m "feat(@the-code-fixer-23/<pkg-name>): add new package"
 ```
+
+### JSR TypeScript Library
+
+For libraries intended for JSR (JavaScript Registry) publishing, use the **nx-jsr plugin**:
+
+```sh
+# Generate JSR library (will prompt for bundler choice)
+npx nx g @the-code-fixer-23/nx-jsr:library <pkg-name> \
+  --importPath=@scope/pkg-name \
+  --description="Package description" \
+  --directory=packages
+
+# Or specify bundler explicitly
+npx nx g @the-code-fixer-23/nx-jsr:library <pkg-name> \
+  --importPath=@scope/pkg-name \
+  --bundler=none
+
+# Install dependencies
+pnpm install
+
+# Build the library
+npx nx build <pkg-name>
+
+# Type check
+npx nx typecheck <pkg-name>
+
+# Publish to JSR (dry run first)
+npx nx publish <pkg-name> --dryRun
+npx nx publish <pkg-name> --token=<your-jsr-token>
+```
+
+#### Bundler Options
+
+The nx-jsr plugin supports **three bundlers**:
+
+| Bundler  | Command Flag       | Best For                          | Notes                        |
+| -------- | ------------------ | --------------------------------- | ---------------------------- |
+| `none`   | `--bundler=none`   | JSR-first projects (recommended)  | TypeScript source only, fastest |
+| `esbuild`| `--bundler=esbuild`| Performance-critical builds       | Fast bundling, minimal config |
+| `tsup`   | `--bundler=tsup`   | Modern library development        | Best DX, auto .d.ts generation |
+
+**Default:** `none` (TypeScript source only)
+
+**Recommendation:** Use `--bundler=none` for JSR-exclusive libraries, as JSR was designed to work directly with TypeScript source.
+
+#### JSR Library Structure
+
+The JSR generator creates:
+
+```
+packages/<pkg-name>/
+├── src/
+│   └── index.ts          # Main entry point
+├── jsr.json              # JSR configuration (name, version, exports)
+├── package.json          # Package metadata with "type": "module"
+├── tsconfig.json         # TypeScript project references
+├── tsconfig.lib.json     # TypeScript library config
+└── README.md             # Library documentation
+```
+
+#### JSR Configuration (`jsr.json`)
+
+```json
+{
+  "name": "@scope/pkg-name",
+  "version": "0.1.0",
+  "exports": "./src/index.ts"
+}
+```
+
+For multiple entry points:
+
+```json
+{
+  "name": "@scope/pkg-name",
+  "version": "0.1.0",
+  "exports": {
+    ".": "./src/index.ts",
+    "./utils": "./src/utils.ts"
+  }
+}
+```
+
+#### JSR Publishing
+
+```sh
+# Publish with JSR_TOKEN environment variable
+export JSR_TOKEN=your-token
+npx nx publish <pkg-name>
+
+# Or pass token directly
+npx nx publish <pkg-name> --token=your-token
+
+# Dry run to validate
+npx nx publish <pkg-name> --dryRun
+
+# Allow uncommitted changes (not recommended)
+npx nx publish <pkg-name> --allowDirty
+```
+
+#### Nx Targets for JSR Libraries
+
+- **build**: Compiles TypeScript, includes `jsr.json` and README in output
+- **typecheck**: Type checks without emitting files
+- **publish**: Publishes to JSR using `npx jsr publish`
 
 ## Testing Philosophy
 
