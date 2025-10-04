@@ -1,0 +1,80 @@
+{
+  "name": "@the-code-fixer-23/nx-tsup",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "generators.json",
+    "executors.json"
+  ],
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "@the-code-fixer-23/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./generators": "./generators.json",
+    "./executors": "./executors.json"
+  },
+  "dependencies": {
+    "@nx/devkit": "21.6.3",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.1",
+    "typescript": "~5.9.2",
+    "vitest": "^3.0.0"
+  },
+  "generators": "./generators.json",
+  "executors": "./executors.json",
+  "nx": {
+    "targets": {
+      "build": {
+        "executor": "@nx/js:tsc",
+        "outputs": ["{options.outputPath}"],
+        "options": {
+          "outputPath": "packages/nx-tsup/dist",
+          "main": "packages/nx-tsup/src/index.ts",
+          "tsConfig": "packages/nx-tsup/tsconfig.lib.json",
+          "rootDir": "packages/nx-tsup/src",
+          "generatePackageJson": false,
+          "assets": [
+            {
+              "input": "./packages/nx-tsup/src",
+              "glob": "**/!(*.ts)",
+              "output": "."
+            },
+            {
+              "input": "./packages/nx-tsup/src",
+              "glob": "**/*.d.ts",
+              "output": "."
+            },
+            {
+              "input": "./packages/nx-tsup",
+              "glob": "generators.json",
+              "output": "."
+            },
+            {
+              "input": "./packages/nx-tsup",
+              "glob": "executors.json",
+              "output": "."
+            }
+          ]
+        }
+      },
+      "test": {
+        "executor": "@nx/vite:test",
+        "outputs": ["{projectRoot}/coverage"],
+        "options": {
+          "config": "packages/nx-tsup/vitest.config.ts",
+          "passWithNoTests": true
+        }
+      }
+    }
+  }
+}
