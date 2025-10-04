@@ -1,0 +1,33 @@
+{
+  "name": "@the-code-fixer-23/is-odd-tsup",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.lib.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "tslib": "^2.6.2"
+  },
+  "devDependencies": {
+    "vitest": "^3.0.0",
+    "@vitest/ui": "^3.0.0",
+    "happy-dom": "^15.0.0",
+    "eslint": "^9.9.0",
+    "@eslint/js": "^9.8.0"
+  }
+}
