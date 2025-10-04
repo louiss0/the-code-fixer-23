@@ -11,7 +11,47 @@
 [Click here to finish setting up your workspace!](https://cloud.nx.app/connect/Rpk27RLfpc)
 
 
+## Packages
+
+This monorepo contains the following packages:
+
+- **[@the-code-fixer-23/nx-tsup](./packages/nx-tsup)** - NX plugin for creating TypeScript libraries with Tsup bundler
+- **[@the-code-fixer-23/is-even](./packages/is-even)** - Demo library: Check if a number is even
+
 ## Generate a library
+
+### Using the nx-tsup plugin (recommended)
+
+Generate a new TypeScript library with [Tsup](https://tsup.egoist.dev/) bundler:
+
+```sh
+# Generate with vitest and eslint (default)
+pnpm nx generate @the-code-fixer-23/nx-tsup:library my-lib \
+  --directory=packages \
+  --importPath=@the-code-fixer-23/my-lib \
+  --description="My awesome library"
+
+# Generate with different options
+pnpm nx generate @the-code-fixer-23/nx-tsup:library my-lib \
+  --directory=packages \
+  --importPath=@the-code-fixer-23/my-lib \
+  --testRunner=jest \
+  --linter=biome
+
+# Generate with no tests or linting
+pnpm nx generate @the-code-fixer-23/nx-tsup:library my-lib \
+  --directory=packages \
+  --importPath=@the-code-fixer-23/my-lib \
+  --testRunner=none \
+  --linter=none
+```
+
+**Available options:**
+- `--testRunner` - Test framework: `vitest` (default), `jest`, or `none`
+- `--linter` - Code linter: `eslint` (default), `biome`, or `none`
+- `--description` - Package description for README and package.json
+
+### Using the standard NX generator
 
 ```sh
 npx nx g @nx/js:lib packages/pkg1 --publishable --importPath=@my-org/pkg1
@@ -19,11 +59,53 @@ npx nx g @nx/js:lib packages/pkg1 --publishable --importPath=@my-org/pkg1
 
 ## Run tasks
 
-To build the library use:
+### Build libraries
+
+Libraries created with `@the-code-fixer-23/nx-tsup` use Tsup for ultra-fast builds:
 
 ```sh
-npx nx build pkg1
+# Build a library
+pnpm nx build my-lib
+
+# Build with watch mode
+pnpm nx build my-lib --watch
+
+# Build with minification
+pnpm nx build my-lib --minify
+
+# Build with sourcemaps
+pnpm nx build my-lib --sourcemap
 ```
+
+**Build outputs:**
+- `dist/index.mjs` - ESM bundle
+- `dist/index.d.mts` - TypeScript declarations
+
+### Test libraries
+
+```sh
+# Run tests (if configured with vitest or jest)
+pnpm nx test my-lib
+
+# Run tests in watch mode
+pnpm nx test my-lib --watch
+```
+
+### Lint libraries
+
+```sh
+# Lint code (if configured with eslint or biome)
+pnpm nx lint my-lib
+```
+
+### Type check
+
+```sh
+# Check TypeScript types without emitting files
+pnpm nx typecheck my-lib
+```
+
+### Run any task
 
 To run any task with Nx use:
 
