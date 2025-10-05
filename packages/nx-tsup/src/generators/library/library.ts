@@ -9,6 +9,8 @@ import {
   logger,
 } from '@nx/devkit';
 import { LibraryGeneratorSchema, TestRunner, Linter } from './schema';
+import { detectLinterFromRootPackageJson, detectTestRunnerFromRootPackageJson } from './detect';
+import { isInteractive, selectOrDefault } from './prompt';
 import { join } from 'node:path';
 
 export async function libraryGenerator(tree: Tree, options: LibraryGeneratorSchema) {
@@ -17,10 +19,10 @@ export async function libraryGenerator(tree: Tree, options: LibraryGeneratorSche
   const projectRoot = joinPathFragments(dir, name);
   const sourceRoot = joinPathFragments(projectRoot, 'src');
 
-  const testRunner: TestRunner = options.testRunner ?? 'vitest';
-  const linter: Linter = options.linter ?? 'eslint';
+  const resolvedTestRunner: TestRunner = await resolveTestRunner(tree, options.testRunner);
+  const resolvedLinter: Linter = await resolveLinter(tree, options.linter);
 
-  const projectTargets = getProjectTargets(projectRoot, testRunner, linter);
+  const projectTargets = getProjectTargets(projectRoot, resolvedTestRunner, resolvedLinter);
 
   addProjectConfiguration(tree, name, {
     root: projectRoot,
@@ -37,25 +39,25 @@ export async function libraryGenerator(tree: Tree, options: LibraryGeneratorSche
     tmpl: '',
     name,
     offsetFromRoot: offsetFromRoot(projectRoot),
-    testRunner,
-    linter,
+    testRunner: resolvedTestRunner,
+    linter: resolvedLinter,
   });
 
   createTsConfig(tree, projectRoot);
-  createPackageJson(tree, projectRoot, options, testRunner, linter);
-  createReadme(tree, projectRoot, options, testRunner);
+  createPackageJson(tree, projectRoot, options, resolvedTestRunner, resolvedLinter);
+  createReadme(tree, projectRoot, options, resolvedTestRunner);
 
-  if (testRunner === 'vitest') {
+  if (resolvedTestRunner === 'vitest') {
     createVitestConfig(tree, projectRoot);
-    createExampleTest(tree, projectRoot, testRunner);
-  } else if (testRunner === 'jest') {
+    createExampleTest(tree, projectRoot, resolvedTestRunner);
+  } else if (resolvedTestRunner === 'jest') {
     createJestConfig(tree, projectRoot);
-    createExampleTest(tree, projectRoot, testRunner);
+    createExampleTest(tree, projectRoot, resolvedTestRunner);
   }
 
-  if (linter === 'eslint') {
+  if (resolvedLinter === 'eslint') {
     createEslintConfig(tree, projectRoot);
-  } else if (linter === 'biome') {
+  } else if (resolvedLinter === 'biome') {
     createBiomeConfig(tree, projectRoot);
   }
 
@@ -64,6 +66,42 @@ export async function libraryGenerator(tree: Tree, options: LibraryGeneratorSche
   }
 
   logger.info(`Created ${name} at ${projectRoot}`);
+}
+
+async function resolveTestRunner(tree: Tree, option?: TestRunner): Promise<TestRunner> {
+  if (option !== undefined) return option;
+  const { detected, candidates } = detectTestRunnerFromRootPackageJson(tree);
+  if (candidates.length === 2) {
+    if (isInteractive()) {
+      const choice = (await selectOrDefault(
+        'Both Jest and Vitest are detected in the workspace. Choose a test runner:',
+        ['jest', 'vitest'],
+        'jest'
+      )) as TestRunner;
+      return choice;
+    }
+    return 'jest';
+  }
+  if (detected) return detected as TestRunner;
+  return 'jest';
+}
+
+async function resolveLinter(tree: Tree, option?: Linter): Promise<Linter> {
+  if (option !== undefined) return option;
+  const { detected, candidates } = detectLinterFromRootPackageJson(tree);
+  if (candidates.length === 2) {
+    if (isInteractive()) {
+      const choice = (await selectOrDefault(
+        'Both ESLint and Biome are detected in the workspace. Choose a linter:',
+        ['eslint', 'biome'],
+        'eslint'
+      )) as Linter;
+      return choice;
+    }
+    return 'eslint';
+  }
+  if (detected) return detected as Linter;
+  return 'eslint';
 }
 
 function getProjectTargets(projectRoot: string, testRunner: TestRunner, linter: Linter) {
