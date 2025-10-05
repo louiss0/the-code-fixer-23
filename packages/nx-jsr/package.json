@@ -49,11 +49,7 @@
             }
           ]
         }
-      }
-    }
-  },
-  "nx": {
-    "targets": {
+      },
       "typecheck": {
         "executor": "@nx/js:tsc",
         "outputs": ["{options.outputPath}"],

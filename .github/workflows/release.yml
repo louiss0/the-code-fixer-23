@@ -49,9 +49,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish to npm
+      - name: Publish to npm (provenance off for private repos)
         run: |
+          # npm provenance is only supported for public repos. Disable to avoid 422 errors on private repos.
+          npm config set provenance false
           pnpm exec nx release publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: true
