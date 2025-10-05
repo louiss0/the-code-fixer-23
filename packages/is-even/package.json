@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "description": "",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "vitest": "^2.0.0",
     "@vitest/ui": "^2.0.0",

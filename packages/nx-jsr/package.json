@@ -19,8 +19,11 @@
     "generators.json",
     "executors.json"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "nx": {
-    "tags": ["paused"],
+    "tags": ["ongoing"],
     "targets": {
       "build": {
         "executor": "@nx/js:tsc",

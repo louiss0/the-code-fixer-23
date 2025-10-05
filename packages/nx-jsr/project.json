@@ -1,0 +1,7 @@
+{
+  "name": "@code-fixer-23/nx-jsr",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/nx-jsr/src",
+  "tags": ["npm:public", "ongoing"]
+}
