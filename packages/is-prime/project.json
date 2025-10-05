@@ -1,0 +1,46 @@
+{
+  "name": "is-prime",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/is-prime/src",
+  "targets": {
+    "build": {
+      "executor": "@code-fixer-23/nx-tsup:build",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "packages/is-prime/dist",
+        "main": "packages/is-prime/src/index.ts",
+        "tsConfig": "packages/is-prime/tsconfig.lib.json",
+        "format": ["esm"],
+        "dts": true,
+        "clean": true,
+        "sourcemap": false,
+        "minify": false
+      }
+    },
+    "typecheck": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/is-prime",
+        "main": "packages/is-prime/src/index.ts",
+        "tsConfig": "packages/is-prime/tsconfig.lib.json",
+        "noEmit": true
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{projectRoot}/coverage"],
+      "options": {
+        "config": "packages/is-prime/vitest.config.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["packages/is-prime/**/*.ts"]
+      }
+    }
+  },
+  "tags": []
+}
