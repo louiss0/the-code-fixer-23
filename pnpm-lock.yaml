@@ -16,8 +16,8 @@ importers:
         specifier: ^1.9.4
         version: 1.9.4
       '@code-fixer-23/nx-tsup':
-        specifier: ^0.0.1
-        version: 0.0.1(nx@21.6.3(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.5.29(@swc/helpers@0.5.17)))
+        specifier: workspace:*
+        version: link:packages/nx-tsup
       '@eslint/js':
         specifier: ^9.37.0
         version: 9.37.0
@@ -840,9 +840,6 @@ packages:
 
   '@borewit/text-codec@0.1.1':
     resolution: {integrity: sha512-5L/uBxmjaCIX5h8Z+uu+kA9BQLkc/Wl06UGR5ajNRxu+/XjonB5i8JpgFMrPj3LXTCPA0pv8yxUvbUi+QthGGA==}
-
-  '@code-fixer-23/nx-tsup@0.0.1':
-    resolution: {integrity: sha512-wWZPyKW6D7SfDPau2uGffBr3DHNE3iq1x6O8rwA0DtgLoAMQTzhTt76tdZOsH/oQiRTZ4vtDdWHcX217HyJIeg==}
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -6171,13 +6168,6 @@ snapshots:
     optional: true
 
   '@borewit/text-codec@0.1.1': {}
-
-  '@code-fixer-23/nx-tsup@0.0.1(nx@21.6.3(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.5.29(@swc/helpers@0.5.17)))':
-    dependencies:
-      '@nx/devkit': 21.6.3(nx@21.6.3(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.5.29(@swc/helpers@0.5.17)))
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - nx
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
