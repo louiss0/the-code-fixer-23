@@ -17,8 +17,7 @@
     },
     "directory": {
       "type": "string",
-      "description": "Directory where the library will be created (defaults to root level for JSR standalone projects)",
-      "default": "."
+      "description": "Directory where the library will be created. If not specified, files are generated in the current directory (standalone mode). If specified, a subfolder with the project name will be created."
     },
     "importPath": {
       "type": "string",

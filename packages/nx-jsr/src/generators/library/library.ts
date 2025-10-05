@@ -13,11 +13,12 @@ export async function libraryGenerator(
   tree: Tree,
   options: LibraryGeneratorSchema
 ) {
-  const directory = options.directory || '.';
-  // Handle root-level projects: if directory is '.' or empty, project goes at root
-  const projectRoot = directory === '.' || directory === '' 
-    ? options.name 
-    : `${directory}/${options.name}`;
+  // Standalone mode: if no directory flag provided, generate files in current directory
+  // If directory flag is provided, create/use that directory with project name subfolder
+  const isStandalone = !options.directory || options.directory === '.';
+  const projectRoot = isStandalone 
+    ? '.'  // Generate directly in current directory
+    : `${options.directory}/${options.name}`;  // Create directory with project name
   const parsedNames = names(options.name);
   const testRunner = options.testRunner || 'vitest';
 

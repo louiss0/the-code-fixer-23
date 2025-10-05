@@ -21,19 +21,19 @@ pnpm add -D @code-fixer-23/nx-jsr
 
 Generate a new JSR TypeScript library.
 
-> **Note**: JSR doesn't fully support monorepos yet, so projects are generated at the **root level** by default. This creates standalone projects that can be published to JSR independently. Monorepo support may be added to JSR in the future.
+> **Note**: JSR doesn't fully support monorepos yet, so projects are generated in **standalone mode** by default. Files are created directly in the current directory without creating a project subfolder. Use the `--directory` flag for monorepo structure.
 
 #### Usage
 
 ```sh
-# Generate at root level (default - recommended for JSR)
+# Standalone mode (default - files in current directory)
 npx nx g @code-fixer-23/nx-jsr:library my-lib --importPath=@scope/my-lib
 
-# Or explicitly specify root level
-npx nx g @code-fixer-23/nx-jsr:library my-lib --importPath=@scope/my-lib --directory=.
-
-# Generate in packages directory (if you want monorepo structure)
+# Monorepo mode (creates packages/my-lib/ subdirectory)
 npx nx g @code-fixer-23/nx-jsr:library my-lib --importPath=@scope/my-lib --directory=packages
+
+# Custom directory (creates libs/my-lib/ subdirectory)
+npx nx g @code-fixer-23/nx-jsr:library my-lib --importPath=@scope/my-lib --directory=libs
 ```
 
 #### Options
@@ -43,16 +43,18 @@ npx nx g @code-fixer-23/nx-jsr:library my-lib --importPath=@scope/my-lib --direc
 | `name`        | string                        | Yes      | Library name (kebab-case)                                    |
 | `importPath`  | string                        | Yes      | JSR import path (e.g., `@scope/package-name`)                |
 | `bundler`     | `'none'` \| `'esbuild'` \| `'tsup'` | No       | Bundler to use (default: `'none'`)                           |
-| `directory`   | string                        | No       | Directory where library will be created (default: `.` for root-level) |
+|| `directory`   | string                        | No       | Directory for monorepo mode. If omitted, files are created in current directory (standalone mode). If specified, creates a subfolder with the project name. |
 | `description` | string                        | No       | Package description                                          |
 | `skipFormat`  | boolean                       | No       | Skip formatting files (default: `false`)                     |
 
 #### What Gets Generated
 
-The generator creates a standalone project at root level:
+**Standalone mode (default - no `--directory` flag):**
+
+Files are created directly in the current directory:
 
 ```
-my-lib/                   # Generated at root level by default
+.
 ├── src/
 │   └── index.ts          # Main entry point
 ├── jsr.json              # JSR configuration
@@ -60,6 +62,22 @@ my-lib/                   # Generated at root level by default
 ├── tsconfig.json         # TypeScript project references
 ├── tsconfig.lib.json     # TypeScript library config
 └── README.md             # Library documentation
+```
+
+**Monorepo mode (with `--directory=packages`):**
+
+A subdirectory with the project name is created:
+
+```
+packages/
+└── my-lib/
+    ├── src/
+    │   └── index.ts
+    ├── jsr.json
+    ├── package.json
+    ├── tsconfig.json
+    ├── tsconfig.lib.json
+    └── README.md
 ```
 
 **jsr.json example:**
@@ -132,7 +150,7 @@ npx nx g @code-fixer-23/nx-jsr:library utils --importPath=@myorg/utils --descrip
 ### 2. Implement your library
 
 ```typescript
-// packages/utils/src/index.ts
+// src/index.ts (standalone mode)
 export function add(a: number, b: number): number {
   return a + b;
 }
