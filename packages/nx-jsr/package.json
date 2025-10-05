@@ -20,6 +20,7 @@
     "executors.json"
   ],
   "nx": {
+    "tags": ["paused"],
     "targets": {
       "build": {
         "executor": "@nx/js:tsc",

@@ -3,6 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "sourceRoot": "packages/is-even/src",
+  "tags": ["paused"],
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",

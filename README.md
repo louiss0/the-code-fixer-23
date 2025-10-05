@@ -127,6 +127,19 @@ npx nx release
 
 Pass `--dry-run` to see what would happen without actually releasing the library.
 
+### Paused Projects
+
+Some projects in this workspace are tagged as `paused`, meaning they are not ready for release. These projects are automatically excluded from:
+- CI builds and tests
+- Release workflows (`nx release`)
+- Pre-release build commands
+
+**Currently paused projects:**
+- `@code-fixer-23/nx-jsr` - JSR plugin development paused
+- `is-even` - Example library for JSR (paused)
+
+To mark a project as paused, add `"tags": ["paused"]` to its `package.json` (in the `nx` section) or `project.json` configuration.
+
 [Learn more about Nx release &raquo;](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
 
 ## Keep TypeScript project references up to date
