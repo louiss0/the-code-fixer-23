@@ -6,7 +6,7 @@
   "private": true,
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@code-fixer-23/nx-tsup": "^0.0.1",
+    "@code-fixer-23/nx-tsup": "workspace:*",
     "@eslint/js": "^9.37.0",
     "@nx/devkit": "21.6.3",
     "@nx/eslint": "^21.6.3",

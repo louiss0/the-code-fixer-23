@@ -63,7 +63,11 @@
     "projects": ["!tag:paused"],
     "version": {
       "preVersionCommand": "pnpm dlx nx run-many -t build --exclude='tag:paused'",
-    "conventionalCommits": true,
+      "conventionalCommits": true,
+      "versionActionsOptions": {
+        "installIgnoreScripts": true,
+        "installArgs": "--ignore-scripts"
+      }
     },
     "changelog": {
       "workspaceChangelog": false,
