@@ -1,17 +1,8 @@
-import eslint from '@eslint/js';
+import baseConfig from '../../eslint.config.mjs';
 
 export default [
-  eslint.configs.recommended,
+  ...baseConfig,
   {
-    files: ['**/*.ts'],
-    languageOptions: { 
-      parserOptions: { 
-        ecmaVersion: 'latest', 
-        sourceType: 'module' 
-      } 
-    },
-    rules: {
-      'no-console': 'off'
-    }
-  }
+    ignores: ['dist/**', 'node_modules/**']
+  },
 ];

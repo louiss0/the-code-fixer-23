@@ -10,6 +10,9 @@
     "generators.json",
     "executors.json"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     "./package.json": "./package.json",
     ".": {

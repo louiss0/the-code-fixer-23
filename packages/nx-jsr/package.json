@@ -54,13 +54,13 @@
   },
   "dependencies": {
     "@nx/devkit": "21.6.3",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "semver": "^7.7.2"
   },
   "generators": "./generators.json",
   "executors": "./executors.json",
   "devDependencies": {
     "@types/semver": "^7.7.1",
-    "conventional-commits-parser": "^6.2.0",
-    "semver": "^7.7.2"
+    "conventional-commits-parser": "^6.2.0"
   }
 }
