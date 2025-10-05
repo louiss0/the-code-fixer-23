@@ -21,10 +21,19 @@ pnpm add -D @code-fixer-23/nx-jsr
 
 Generate a new JSR TypeScript library.
 
+> **Note**: JSR doesn't fully support monorepos yet, so projects are generated at the **root level** by default. This creates standalone projects that can be published to JSR independently. Monorepo support may be added to JSR in the future.
+
 #### Usage
 
 ```sh
+# Generate at root level (default - recommended for JSR)
 npx nx g @code-fixer-23/nx-jsr:library my-lib --importPath=@scope/my-lib
+
+# Or explicitly specify root level
+npx nx g @code-fixer-23/nx-jsr:library my-lib --importPath=@scope/my-lib --directory=.
+
+# Generate in packages directory (if you want monorepo structure)
+npx nx g @code-fixer-23/nx-jsr:library my-lib --importPath=@scope/my-lib --directory=packages
 ```
 
 #### Options
@@ -34,16 +43,16 @@ npx nx g @code-fixer-23/nx-jsr:library my-lib --importPath=@scope/my-lib
 | `name`        | string                        | Yes      | Library name (kebab-case)                                    |
 | `importPath`  | string                        | Yes      | JSR import path (e.g., `@scope/package-name`)                |
 | `bundler`     | `'none'` \| `'esbuild'` \| `'tsup'` | No       | Bundler to use (default: `'none'`)                           |
-| `directory`   | string                        | No       | Directory where library will be created (default: `packages`) |
+| `directory`   | string                        | No       | Directory where library will be created (default: `.` for root-level) |
 | `description` | string                        | No       | Package description                                          |
 | `skipFormat`  | boolean                       | No       | Skip formatting files (default: `false`)                     |
 
 #### What Gets Generated
 
-The generator creates:
+The generator creates a standalone project at root level:
 
 ```
-packages/my-lib/
+my-lib/                   # Generated at root level by default
 ├── src/
 │   └── index.ts          # Main entry point
 ├── jsr.json              # JSR configuration

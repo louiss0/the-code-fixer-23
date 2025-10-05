@@ -13,8 +13,11 @@ export async function libraryGenerator(
   tree: Tree,
   options: LibraryGeneratorSchema
 ) {
-  const directory = options.directory || 'packages';
-  const projectRoot = `${directory}/${options.name}`;
+  const directory = options.directory || '.';
+  // Handle root-level projects: if directory is '.' or empty, project goes at root
+  const projectRoot = directory === '.' || directory === '' 
+    ? options.name 
+    : `${directory}/${options.name}`;
   const parsedNames = names(options.name);
   const testRunner = options.testRunner || 'vitest';
 
@@ -135,15 +138,18 @@ export default defineConfig({
 }
 
 function createJestConfig(tree: Tree, projectRoot: string) {
+  const isRootLevel = !projectRoot.includes('/');
+  const relativeToRoot = isRootLevel ? '.' : '../..';
+  
   const content = `export default {
   displayName: '${projectRoot}',
-  preset: '../../jest.preset.js',
+  preset: '${relativeToRoot}/jest.preset.js',
   testEnvironment: 'node',
   transform: {
     '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../coverage/${projectRoot}',
+  coverageDirectory: '${relativeToRoot}/coverage/${projectRoot}',
 };
 `;
 
@@ -194,10 +200,14 @@ function createTsConfig(
   projectRoot: string,
   options: LibraryGeneratorSchema
 ) {
+  // Determine if project is at root level
+  const isRootLevel = !projectRoot.includes('/');
+  const relativeToRoot = isRootLevel ? '.' : '../..';
+  
   const tsConfigLib = {
-    extends: '../../tsconfig.base.json',
+    extends: `${relativeToRoot}/tsconfig.base.json`,
     compilerOptions: {
-      outDir: '../../dist/out-tsc',
+      outDir: `${relativeToRoot}/dist/out-tsc`,
       declaration: true,
       types: [],
     },
@@ -211,7 +221,7 @@ function createTsConfig(
   );
 
   const tsConfig = {
-    extends: '../../tsconfig.json',
+    extends: `${relativeToRoot}/tsconfig.json`,
     files: [],
     references: [
       {

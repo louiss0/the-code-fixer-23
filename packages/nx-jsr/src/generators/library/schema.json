@@ -17,8 +17,8 @@
     },
     "directory": {
       "type": "string",
-      "description": "Directory where the library will be created (defaults to packages)",
-      "default": "packages"
+      "description": "Directory where the library will be created (defaults to root level for JSR standalone projects)",
+      "default": "."
     },
     "importPath": {
       "type": "string",
