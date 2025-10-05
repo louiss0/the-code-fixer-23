@@ -48,7 +48,7 @@ npx nx lint <package-name>
 npx nx graph
 
 # Generate a new publishable library
-npx nx g @nx/js:lib packages/<pkg-name> --publishable --importPath=@the-code-fixer-23/<pkg-name>
+npx nx g @nx/js:lib packages/<pkg-name> --publishable --importPath=@code-fixer-23/<pkg-name>
 
 # Check if TypeScript project references are in sync (useful in CI)
 npx nx sync:check
@@ -132,13 +132,13 @@ Follow **Conventional Commits** with strict formatting:
 - `chore`: Maintenance tasks
 
 ### Scope Rules
-- Use the package name from package metadata (e.g., `@the-code-fixer-23/source`)
+- Use the package name from package metadata (e.g., `@code-fixer-23/source`)
 - For monorepo-wide changes, use workspace identifier: `@the-code-fixer-23`
 
 ### Example Commits
 ```sh
-feat(@the-code-fixer-23/parser): add token validation
-fix(@the-code-fixer-23/utils): handle empty input
+feat(@code-fixer-23/parser): add token validation
+fix(@code-fixer-23/utils): handle empty input
 docs(@the-code-fixer-23): update README with setup instructions
 ```
 
@@ -202,14 +202,14 @@ When creating a new package:
 
 ```sh
 # Generate publishable library
-npx nx g @nx/js:lib packages/<pkg-name> --publishable --importPath=@the-code-fixer-23/<pkg-name>
+npx nx g @nx/js:lib packages/<pkg-name> --publishable --importPath=@code-fixer-23/<pkg-name>
 
 # Install dependencies
 pnpm install
 
 # Commit all files (atomically)
 git add .
-git commit -m "feat(@the-code-fixer-23/<pkg-name>): add new package"
+git commit -m "feat(@code-fixer-23/<pkg-name>): add new package"
 ```
 
 ### JSR TypeScript Library
@@ -218,13 +218,13 @@ For libraries intended for JSR (JavaScript Registry) publishing, use the **nx-js
 
 ```sh
 # Generate JSR library (will prompt for bundler choice)
-npx nx g @the-code-fixer-23/nx-jsr:library <pkg-name> \
+npx nx g @code-fixer-23/nx-jsr:library <pkg-name> \
   --importPath=@scope/pkg-name \
   --description="Package description" \
   --directory=packages
 
 # Or specify bundler explicitly
-npx nx g @the-code-fixer-23/nx-jsr:library <pkg-name> \
+npx nx g @code-fixer-23/nx-jsr:library <pkg-name> \
   --importPath=@scope/pkg-name \
   --bundler=none
 

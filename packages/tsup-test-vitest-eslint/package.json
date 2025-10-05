@@ -1,5 +1,5 @@
 {
-  "name": "@the-code-fixer-23/tsup-test-vitest-eslint",
+  "name": "@code-fixer-23/tsup-test-vitest-eslint",
   "version": "0.0.0",
   "type": "module",
   "main": "./dist/index.js",

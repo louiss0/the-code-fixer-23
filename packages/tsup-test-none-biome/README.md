@@ -1,4 +1,4 @@
-# @the-code-fixer-23/tsup-test-none-biome
+# @code-fixer-23/tsup-test-none-biome
 
 E2E test lib with none+biome
 
@@ -6,16 +6,16 @@ E2E test lib with none+biome
 
 ```sh
 # Using pnpm
-pnpm add @the-code-fixer-23/tsup-test-none-biome
+pnpm add @code-fixer-23/tsup-test-none-biome
 
 # Or using JPD if available
-jpd add @the-code-fixer-23/tsup-test-none-biome
+jpd add @code-fixer-23/tsup-test-none-biome
 ```
 
 ## Usage
 
 ```typescript
-import { hello } from '@the-code-fixer-23/tsup-test-none-biome';
+import { hello } from '@code-fixer-23/tsup-test-none-biome';
 
 console.log(hello());
 ```

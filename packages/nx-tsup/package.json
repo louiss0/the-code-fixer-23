@@ -1,5 +1,5 @@
 {
-  "name": "@the-code-fixer-23/nx-tsup",
+  "name": "@code-fixer-23/nx-tsup",
   "version": "0.0.1",
   "type": "module",
   "main": "./dist/index.js",
@@ -13,7 +13,7 @@
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "@the-code-fixer-23/source": "./src/index.ts",
+      "@code-fixer-23/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"

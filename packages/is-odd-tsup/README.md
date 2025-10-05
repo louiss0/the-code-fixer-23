@@ -1,4 +1,4 @@
-# @the-code-fixer-23/is-odd-tsup
+# @code-fixer-23/is-odd-tsup
 
 Check if a number is odd using Tsup
 
@@ -8,16 +8,16 @@ Check if a number is odd using Tsup
 
 ```sh
 # Using pnpm
-pnpm add @the-code-fixer-23/is-odd-tsup
+pnpm add @code-fixer-23/is-odd-tsup
 
 # Or using JPD if available
-jpd add @the-code-fixer-23/is-odd-tsup
+jpd add @code-fixer-23/is-odd-tsup
 ```
 
 ## Usage
 
 ```typescript
-import { hello } from '@the-code-fixer-23/is-odd-tsup';
+import { hello } from '@code-fixer-23/is-odd-tsup';
 
 console.log(hello());
 ```

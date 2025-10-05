@@ -45,7 +45,7 @@ export default defineConfig({
 Expose more Tsup options during library generation:
 
 ```bash
-pnpm nx generate @the-code-fixer-23/nx-tsup:library my-lib \
+pnpm nx generate @code-fixer-23/nx-tsup:library my-lib \
   --minify=true \
   --sourcemap=true \
   --splitting=true \
@@ -94,7 +94,7 @@ Add a publish executor for publishing to npm/JSR:
 {
   "targets": {
     "publish": {
-      "executor": "@the-code-fixer-23/nx-tsup:publish",
+      "executor": "@code-fixer-23/nx-tsup:publish",
       "options": {
         "registry": "https://registry.npmjs.org",
         "access": "public",
@@ -157,7 +157,7 @@ Smart external dependencies detection and configuration:
 Support generating multiple formats simultaneously:
 
 ```bash
-pnpm nx generate @the-code-fixer-23/nx-tsup:library my-lib \
+pnpm nx generate @code-fixer-23/nx-tsup:library my-lib \
   --formats=esm,cjs,iife
 
 # Generates:
@@ -173,7 +173,7 @@ Support custom scripts before/after build:
 {
   "targets": {
     "build": {
-      "executor": "@the-code-fixer-23/nx-tsup:build",
+      "executor": "@code-fixer-23/nx-tsup:build",
       "options": {
         "preBuild": "node scripts/pre-build.js",
         "postBuild": "node scripts/copy-files.js"
@@ -202,7 +202,7 @@ Automatically configure path aliases from tsconfig:
 
 ## Community Requests 💡
 
-Have an idea? [Open an issue](https://github.com/louiss0/the-code-fixer-23/issues) with the `nx-tsup` label!
+Have an idea? [Open an issue](https://github.com/louiss0/code-fixer-23/issues) with the `nx-tsup` label!
 
 ## Contributing
 

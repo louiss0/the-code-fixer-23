@@ -9,7 +9,7 @@ export default defineConfig(() => ({
   //  plugins: [ nxViteTsPaths() ],
   // },
   test: {
-    name: '@the-code-fixer-23/nx-jsr',
+    name: '@code-fixer-23/nx-jsr',
     watch: false,
     globals: true,
     environment: 'jsdom',

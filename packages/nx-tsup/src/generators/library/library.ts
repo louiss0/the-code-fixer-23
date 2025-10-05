@@ -68,7 +68,7 @@ export async function libraryGenerator(tree: Tree, options: LibraryGeneratorSche
 function getProjectTargets(projectRoot: string, testRunner: TestRunner, linter: Linter) {
   const targets: any = {
     build: {
-      executor: '@the-code-fixer-23/nx-tsup:build',
+      executor: '@code-fixer-23/nx-tsup:build',
       outputs: ['{options.outputPath}'],
       options: {
         outputPath: `${projectRoot}/dist`,

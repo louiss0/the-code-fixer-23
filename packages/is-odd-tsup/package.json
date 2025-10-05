@@ -1,5 +1,5 @@
 {
-  "name": "@the-code-fixer-23/is-odd-tsup",
+  "name": "@code-fixer-23/is-odd-tsup",
   "version": "0.0.0",
   "type": "module",
   "main": "./dist/index.js",

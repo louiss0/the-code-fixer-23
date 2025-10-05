@@ -6,7 +6,7 @@
  * 
  * @example
  * ```ts
- * import { isEven } from '@the-code-fixer-23/is-even';
+ * import { isEven } from '@code-fixer-23/is-even';
  * 
  * isEven(2); // true
  * isEven(3); // false

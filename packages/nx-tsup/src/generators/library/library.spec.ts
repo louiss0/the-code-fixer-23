@@ -42,7 +42,7 @@ describe('library generator', () => {
 
     const config = readProjectConfiguration(tree, 'test-lib');
     expect(config.targets?.build).toBeDefined();
-    expect(config.targets?.build.executor).toBe('@the-code-fixer-23/nx-tsup:build');
+    expect(config.targets?.build.executor).toBe('@code-fixer-23/nx-tsup:build');
     expect(config.targets?.build.options.format).toEqual(['esm']);
     expect(config.targets?.build.options.dts).toBe(true);
   });

@@ -1,4 +1,4 @@
-# @the-code-fixer-23/nx-tsup
+# @code-fixer-23/nx-tsup
 
 An **NX plugin** for building TypeScript libraries using **[Tsup](https://tsup.egoist.sh/)** - the fastest way to bundle your TypeScript libraries with zero config.
 
@@ -26,10 +26,10 @@ npx create-nx-workspace@latest
 
 ```bash
 # Using pnpm (recommended)
-pnpm add -D @the-code-fixer-23/nx-tsup tsup
+pnpm add -D @code-fixer-23/nx-tsup tsup
 
 # Or using npm
-npm install --save-dev @the-code-fixer-23/nx-tsup tsup
+npm install --save-dev @code-fixer-23/nx-tsup tsup
 ```
 
 ## Usage
@@ -40,10 +40,10 @@ Create a new Tsup-powered library:
 
 ```bash
 # Interactive mode (recommended)
-nx generate @the-code-fixer-23/nx-tsup:library
+nx generate @code-fixer-23/nx-tsup:library
 
 # With options
-nx generate @the-code-fixer-23/nx-tsup:library my-lib \\
+nx generate @code-fixer-23/nx-tsup:library my-lib \\
   --importPath=@my-scope/my-lib \\
   --description="My awesome library" \\
   --testRunner=vitest \\
@@ -196,7 +196,7 @@ Override build options in your `project.json`:
 {
   "targets": {
     "build": {
-      "executor": "@the-code-fixer-23/nx-tsup:build",
+      "executor": "@code-fixer-23/nx-tsup:build",
       "options": {
         "outputPath": "packages/my-lib/dist",
         "main": "packages/my-lib/src/index.ts",

@@ -1,4 +1,4 @@
-# @the-code-fixer-23/tsup-test-vitest-eslint
+# @code-fixer-23/tsup-test-vitest-eslint
 
 E2E test lib with vitest+eslint
 
@@ -8,16 +8,16 @@ E2E test lib with vitest+eslint
 
 ```sh
 # Using pnpm
-pnpm add @the-code-fixer-23/tsup-test-vitest-eslint
+pnpm add @code-fixer-23/tsup-test-vitest-eslint
 
 # Or using JPD if available
-jpd add @the-code-fixer-23/tsup-test-vitest-eslint
+jpd add @code-fixer-23/tsup-test-vitest-eslint
 ```
 
 ## Usage
 
 ```typescript
-import { hello } from '@the-code-fixer-23/tsup-test-vitest-eslint';
+import { hello } from '@code-fixer-23/tsup-test-vitest-eslint';
 
 console.log(hello());
 ```

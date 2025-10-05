@@ -1,4 +1,4 @@
-# @the-code-fixer-23/is-even
+# @code-fixer-23/is-even
 
 A simple, lightweight utility to check if a number is even. Because sometimes you just need to know! 😄
 
@@ -9,16 +9,16 @@ A simple, lightweight utility to check if a number is even. Because sometimes yo
 
 ```sh
 # Using JSR
-npx jsr add @the-code-fixer-23/is-even
+npx jsr add @code-fixer-23/is-even
 
 # Using Deno
-import { isEven } from "jsr:@the-code-fixer-23/is-even";
+import { isEven } from "jsr:@code-fixer-23/is-even";
 ```
 
 ## Usage
 
 ```typescript
-import { isEven } from '@the-code-fixer-23/is-even';
+import { isEven } from '@code-fixer-23/is-even';
 
 // Check positive numbers
 isEven(2);    // true

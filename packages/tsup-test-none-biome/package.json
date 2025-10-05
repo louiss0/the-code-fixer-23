@@ -1,5 +1,5 @@
 {
-  "name": "@the-code-fixer-23/tsup-test-none-biome",
+  "name": "@code-fixer-23/tsup-test-none-biome",
   "version": "0.0.0",
   "type": "module",
   "main": "./dist/index.js",

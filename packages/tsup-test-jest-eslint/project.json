@@ -5,7 +5,7 @@
   "sourceRoot": "packages/tsup-test-jest-eslint/src",
   "targets": {
     "build": {
-      "executor": "@the-code-fixer-23/nx-tsup:build",
+      "executor": "@code-fixer-23/nx-tsup:build",
       "outputs": [
         "{options.outputPath}"
       ],

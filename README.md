@@ -15,8 +15,8 @@
 
 This monorepo contains the following packages:
 
-- **[@the-code-fixer-23/nx-tsup](./packages/nx-tsup)** - NX plugin for creating TypeScript libraries with Tsup bundler
-- **[@the-code-fixer-23/is-even](./packages/is-even)** - Demo library: Check if a number is even
+- **[@code-fixer-23/nx-tsup](./packages/nx-tsup)** - NX plugin for creating TypeScript libraries with Tsup bundler
+- **[@code-fixer-23/is-even](./packages/is-even)** - Demo library: Check if a number is even
 
 ## Generate a library
 
@@ -26,22 +26,22 @@ Generate a new TypeScript library with [Tsup](https://tsup.egoist.dev/) bundler:
 
 ```sh
 # Generate with vitest and eslint (default)
-pnpm nx generate @the-code-fixer-23/nx-tsup:library my-lib \
+pnpm nx generate @code-fixer-23/nx-tsup:library my-lib \
   --directory=packages \
-  --importPath=@the-code-fixer-23/my-lib \
+  --importPath=@code-fixer-23/my-lib \
   --description="My awesome library"
 
 # Generate with different options
-pnpm nx generate @the-code-fixer-23/nx-tsup:library my-lib \
+pnpm nx generate @code-fixer-23/nx-tsup:library my-lib \
   --directory=packages \
-  --importPath=@the-code-fixer-23/my-lib \
+  --importPath=@code-fixer-23/my-lib \
   --testRunner=jest \
   --linter=biome
 
 # Generate with no tests or linting
-pnpm nx generate @the-code-fixer-23/nx-tsup:library my-lib \
+pnpm nx generate @code-fixer-23/nx-tsup:library my-lib \
   --directory=packages \
-  --importPath=@the-code-fixer-23/my-lib \
+  --importPath=@code-fixer-23/my-lib \
   --testRunner=none \
   --linter=none
 ```
@@ -61,7 +61,7 @@ npx nx g @nx/js:lib packages/pkg1 --publishable --importPath=@my-org/pkg1
 
 ### Build libraries
 
-Libraries created with `@the-code-fixer-23/nx-tsup` use Tsup for ultra-fast builds:
+Libraries created with `@code-fixer-23/nx-tsup` use Tsup for ultra-fast builds:
 
 ```sh
 # Build a library

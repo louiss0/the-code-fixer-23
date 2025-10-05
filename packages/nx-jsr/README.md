@@ -1,4 +1,4 @@
-# @the-code-fixer-23/nx-jsr
+# @code-fixer-23/nx-jsr
 
 An Nx plugin for scaffolding and publishing TypeScript libraries to [JSR (JavaScript Registry)](https://jsr.io).
 
@@ -12,7 +12,7 @@ An Nx plugin for scaffolding and publishing TypeScript libraries to [JSR (JavaSc
 ## Installation
 
 ```sh
-pnpm add -D @the-code-fixer-23/nx-jsr
+pnpm add -D @code-fixer-23/nx-jsr
 ```
 
 ## Generators
@@ -24,7 +24,7 @@ Generate a new JSR TypeScript library.
 #### Usage
 
 ```sh
-npx nx g @the-code-fixer-23/nx-jsr:library my-lib --importPath=@scope/my-lib
+npx nx g @code-fixer-23/nx-jsr:library my-lib --importPath=@scope/my-lib
 ```
 
 #### Options
@@ -117,7 +117,7 @@ npx nx publish my-lib
 ### 1. Generate a new JSR library
 
 ```sh
-npx nx g @the-code-fixer-23/nx-jsr:library utils --importPath=@myorg/utils --description="Utility functions"
+npx nx g @code-fixer-23/nx-jsr:library utils --importPath=@myorg/utils --description="Utility functions"
 ```
 
 ### 2. Implement your library
@@ -191,7 +191,7 @@ The plugin supports **three bundler configurations** to match different project 
 **Recommended for JSR** - JSR was designed to work directly with TypeScript source code.
 
 ```sh
-npx nx g @the-code-fixer-23/nx-jsr:library my-lib \
+npx nx g @code-fixer-23/nx-jsr:library my-lib \
   --importPath=@scope/my-lib \
   --bundler=none
 ```
@@ -220,7 +220,7 @@ npx nx g @the-code-fixer-23/nx-jsr:library my-lib \
 **Best for performance-critical builds** where speed matters most.
 
 ```sh
-npx nx g @the-code-fixer-23/nx-jsr:library my-lib \
+npx nx g @code-fixer-23/nx-jsr:library my-lib \
   --importPath=@scope/my-lib \
   --bundler=esbuild
 ```
@@ -268,7 +268,7 @@ build({
 **Best for modern library development** with excellent developer experience.
 
 ```sh
-npx nx g @the-code-fixer-23/nx-jsr:library my-lib \
+npx nx g @code-fixer-23/nx-jsr:library my-lib \
   --importPath=@scope/my-lib \
   --bundler=tsup
 ```

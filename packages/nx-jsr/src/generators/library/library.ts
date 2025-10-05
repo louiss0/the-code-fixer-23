@@ -82,13 +82,13 @@ function getProjectTargets(projectRoot: string, testRunner: TestRunner) {
       },
     },
     publish: {
-      executor: '@the-code-fixer-23/nx-jsr:publish',
+      executor: '@code-fixer-23/nx-jsr:publish',
       options: {
         packageRoot: projectRoot,
       },
     },
     version: {
-      executor: '@the-code-fixer-23/nx-jsr:version',
+      executor: '@code-fixer-23/nx-jsr:version',
       options: {
         packageRoot: projectRoot,
       },

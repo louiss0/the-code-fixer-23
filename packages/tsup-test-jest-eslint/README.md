@@ -1,4 +1,4 @@
-# @the-code-fixer-23/tsup-test-jest-eslint
+# @code-fixer-23/tsup-test-jest-eslint
 
 E2E test lib with jest+eslint
 
@@ -8,16 +8,16 @@ E2E test lib with jest+eslint
 
 ```sh
 # Using pnpm
-pnpm add @the-code-fixer-23/tsup-test-jest-eslint
+pnpm add @code-fixer-23/tsup-test-jest-eslint
 
 # Or using JPD if available
-jpd add @the-code-fixer-23/tsup-test-jest-eslint
+jpd add @code-fixer-23/tsup-test-jest-eslint
 ```
 
 ## Usage
 
 ```typescript
-import { hello } from '@the-code-fixer-23/tsup-test-jest-eslint';
+import { hello } from '@code-fixer-23/tsup-test-jest-eslint';
 
 console.log(hello());
 ```
