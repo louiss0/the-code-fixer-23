@@ -9,7 +9,7 @@ An **NX plugin** for building TypeScript libraries using **[Tsup](https://tsup.e
 - 🚀 **Fast Bundling** - Powered by esbuild through Tsup
 - 📦 **Zero Configuration** - Sensible defaults, works out of the box
 - 🎯 **Type-Safe** - Automatic TypeScript declaration file generation
-- 🧪 **Test Integration** - Optional Vitest or Jest setup
+- 🧪 **Test Integration** - Optional Vitest or Jest setup with auto-detection
 - 🎨 **Linter Support** - Optional ESLint or Biome integration
 - 🔧 **Customizable** - Full control over Tsup configuration per package
 - 📚 **Monorepo Ready** - Works with both integrated and package-based monorepos
@@ -60,8 +60,8 @@ nx generate @code-fixer-23/nx-tsup:library my-lib \\
 | `importPath` | `string` | *required* | Import path (e.g., `@scope/package-name`) |
 | `directory` | `string` | `packages` | Directory where library will be created |
 | `description` | `string` | `""` | Package description |
-| `testRunner` | `vitest \| jest \| none` | `vitest` | Test framework to use |
-| `linter` | `eslint \| biome \| none` | `eslint` | Linter to configure |
+| `testRunner` | `vitest \\| jest \\| none` | auto-detect (fallback: `jest`) | Test framework to use |
+| `linter` | `eslint \\| biome \\| none` | auto-detect (fallback: `eslint`) | Linter to configure |
 | `skipFormat` | `boolean` | `false` | Skip formatting generated files |
 
 ### Build Your Library
@@ -115,6 +115,20 @@ packages/my-lib/
 ├── jest.config.ts            # Jest config (if selected)
 └── eslint.config.mjs         # ESLint config (if selected)
 ```
+
+## Auto-detection behavior
+
+When you omit `--testRunner` and/or `--linter`, the generator inspects your workspace root `package.json` to detect installed tools by their official package names:
+
+- Test runners: `jest`, `vitest`
+- Linters: `eslint`, `@biomejs/biome`
+
+Selection rules:
+- If exactly one candidate is present, it is selected automatically.
+- If both are present, you will be prompted to choose in interactive mode. In non-interactive/CI environments, the fallback is `jest` for tests and `eslint` for linting.
+- If none are present, the fallback is `jest` and `eslint`.
+
+To override detection, pass explicit flags, e.g. `--testRunner=vitest --linter=eslint`.
 
 ## Configuration
 
