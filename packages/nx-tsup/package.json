@@ -1,7 +1,7 @@
 {
   "name": "@code-fixer-23/nx-tsup",
   "version": "0.0.1",
-  "type": "module",
+  "type": "commonjs",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
