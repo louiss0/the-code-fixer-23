@@ -33,6 +33,7 @@ export async function libraryGenerator(tree: Tree, options: LibraryGeneratorSche
   // Templates
   generateFiles(tree, join(__dirname, 'files'), projectRoot, {
     ...options,
+    description: options.description || 'A TypeScript library built with Tsup.',
     tmpl: '',
     name,
     offsetFromRoot: offsetFromRoot(projectRoot),

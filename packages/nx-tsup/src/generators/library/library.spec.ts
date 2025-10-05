@@ -10,6 +10,7 @@ describe('library generator', () => {
     name: 'test-lib',
     importPath: '@test/test-lib',
     directory: 'packages',
+    description: 'A TypeScript library built with Tsup.',
     skipFormat: true,
   };
 
