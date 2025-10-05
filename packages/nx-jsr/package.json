@@ -52,6 +52,20 @@
       }
     }
   },
+  "nx": {
+    "targets": {
+      "typecheck": {
+        "executor": "@nx/js:tsc",
+        "outputs": ["{options.outputPath}"],
+        "options": {
+          "outputPath": "dist/packages/nx-jsr",
+          "main": "packages/nx-jsr/src/index.ts",
+          "tsConfig": "packages/nx-jsr/tsconfig.lib.json",
+          "noEmit": true
+        }
+      }
+    }
+  },
   "dependencies": {
     "@nx/devkit": "21.6.3",
     "tslib": "^2.3.0",

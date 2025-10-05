@@ -76,6 +76,16 @@
         "options": {
           "passWithNoTests": true
         }
+      },
+      "typecheck": {
+        "executor": "@nx/js:tsc",
+        "outputs": ["{options.outputPath}"],
+        "options": {
+          "outputPath": "dist/packages/nx-tsup",
+          "main": "packages/nx-tsup/src/index.ts",
+          "tsConfig": "packages/nx-tsup/tsconfig.lib.json",
+          "noEmit": true
+        }
       }
     }
   }
