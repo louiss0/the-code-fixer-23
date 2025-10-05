@@ -1,10 +1,17 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Tree, readProjectConfiguration } from '@nx/devkit';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { libraryGenerator } from './library';
 import { LibraryGeneratorSchema } from './schema';
 
 describe('library generator', () => {
+  // Mock prompt utils to control interactivity and user choice
+  vi.mock('./prompt', () => {
+    return {
+      isInteractive: () => false, // default non-interactive for deterministic fallbacks
+      selectOrDefault: async (_q: string, _choices: string[], defaultChoice: string) => defaultChoice,
+    };
+  });
   let tree: Tree;
   const options: LibraryGeneratorSchema = {
     name: 'test-lib',
@@ -126,5 +133,72 @@ describe('library generator', () => {
     expect(packageJson.type).toBe('module');
     expect(packageJson.main).toBe('./dist/index.js');
     expect(packageJson.types).toBe('./dist/index.d.ts');
+  });
+  it('auto-detects vitest when only vitest is present and options omitted', async () => {
+    // Write root package.json with vitest only
+    tree.write(
+      'package.json',
+      JSON.stringify({ devDependencies: { vitest: '^3.2.4' } }, null, 2)
+    );
+
+    await libraryGenerator(tree, { ...options });
+
+    const config = readProjectConfiguration(tree, 'test-lib');
+    expect(config.targets?.test?.executor).toBe('@nx/vite:test');
+    expect(tree.exists('packages/test-lib/vitest.config.ts')).toBe(true);
+  });
+
+  it('auto-detects jest when only jest is present and options omitted', async () => {
+    tree.write(
+      'package.json',
+      JSON.stringify({ devDependencies: { jest: '^29.7.0' } }, null, 2)
+    );
+
+    await libraryGenerator(tree, { ...options });
+
+    const config = readProjectConfiguration(tree, 'test-lib');
+    expect(config.targets?.test?.executor).toBe('@nx/jest:jest');
+    expect(tree.exists('packages/test-lib/jest.config.ts')).toBe(true);
+  });
+
+  it('when both jest and vitest are present and non-interactive, falls back to jest', async () => {
+    tree.write(
+      'package.json',
+      JSON.stringify({ devDependencies: { jest: '^29.7.0', vitest: '^3.2.4' } }, null, 2)
+    );
+
+    await libraryGenerator(tree, { ...options });
+
+    const config = readProjectConfiguration(tree, 'test-lib');
+    expect(config.targets?.test?.executor).toBe('@nx/jest:jest');
+  });
+
+  it('auto-detects eslint when only eslint is present and options omitted', async () => {
+    tree.write(
+      'package.json',
+      JSON.stringify({ devDependencies: { eslint: '^9.37.0' } }, null, 2)
+    );
+
+    await libraryGenerator(tree, { ...options });
+
+    const config = readProjectConfiguration(tree, 'test-lib');
+    expect(config.targets?.lint?.executor).toBe('@nx/eslint:lint');
+    expect(tree.exists('packages/test-lib/eslint.config.mjs')).toBe(true);
+  });
+
+  it('when both eslint and biome are present and non-interactive, falls back to eslint', async () => {
+    tree.write(
+      'package.json',
+      JSON.stringify(
+        { devDependencies: { eslint: '^9.37.0', '@biomejs/biome': '^1.9.4' } },
+        null,
+        2
+      )
+    );
+
+    await libraryGenerator(tree, { ...options });
+
+    const config = readProjectConfiguration(tree, 'test-lib');
+    expect(config.targets?.lint?.executor).toBe('@nx/eslint:lint');
   });
 });
