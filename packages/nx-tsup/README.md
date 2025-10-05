@@ -1,5 +1,7 @@
 # @code-fixer-23/nx-tsup
 
+> Note: Minor README touch to seed the first patch bump via conventional commit.
+
 An **NX plugin** for building TypeScript libraries using **[Tsup](https://tsup.egoist.sh/)** - the fastest way to bundle your TypeScript libraries with zero config.
 
 ## Features
