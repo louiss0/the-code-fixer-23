@@ -62,7 +62,8 @@
   "release": {
     "projects": ["!tag:paused"],
     "version": {
-      "preVersionCommand": "pnpm dlx nx run-many -t build --exclude='tag:paused'"
+      "preVersionCommand": "pnpm dlx nx run-many -t build --exclude='tag:paused'",
+      "conventionalCommits": true
     },
     "changelog": {
       "workspaceChangelog": false,

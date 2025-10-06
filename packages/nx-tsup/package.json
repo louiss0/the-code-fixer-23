@@ -1,7 +1,7 @@
 {
   "name": "@code-fixer-23/nx-tsup",
   "version": "0.0.1",
-  "type": "module",
+  "type": "commonjs",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -10,6 +10,9 @@
     "generators.json",
     "executors.json"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     "./package.json": "./package.json",
     ".": {
@@ -28,7 +31,8 @@
   "devDependencies": {
     "tsup": "^8.0.1",
     "typescript": "~5.9.2",
-    "vitest": "^3.0.0"
+    "vitest": "^3.0.0",
+    "enquirer": "^2.4.1"
   },
   "generators": "./generators.json",
   "executors": "./executors.json",
@@ -36,7 +40,9 @@
     "targets": {
       "build": {
         "executor": "@nx/js:tsc",
-        "outputs": ["{options.outputPath}"],
+        "outputs": [
+          "{options.outputPath}"
+        ],
         "options": {
           "outputPath": "packages/nx-tsup/dist",
           "main": "packages/nx-tsup/src/index.ts",
@@ -69,9 +75,23 @@
       },
       "test": {
         "executor": "@nx/vite:test",
-        "outputs": ["{projectRoot}/coverage"],
+        "outputs": [
+          "{projectRoot}/coverage"
+        ],
         "options": {
           "passWithNoTests": true
+        }
+      },
+      "typecheck": {
+        "executor": "@nx/js:tsc",
+        "outputs": [
+          "{options.outputPath}"
+        ],
+        "options": {
+          "outputPath": "dist/packages/nx-tsup",
+          "main": "packages/nx-tsup/src/index.ts",
+          "tsConfig": "packages/nx-tsup/tsconfig.lib.json",
+          "noEmit": true
         }
       }
     }

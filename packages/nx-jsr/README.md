@@ -38,14 +38,14 @@ npx nx g @code-fixer-23/nx-jsr:library my-lib --importPath=@scope/my-lib --direc
 
 #### Options
 
-| Option        | Type                          | Required | Description                                                  |
-| ------------- | ----------------------------- | -------- | ------------------------------------------------------------ |
-| `name`        | string                        | Yes      | Library name (kebab-case)                                    |
-| `importPath`  | string                        | Yes      | JSR import path (e.g., `@scope/package-name`)                |
-| `bundler`     | `'none'` \| `'esbuild'` \| `'tsup'` | No       | Bundler to use (default: `'none'`)                           |
-|| `directory`   | string                        | No       | Directory for monorepo mode. If omitted, files are created in current directory (standalone mode). If specified, creates a subfolder with the project name. |
-| `description` | string                        | No       | Package description                                          |
-| `skipFormat`  | boolean                       | No       | Skip formatting files (default: `false`)                     |
+| Option        | Type                                | Required | Description                                   |
+| ------------- | ----------------------------------- | -------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`        | string                              | Yes      | Library name (kebab-case)                     |
+| `importPath`  | string                              | Yes      | JSR import path (e.g., `@scope/package-name`) |
+| `bundler`     | `'none'` \| `'esbuild'` \| `'tsup'` | No       | Bundler to use (default: `'none'`)            |
+|               | `directory`                         | string   | No                                            | Directory for monorepo mode. If omitted, files are created in current directory (standalone mode). If specified, creates a subfolder with the project name. |
+| `description` | string                              | No       | Package description                           |
+| `skipFormat`  | boolean                             | No       | Skip formatting files (default: `false`)      |
 
 #### What Gets Generated
 
@@ -119,11 +119,11 @@ npx nx publish my-lib --token=your-jsr-token
 
 #### Options
 
-| Option        | Type    | Required | Description                                              |
-| ------------- | ------- | -------- | -------------------------------------------------------- |
-| `packageRoot` | string  | Yes      | Root directory of the package to publish                 |
-| `dryRun`      | boolean | No       | Run in dry-run mode (no actual publishing)               |
-| `token`       | string  | No       | JSR authentication token (or use `JSR_TOKEN` env var)    |
+| Option        | Type    | Required | Description                                                  |
+| ------------- | ------- | -------- | ------------------------------------------------------------ |
+| `packageRoot` | string  | Yes      | Root directory of the package to publish                     |
+| `dryRun`      | boolean | No       | Run in dry-run mode (no actual publishing)                   |
+| `token`       | string  | No       | JSR authentication token (or use `JSR_TOKEN` env var)        |
 | `allowDirty`  | boolean | No       | Allow publishing with uncommitted changes (default: `false`) |
 
 #### Authentication
@@ -207,11 +207,11 @@ The plugin supports **three bundler configurations** to match different project 
 
 ### Choosing a Bundler
 
-| Bundler    | Best For                          | Build Speed | Bundle Size | DX       |
-| ---------- | --------------------------------- | ----------- | ----------- | -------- |
-| **none**   | JSR-first projects, simple libs   | ⚡⚡⚡       | N/A         | Simple   |
-| **esbuild**| Performance-critical builds       | ⚡⚡⚡       | Small       | Minimal  |
-| **tsup**   | Modern library development        | ⚡⚡        | Small       | Excellent|
+| Bundler     | Best For                        | Build Speed | Bundle Size | DX        |
+| ----------- | ------------------------------- | ----------- | ----------- | --------- |
+| **none**    | JSR-first projects, simple libs | ⚡⚡⚡      | N/A         | Simple    |
+| **esbuild** | Performance-critical builds     | ⚡⚡⚡      | Small       | Minimal   |
+| **tsup**    | Modern library development      | ⚡⚡        | Small       | Excellent |
 
 ### `none` (TypeScript Source Only)
 
@@ -224,6 +224,7 @@ npx nx g @code-fixer-23/nx-jsr:library my-lib \
 ```
 
 **Characteristics:**
+
 - Uses `@nx/js:tsc` executor
 - No bundling, just TypeScript compilation
 - Fastest build times
@@ -231,6 +232,7 @@ npx nx g @code-fixer-23/nx-jsr:library my-lib \
 - Perfect for JSR's TypeScript-first approach
 
 **Build target:**
+
 ```json
 {
   "executor": "@nx/js:tsc",
@@ -253,6 +255,7 @@ npx nx g @code-fixer-23/nx-jsr:library my-lib \
 ```
 
 **Characteristics:**
+
 - Uses `@nx/esbuild:esbuild` executor
 - Extremely fast bundling
 - Minimal configuration
@@ -260,6 +263,7 @@ npx nx g @code-fixer-23/nx-jsr:library my-lib \
 - Adds `esbuild` as dev dependency
 
 **Generated `esbuild.config.js`:**
+
 ```javascript
 const { build } = require('esbuild');
 
@@ -277,6 +281,7 @@ build({
 ```
 
 **Build target:**
+
 ```json
 {
   "executor": "@nx/esbuild:esbuild",
@@ -301,6 +306,7 @@ npx nx g @code-fixer-23/nx-jsr:library my-lib \
 ```
 
 **Characteristics:**
+
 - Uses `nx:run-commands` to run `tsup`
 - Built on esbuild with better defaults
 - Automatic `.d.ts` generation
@@ -309,13 +315,14 @@ npx nx g @code-fixer-23/nx-jsr:library my-lib \
 - Adds `tsup` as dev dependency
 
 **Generated `tsup.config.ts`:**
+
 ```typescript
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: ['src/index.ts'],
   format: ['esm'],
-  dts: true,              // Generates .d.ts files
+  dts: true, // Generates .d.ts files
   sourcemap: true,
   clean: true,
   minify: false,
@@ -325,6 +332,7 @@ export default defineConfig({
 ```
 
 **Build target:**
+
 ```json
 {
   "executor": "nx:run-commands",
@@ -338,18 +346,21 @@ export default defineConfig({
 ### Decision Guide
 
 **Choose `none` if:**
+
 - Publishing exclusively to JSR
 - Want fastest build times
 - Prefer simplicity
 - Don't need bundling
 
 **Choose `esbuild` if:**
+
 - Need fast bundling
 - Want minimal configuration
 - Building performance-critical libraries
 - Comfortable with manual config tweaks
 
 **Choose `tsup` if:**
+
 - Want modern DX
 - Need automatic `.d.ts` generation
 - Prefer zero-config approach

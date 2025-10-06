@@ -40,49 +40,13 @@
       "type": "string",
       "description": "Test runner to use for the library",
       "enum": ["vitest", "jest", "none"],
-      "default": "vitest",
-      "x-prompt": {
-        "message": "Which test runner would you like to use?",
-        "type": "list",
-        "items": [
-          {
-            "value": "vitest",
-            "label": "Vitest (Modern, Vite-powered testing - recommended)"
-          },
-          {
-            "value": "jest",
-            "label": "Jest (Stable, mature testing framework)"
-          },
-          {
-            "value": "none",
-            "label": "None (Skip test setup)"
-          }
-        ]
-      }
+      "description": "When omitted, this will be auto-detected from the root package.json. If ambiguous or not found, jest is used by default."
     },
     "linter": {
       "type": "string",
       "description": "Linter to use for the library",
       "enum": ["eslint", "biome", "none"],
-      "default": "eslint",
-      "x-prompt": {
-        "message": "Which linter would you like to use?",
-        "type": "list",
-        "items": [
-          {
-            "value": "eslint",
-            "label": "ESLint (Recommended)"
-          },
-          {
-            "value": "biome",
-            "label": "Biome (Fast, all-in-one toolchain)"
-          },
-          {
-            "value": "none",
-            "label": "None (Skip linter setup)"
-          }
-        ]
-      }
+      "description": "When omitted, this will be auto-detected from the root package.json. If ambiguous or not found, eslint is used by default."
     }
   },
   "required": ["name", "importPath"]

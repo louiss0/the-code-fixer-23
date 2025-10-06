@@ -23,7 +23,9 @@
     "access": "public"
   },
   "nx": {
-    "tags": ["ongoing"],
+    "tags": [
+      "ongoing"
+    ],
     "targets": {
       "build": {
         "executor": "@nx/js:tsc",
@@ -49,18 +51,30 @@
             }
           ]
         }
+      },
+      "typecheck": {
+        "executor": "@nx/js:tsc",
+        "outputs": [
+          "{options.outputPath}"
+        ],
+        "options": {
+          "outputPath": "dist/packages/nx-jsr",
+          "main": "packages/nx-jsr/src/index.ts",
+          "tsConfig": "packages/nx-jsr/tsconfig.lib.json",
+          "noEmit": true
+        }
       }
     }
   },
   "dependencies": {
     "@nx/devkit": "21.6.3",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "semver": "^7.7.2"
   },
   "generators": "./generators.json",
   "executors": "./executors.json",
   "devDependencies": {
     "@types/semver": "^7.7.1",
-    "conventional-commits-parser": "^6.2.0",
-    "semver": "^7.7.2"
+    "conventional-commits-parser": "^6.2.0"
   }
 }

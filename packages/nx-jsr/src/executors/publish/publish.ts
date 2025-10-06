@@ -64,8 +64,7 @@ const runExecutor: PromiseExecutor<PublishExecutorSchema> = async (
     );
     return { success: true };
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : String(error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error(`Failed to publish package: ${errorMessage}`);
     return { success: false };
   }

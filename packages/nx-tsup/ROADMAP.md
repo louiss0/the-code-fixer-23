@@ -19,6 +19,7 @@
 ### High Priority
 
 #### 1. Multiple Entry Points Support
+
 Allow libraries to have multiple entry points for better code splitting:
 
 ```typescript
@@ -37,11 +38,13 @@ export default defineConfig({
 ```
 
 **Benefits:**
+
 - Better tree-shaking for consumers
 - Separate CLI from library code
 - Allow importing subpaths: `@pkg/utils`
 
 #### 2. Configurable Build Defaults via Generator
+
 Expose more Tsup options during library generation:
 
 ```bash
@@ -53,6 +56,7 @@ pnpm nx generate @code-fixer-23/nx-tsup:library my-lib \
 ```
 
 **Options to add:**
+
 - `--minify` - Enable minification by default
 - `--sourcemap` - Enable sourcemaps by default
 - `--splitting` - Enable code splitting
@@ -62,12 +66,13 @@ pnpm nx generate @code-fixer-23/nx-tsup:library my-lib \
 ### Medium Priority
 
 #### 3. Enhanced Assets Handling
+
 Support glob patterns and transformations for asset copying:
 
 ```typescript
 // Current (basic)
 {
-  assets: ['README.md', 'LICENSE']
+  assets: ['README.md', 'LICENSE'];
 }
 
 // Enhanced (glob patterns + output mapping)
@@ -76,18 +81,19 @@ Support glob patterns and transformations for asset copying:
     {
       input: 'src/templates',
       glob: '**/*.hbs',
-      output: 'templates'
+      output: 'templates',
     },
     {
       input: 'assets',
       glob: '**/*.{png,jpg,svg}',
-      output: 'static'
-    }
-  ]
+      output: 'static',
+    },
+  ];
 }
 ```
 
 #### 4. Publish Executor
+
 Add a publish executor for publishing to npm/JSR:
 
 ```json
@@ -106,6 +112,7 @@ Add a publish executor for publishing to npm/JSR:
 ```
 
 **Features:**
+
 - Version bumping
 - Git tag creation
 - Changelog generation
@@ -113,6 +120,7 @@ Add a publish executor for publishing to npm/JSR:
 - Dry-run support
 
 #### 5. Watch Mode Improvements
+
 Better watch mode experience with automatic test running:
 
 ```bash
@@ -126,6 +134,7 @@ pnpm nx watch my-lib --reload
 ### Low Priority
 
 #### 6. Bundle Analysis
+
 Add bundle size analysis and reporting:
 
 ```bash
@@ -135,13 +144,14 @@ pnpm nx build my-lib --analyze
 Bundle Analysis:
   index.mjs: 2.3 KB (gzipped: 1.1 KB)
   cli.mjs: 4.5 KB (gzipped: 1.8 KB)
-  
+
 Dependencies:
   - tslib: 1.2 KB
   - ...
 ```
 
 #### 7. External Dependencies Management
+
 Smart external dependencies detection and configuration:
 
 ```typescript
@@ -154,6 +164,7 @@ Smart external dependencies detection and configuration:
 ```
 
 #### 8. Multiple Output Formats
+
 Support generating multiple formats simultaneously:
 
 ```bash
@@ -167,6 +178,7 @@ pnpm nx generate @code-fixer-23/nx-tsup:library my-lib \
 ```
 
 #### 9. Pre/Post Build Hooks
+
 Support custom scripts before/after build:
 
 ```json
@@ -184,6 +196,7 @@ Support custom scripts before/after build:
 ```
 
 #### 10. TypeScript Paths Alias Support
+
 Automatically configure path aliases from tsconfig:
 
 ```json

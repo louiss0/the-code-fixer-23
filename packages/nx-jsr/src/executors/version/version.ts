@@ -45,9 +45,7 @@ const runExecutor: PromiseExecutor<VersionExecutorSchema> = async (
   }
 
   // Read current jsr.json
-  const jsrConfig: JsrConfig = JSON.parse(
-    readFileSync(jsrJsonPath, 'utf-8')
-  );
+  const jsrConfig: JsrConfig = JSON.parse(readFileSync(jsrJsonPath, 'utf-8'));
   const currentVersion = jsrConfig.version;
 
   if (!currentVersion) {
@@ -78,7 +76,9 @@ const runExecutor: PromiseExecutor<VersionExecutorSchema> = async (
     logger.info(`Manual version update: ${currentVersion} → ${newVersion}`);
   } else {
     // Auto mode: analyze conventional commits
-    const releaseType = options.releaseAs || determineReleaseType(workspaceRoot, options.tagPrefix || 'v');
+    const releaseType =
+      options.releaseAs ||
+      determineReleaseType(workspaceRoot, options.tagPrefix || 'v');
 
     if (!releaseType) {
       logger.info('No version-bumping commits found since last release');
@@ -86,17 +86,22 @@ const runExecutor: PromiseExecutor<VersionExecutorSchema> = async (
     }
 
     if (options.preid) {
-      newVersion = semver.inc(currentVersion, releaseType, options.preid) || null;
+      newVersion =
+        semver.inc(currentVersion, releaseType, options.preid) || null;
     } else {
       newVersion = semver.inc(currentVersion, releaseType) || null;
     }
 
     if (!newVersion) {
-      logger.error(`Failed to calculate new version from ${currentVersion} with release type ${releaseType}`);
+      logger.error(
+        `Failed to calculate new version from ${currentVersion} with release type ${releaseType}`
+      );
       return { success: false };
     }
 
-    logger.info(`Auto version update (${releaseType}): ${currentVersion} → ${newVersion}`);
+    logger.info(
+      `Auto version update (${releaseType}): ${currentVersion} → ${newVersion}`
+    );
   }
 
   // Update jsr.json
@@ -109,12 +114,18 @@ const runExecutor: PromiseExecutor<VersionExecutorSchema> = async (
     try {
       const tagName = `${options.tagPrefix || 'v'}${newVersion}`;
       execSync(`git add ${jsrJsonPath}`, { cwd: absolutePackageRoot });
-      execSync(`git commit -m "chore(release): ${newVersion}"`, { cwd: workspaceRoot });
+      execSync(`git commit -m "chore(release): ${newVersion}"`, {
+        cwd: workspaceRoot,
+      });
       execSync(`git tag ${tagName}`, { cwd: workspaceRoot });
-      execSync(`git push && git push --tags`, { cwd: workspaceRoot, stdio: 'inherit' });
+      execSync(`git push && git push --tags`, {
+        cwd: workspaceRoot,
+        stdio: 'inherit',
+      });
       logger.info(`✓ Pushed changes and tag ${tagName} to GitHub`);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       logger.error(`Failed to push to GitHub: ${errorMessage}`);
       return { success: false };
     }
@@ -123,26 +134,37 @@ const runExecutor: PromiseExecutor<VersionExecutorSchema> = async (
     logger.info('📝 Next steps:');
     logger.info('  1. Review the version change in jsr.json');
     logger.info(`  2. Commit the changes: git add ${projectRoot}/jsr.json`);
-    logger.info(`  3. Create a git tag: git tag ${options.tagPrefix || 'v'}${newVersion}`);
+    logger.info(
+      `  3. Create a git tag: git tag ${options.tagPrefix || 'v'}${newVersion}`
+    );
     logger.info('  4. Push to GitHub: git push && git push --tags');
   }
 
   return { success: true };
 };
 
-function determineReleaseType(workspaceRoot: string, tagPrefix: string): ReleaseType | null {
+function determineReleaseType(
+  workspaceRoot: string,
+  tagPrefix: string
+): ReleaseType | null {
   try {
     // Get the last tag
-    const lastTag = execSync(`git describe --tags --abbrev=0 --match="${tagPrefix}*" 2>nul`, {
-      cwd: workspaceRoot,
-      encoding: 'utf-8',
-    }).trim();
+    const lastTag = execSync(
+      `git describe --tags --abbrev=0 --match="${tagPrefix}*" 2>nul`,
+      {
+        cwd: workspaceRoot,
+        encoding: 'utf-8',
+      }
+    ).trim();
 
     // Get commits since last tag
-    const commits = execSync(`git log ${lastTag}..HEAD --format=%B%n-hash-%n%H%n-END-`, {
-      cwd: workspaceRoot,
-      encoding: 'utf-8',
-    }).trim();
+    const commits = execSync(
+      `git log ${lastTag}..HEAD --format=%B%n-hash-%n%H%n-END-`,
+      {
+        cwd: workspaceRoot,
+        encoding: 'utf-8',
+      }
+    ).trim();
 
     if (!commits) {
       logger.info('No commits found since last tag');
@@ -159,7 +181,7 @@ function determineReleaseType(workspaceRoot: string, tagPrefix: string): Release
         const type = match ? match[1] : '';
         const hasBreakingInHeader = match ? !!match[4] : false;
         const hasBreakingInBody = /BREAKING CHANGE:/i.test(commit);
-        
+
         return {
           type,
           breaking: hasBreakingInHeader || hasBreakingInBody,
