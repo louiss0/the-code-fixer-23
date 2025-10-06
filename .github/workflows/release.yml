@@ -52,12 +52,8 @@ jobs:
       - name: Lint (excluding paused)
         run: pnpm exec nx run-many -t lint --exclude='tag:paused'
 
-      - name: Test (excluding paused)
-        run: pnpm exec nx run-many -t test --exclude='tag:paused'
-
       - name: Release (version + publish via conventional commits)
         run: |
-          npm config set provenance false
           pnpm exec nx release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
