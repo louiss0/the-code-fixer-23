@@ -38,11 +38,23 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Check formatting
-        run: pnpm exec nx format:check --all
+      - name: Determine affected base/head
+        id: vars
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "BASE=${{ github.event.pull_request.base.sha }}" >> $GITHUB_ENV
+            echo "HEAD=${{ github.sha }}" >> $GITHUB_ENV
+          else
+            echo "BASE=$(git rev-parse HEAD~1)" >> $GITHUB_ENV
+            echo "HEAD=${{ github.sha }}" >> $GITHUB_ENV
+          fi
 
-      - name: Lint/Test/Build/Typecheck (excluding paused)
-        run: pnpm exec nx run-many -t lint test build typecheck --exclude='tag:paused'
+      - name: Check formatting (affected)
+        run: pnpm exec nx format:check --base=$BASE --head=$HEAD
+
+      - name: Lint/Test/Build/Typecheck (affected, excluding paused)
+        run: pnpm exec nx affected -t lint test build typecheck --exclude='tag:paused' --base=$BASE --head=$HEAD
 
       - run: pnpm exec nx fix-ci
         if: always()
