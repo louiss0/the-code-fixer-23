@@ -31,7 +31,8 @@
   "devDependencies": {
     "tsup": "^8.0.1",
     "typescript": "~5.9.2",
-    "vitest": "^3.0.0"
+    "vitest": "^3.0.0",
+    "enquirer": "^2.4.1"
   },
   "generators": "./generators.json",
   "executors": "./executors.json",
@@ -39,7 +40,9 @@
     "targets": {
       "build": {
         "executor": "@nx/js:tsc",
-        "outputs": ["{options.outputPath}"],
+        "outputs": [
+          "{options.outputPath}"
+        ],
         "options": {
           "outputPath": "packages/nx-tsup/dist",
           "main": "packages/nx-tsup/src/index.ts",
@@ -72,14 +75,18 @@
       },
       "test": {
         "executor": "@nx/vite:test",
-        "outputs": ["{projectRoot}/coverage"],
+        "outputs": [
+          "{projectRoot}/coverage"
+        ],
         "options": {
           "passWithNoTests": true
         }
       },
       "typecheck": {
         "executor": "@nx/js:tsc",
-        "outputs": ["{options.outputPath}"],
+        "outputs": [
+          "{options.outputPath}"
+        ],
         "options": {
           "outputPath": "dist/packages/nx-tsup",
           "main": "packages/nx-tsup/src/index.ts",

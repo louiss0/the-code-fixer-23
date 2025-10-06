@@ -16,9 +16,9 @@ export async function libraryGenerator(
   // Standalone mode: if no directory flag provided, generate files in current directory
   // If directory flag is provided, create/use that directory with project name subfolder
   const isStandalone = !options.directory || options.directory === '.';
-  const projectRoot = isStandalone 
-    ? '.'  // Generate directly in current directory
-    : `${options.directory}/${options.name}`;  // Create directory with project name
+  const projectRoot = isStandalone
+    ? '.' // Generate directly in current directory
+    : `${options.directory}/${options.name}`; // Create directory with project name
   const parsedNames = names(options.name);
   const testRunner = options.testRunner || 'vitest';
 
@@ -141,7 +141,7 @@ export default defineConfig({
 function createJestConfig(tree: Tree, projectRoot: string) {
   const isRootLevel = !projectRoot.includes('/');
   const relativeToRoot = isRootLevel ? '.' : '../..';
-  
+
   const content = `export default {
   displayName: '${projectRoot}',
   preset: '${relativeToRoot}/jest.preset.js',
@@ -204,7 +204,7 @@ function createTsConfig(
   // Determine if project is at root level
   const isRootLevel = !projectRoot.includes('/');
   const relativeToRoot = isRootLevel ? '.' : '../..';
-  
+
   const tsConfigLib = {
     extends: `${relativeToRoot}/tsconfig.base.json`,
     compilerOptions: {
@@ -276,14 +276,10 @@ function createReadme(
   testRunner: TestRunner
 ) {
   const testingInfo =
-    testRunner !== 'none'
-      ? `**Testing**: ${testRunner}\n\n`
-      : '';
+    testRunner !== 'none' ? `**Testing**: ${testRunner}\n\n` : '';
 
   const testCommand =
-    testRunner !== 'none'
-      ? `\n# Run tests\nnpx nx test ${options.name}\n`
-      : '';
+    testRunner !== 'none' ? `\n# Run tests\nnpx nx test ${options.name}\n` : '';
 
   const content = `# ${options.importPath}
 

@@ -35,7 +35,9 @@ export default async function runExecutor(
         ? join(root, 'node_modules', '.bin', 'tsup.cmd')
         : join(root, 'node_modules', '.bin', 'tsup');
 
-    const fmt = (options.format && options.format.length ? options.format : ['esm']).join(',');
+    const fmt = (
+      options.format && options.format.length ? options.format : ['esm']
+    ).join(',');
     const args: string[] = [
       `"${entry}"`,
       `--format=${fmt}`,

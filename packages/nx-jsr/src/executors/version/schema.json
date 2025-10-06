@@ -21,7 +21,15 @@
     },
     "releaseAs": {
       "type": "string",
-      "enum": ["major", "minor", "patch", "premajor", "preminor", "prepatch", "prerelease"],
+      "enum": [
+        "major",
+        "minor",
+        "patch",
+        "premajor",
+        "preminor",
+        "prepatch",
+        "prerelease"
+      ],
       "description": "Force a specific release type in auto mode (overrides conventional commit analysis)"
     },
     "preid": {

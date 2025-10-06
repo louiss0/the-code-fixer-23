@@ -9,7 +9,7 @@ An **NX plugin** for building TypeScript libraries using **[Tsup](https://tsup.e
 - 🚀 **Fast Bundling** - Powered by esbuild through Tsup
 - 📦 **Zero Configuration** - Sensible defaults, works out of the box
 - 🎯 **Type-Safe** - Automatic TypeScript declaration file generation
-- 🧪 **Test Integration** - Optional Vitest or Jest setup
+- 🧪 **Test Integration** - Optional Vitest or Jest setup with auto-detection
 - 🎨 **Linter Support** - Optional ESLint or Biome integration
 - 🔧 **Customizable** - Full control over Tsup configuration per package
 - 📚 **Monorepo Ready** - Works with both integrated and package-based monorepos
@@ -54,15 +54,15 @@ nx generate @code-fixer-23/nx-tsup:library my-lib \\
 
 ### Generator Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `name` | `string` | *required* | Library name (kebab-case) |
-| `importPath` | `string` | *required* | Import path (e.g., `@scope/package-name`) |
-| `directory` | `string` | `packages` | Directory where library will be created |
-| `description` | `string` | `""` | Package description |
-| `testRunner` | `vitest \| jest \| none` | `vitest` | Test framework to use |
-| `linter` | `eslint \| biome \| none` | `eslint` | Linter to configure |
-| `skipFormat` | `boolean` | `false` | Skip formatting generated files |
+| Option        | Type       | Default    | Description                               |
+| ------------- | ---------- | ---------- | ----------------------------------------- | -------------------------------- | --------------------- |
+| `name`        | `string`   | _required_ | Library name (kebab-case)                 |
+| `importPath`  | `string`   | _required_ | Import path (e.g., `@scope/package-name`) |
+| `directory`   | `string`   | `packages` | Directory where library will be created   |
+| `description` | `string`   | `""`       | Package description                       |
+| `testRunner`  | `vitest \\ | jest \\    | none`                                     | auto-detect (fallback: `jest`)   | Test framework to use |
+| `linter`      | `eslint \\ | biome \\   | none`                                     | auto-detect (fallback: `eslint`) | Linter to configure   |
+| `skipFormat`  | `boolean`  | `false`    | Skip formatting generated files           |
 
 ### Build Your Library
 
@@ -81,18 +81,18 @@ nx build my-lib --watch
 
 The build executor supports the following options:
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `outputPath` | `string` | *required* | Output directory for built files |
-| `main` | `string` | *required* | Entry point file |
-| `tsConfig` | `string` | *required* | Path to tsconfig file |
-| `format` | `('esm'\|'cjs'\|'iife')[]` | `['esm']` | Output formats |
-| `dts` | `boolean` | `true` | Generate TypeScript declaration files |
-| `clean` | `boolean` | `true` | Clean output directory before build |
-| `watch` | `boolean` | `false` | Enable watch mode |
-| `minify` | `boolean` | `false` | Minify output |
-| `sourcemap` | `boolean` | `false` | Generate sourcemaps |
-| `assets` | `string[]` | `[]` | Additional assets to copy to dist |
+| Option       | Type                       | Default    | Description                           |
+| ------------ | -------------------------- | ---------- | ------------------------------------- |
+| `outputPath` | `string`                   | _required_ | Output directory for built files      |
+| `main`       | `string`                   | _required_ | Entry point file                      |
+| `tsConfig`   | `string`                   | _required_ | Path to tsconfig file                 |
+| `format`     | `('esm'\|'cjs'\|'iife')[]` | `['esm']`  | Output formats                        |
+| `dts`        | `boolean`                  | `true`     | Generate TypeScript declaration files |
+| `clean`      | `boolean`                  | `true`     | Clean output directory before build   |
+| `watch`      | `boolean`                  | `false`    | Enable watch mode                     |
+| `minify`     | `boolean`                  | `false`    | Minify output                         |
+| `sourcemap`  | `boolean`                  | `false`    | Generate sourcemaps                   |
+| `assets`     | `string[]`                 | `[]`       | Additional assets to copy to dist     |
 
 ## Generated Project Structure
 
@@ -116,6 +116,21 @@ packages/my-lib/
 └── eslint.config.mjs         # ESLint config (if selected)
 ```
 
+## Auto-detection behavior
+
+When you omit `--testRunner` and/or `--linter`, the generator inspects your workspace root `package.json` to detect installed tools by their official package names:
+
+- Test runners: `jest`, `vitest`
+- Linters: `eslint`, `@biomejs/biome`
+
+Selection rules:
+
+- If exactly one candidate is present, it is selected automatically.
+- If both are present, you will be prompted to choose in interactive mode. In non-interactive/CI environments, the fallback is `jest` for tests and `eslint` for linting.
+- If none are present, the fallback is `jest` and `eslint`.
+
+To override detection, pass explicit flags, e.g. `--testRunner=vitest --linter=eslint`.
+
 ## Configuration
 
 ### Tsup Configuration
@@ -128,11 +143,11 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: ['src/index.ts'],
-  format: ['esm', 'cjs'],  // Add CJS format
+  format: ['esm', 'cjs'], // Add CJS format
   dts: true,
   clean: true,
-  sourcemap: true,          // Enable sourcemaps
-  minify: true,             // Enable minification
+  sourcemap: true, // Enable sourcemaps
+  minify: true, // Enable minification
   target: 'es2022',
   splitting: false,
   treeshake: true,
@@ -169,6 +184,7 @@ In an integrated monorepo, `tsup` is installed at the workspace root and shared 
 ### Package-based Monorepo
 
 If your `package.json` includes a `workspaces` field, the generator automatically:
+
 - Detects the package-based setup
 - Adds `tsup` to each generated package's `devDependencies`
 - Ensures each package can build independently
