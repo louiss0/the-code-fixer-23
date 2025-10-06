@@ -19,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NX_INTERACTIVE: 'false'
+      NX_TASKS_RUNNER: 'local'
+      NX_CLOUD: 'false'
     steps:
       - uses: actions/checkout@v4
         with:
