@@ -40,7 +40,9 @@ describe('detect utilities', () => {
     });
 
     it('detects both jest and vitest', () => {
-      writeRootPkg(tree, { devDependencies: { jest: '^29.7.0', vitest: '^3.2.4' } });
+      writeRootPkg(tree, {
+        devDependencies: { jest: '^29.7.0', vitest: '^3.2.4' },
+      });
       const res = detectTestRunnerFromRootPackageJson(tree);
       expect(res.detected).toBeNull();
       expect(res.candidates.sort()).toEqual(['jest', 'vitest']);
@@ -70,7 +72,9 @@ describe('detect utilities', () => {
     });
 
     it('detects both eslint and biome', () => {
-      writeRootPkg(tree, { devDependencies: { eslint: '^9.37.0', '@biomejs/biome': '^1.9.4' } });
+      writeRootPkg(tree, {
+        devDependencies: { eslint: '^9.37.0', '@biomejs/biome': '^1.9.4' },
+      });
       const res = detectLinterFromRootPackageJson(tree);
       expect(res.detected).toBeNull();
       expect(res.candidates.sort()).toEqual(['biome', 'eslint']);

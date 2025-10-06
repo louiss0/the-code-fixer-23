@@ -69,6 +69,7 @@ npx nx release --dry-run
 This project uses **Git Flow with CI-centric approach**:
 
 ### Branch Structure
+
 - **`main`**: Always deployable to production
 - **`develop`**: Primary integration branch for feature development
 - **`feature/*`**: Feature branches (created from develop)
@@ -107,6 +108,7 @@ git branch -d fix/<issue-name>
 ```
 
 ### Deployment Flow
+
 - Merge `develop` into `main` frequently (no release branches)
 - `main` is deployed immediately after merge
 - CI runs on all pushes to `main` and `develop`
@@ -120,6 +122,7 @@ Follow **Conventional Commits** with strict formatting:
 ```
 
 ### Commit Types
+
 - `feat`: New user-facing feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -132,10 +135,12 @@ Follow **Conventional Commits** with strict formatting:
 - `chore`: Maintenance tasks
 
 ### Scope Rules
+
 - Use the package name from package metadata (e.g., `@code-fixer-23/source`)
 - For monorepo-wide changes, use workspace identifier: `@the-code-fixer-23`
 
 ### Example Commits
+
 ```sh
 feat(@code-fixer-23/parser): add token validation
 fix(@code-fixer-23/utils): handle empty input
@@ -145,6 +150,7 @@ docs(@the-code-fixer-23): update README with setup instructions
 ## TypeScript Configuration
 
 The workspace uses strict TypeScript settings:
+
 - **Module system**: `nodenext` (ESM + CommonJS interop)
 - **Target**: `es2022`
 - **Strict mode**: Enabled with all strict checks
@@ -159,6 +165,7 @@ The workspace uses strict TypeScript settings:
 ## CI/CD
 
 GitHub Actions workflow (`.github/workflows/ci.yml`):
+
 - Runs on pushes to `main` and all pull requests
 - Executes: `lint`, `test`, `build`, `typecheck` for all projects
 - Uses Nx Cloud for task caching and distribution (optional)
@@ -167,6 +174,7 @@ GitHub Actions workflow (`.github/workflows/ci.yml`):
 ## Architecture Notes
 
 ### Monorepo Structure
+
 ```
 packages/
   <pkg-name>/
@@ -177,20 +185,25 @@ packages/
 ```
 
 ### Task Execution
+
 Nx uses **inferred tasks** from the TypeScript plugin:
+
 - `build`: Compiles TypeScript (uses `tsconfig.lib.json`)
 - `typecheck`: Type checks without emitting files
 - `build-deps`: Builds dependencies before building the project
 - `watch-deps`: Watches dependencies for changes
 
 ### Project References
+
 TypeScript project references are automatically managed:
+
 - Run `npx nx sync` to update references based on dependencies
 - Run `npx nx sync:check` in CI to enforce correctness
 
 ## Nx Cloud
 
 Workspace is connected to Nx Cloud (ID: `68e0102b19999567fd36b781`):
+
 - Task caching across CI runs
 - Optional: Distributed task execution (commented out in CI config)
 
@@ -246,11 +259,11 @@ npx nx publish <pkg-name> --token=<your-jsr-token>
 
 The nx-jsr plugin supports **three bundlers**:
 
-| Bundler  | Command Flag       | Best For                          | Notes                        |
-| -------- | ------------------ | --------------------------------- | ---------------------------- |
-| `none`   | `--bundler=none`   | JSR-first projects (recommended)  | TypeScript source only, fastest |
-| `esbuild`| `--bundler=esbuild`| Performance-critical builds       | Fast bundling, minimal config |
-| `tsup`   | `--bundler=tsup`   | Modern library development        | Best DX, auto .d.ts generation |
+| Bundler   | Command Flag        | Best For                         | Notes                           |
+| --------- | ------------------- | -------------------------------- | ------------------------------- |
+| `none`    | `--bundler=none`    | JSR-first projects (recommended) | TypeScript source only, fastest |
+| `esbuild` | `--bundler=esbuild` | Performance-critical builds      | Fast bundling, minimal config   |
+| `tsup`    | `--bundler=tsup`    | Modern library development       | Best DX, auto .d.ts generation  |
 
 **Default:** `none` (TypeScript source only)
 

@@ -9,20 +9,33 @@ import {
   logger,
 } from '@nx/devkit';
 import { LibraryGeneratorSchema, TestRunner, Linter } from './schema';
-import { detectLinterFromRootPackageJson, detectTestRunnerFromRootPackageJson } from './detect';
+import {
+  detectLinterFromRootPackageJson,
+  detectTestRunnerFromRootPackageJson,
+} from './detect';
 import { isInteractive, selectOrDefault } from './prompt';
 import { join } from 'node:path';
 
-export async function libraryGenerator(tree: Tree, options: LibraryGeneratorSchema) {
+export async function libraryGenerator(
+  tree: Tree,
+  options: LibraryGeneratorSchema
+) {
   const name = names(options.name).fileName;
   const dir = options.directory ?? 'packages';
   const projectRoot = joinPathFragments(dir, name);
   const sourceRoot = joinPathFragments(projectRoot, 'src');
 
-  const resolvedTestRunner: TestRunner = await resolveTestRunner(tree, options.testRunner);
+  const resolvedTestRunner: TestRunner = await resolveTestRunner(
+    tree,
+    options.testRunner
+  );
   const resolvedLinter: Linter = await resolveLinter(tree, options.linter);
 
-  const projectTargets = getProjectTargets(projectRoot, resolvedTestRunner, resolvedLinter);
+  const projectTargets = getProjectTargets(
+    projectRoot,
+    resolvedTestRunner,
+    resolvedLinter
+  );
 
   addProjectConfiguration(tree, name, {
     root: projectRoot,
@@ -44,7 +57,13 @@ export async function libraryGenerator(tree: Tree, options: LibraryGeneratorSche
   });
 
   createTsConfig(tree, projectRoot);
-  createPackageJson(tree, projectRoot, options, resolvedTestRunner, resolvedLinter);
+  createPackageJson(
+    tree,
+    projectRoot,
+    options,
+    resolvedTestRunner,
+    resolvedLinter
+  );
   createReadme(tree, projectRoot, options, resolvedTestRunner);
 
   if (resolvedTestRunner === 'vitest') {
@@ -68,7 +87,10 @@ export async function libraryGenerator(tree: Tree, options: LibraryGeneratorSche
   logger.info(`Created ${name} at ${projectRoot}`);
 }
 
-async function resolveTestRunner(tree: Tree, option?: TestRunner): Promise<TestRunner> {
+async function resolveTestRunner(
+  tree: Tree,
+  option?: TestRunner
+): Promise<TestRunner> {
   if (option !== undefined) return option;
   const { detected, candidates } = detectTestRunnerFromRootPackageJson(tree);
   if (candidates.length === 2) {
@@ -104,7 +126,11 @@ async function resolveLinter(tree: Tree, option?: Linter): Promise<Linter> {
   return 'eslint';
 }
 
-function getProjectTargets(projectRoot: string, testRunner: TestRunner, linter: Linter) {
+function getProjectTargets(
+  projectRoot: string,
+  testRunner: TestRunner,
+  linter: Linter
+) {
   const targets: any = {
     build: {
       executor: '@code-fixer-23/nx-tsup:build',
@@ -184,7 +210,10 @@ function createTsConfig(tree: Tree, projectRoot: string) {
     exclude: ['src/**/*.spec.ts', 'src/**/*.test.ts'],
   };
 
-  tree.write(`${projectRoot}/tsconfig.lib.json`, JSON.stringify(tsconfig, null, 2));
+  tree.write(
+    `${projectRoot}/tsconfig.lib.json`,
+    JSON.stringify(tsconfig, null, 2)
+  );
 
   const tsconfigMain = {
     extends: '../../tsconfig.json',
@@ -196,7 +225,10 @@ function createTsConfig(tree: Tree, projectRoot: string) {
     ],
   };
 
-  tree.write(`${projectRoot}/tsconfig.json`, JSON.stringify(tsconfigMain, null, 2));
+  tree.write(
+    `${projectRoot}/tsconfig.json`,
+    JSON.stringify(tsconfigMain, null, 2)
+  );
 }
 
 function createPackageJson(
@@ -292,7 +324,11 @@ function createJestConfig(tree: Tree, projectRoot: string) {
   tree.write(`${projectRoot}/jest.config.ts`, content);
 }
 
-function createExampleTest(tree: Tree, projectRoot: string, runner: TestRunner) {
+function createExampleTest(
+  tree: Tree,
+  projectRoot: string,
+  runner: TestRunner
+) {
   const testContent =
     runner === 'vitest'
       ? `import { describe, it, expect } from 'vitest';
@@ -342,8 +378,10 @@ function createReadme(
   options: LibraryGeneratorSchema,
   testRunner: TestRunner
 ) {
-  const testingInfo = testRunner !== 'none' ? `**Testing**: ${testRunner}\n\n` : '';
-  const testCommand = testRunner !== 'none' ? `\n# Run tests\nnpx nx test ${options.name}\n` : '';
+  const testingInfo =
+    testRunner !== 'none' ? `**Testing**: ${testRunner}\n\n` : '';
+  const testCommand =
+    testRunner !== 'none' ? `\n# Run tests\nnpx nx test ${options.name}\n` : '';
 
   const content = `# ${options.importPath}
 

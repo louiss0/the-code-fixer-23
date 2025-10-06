@@ -6,9 +6,9 @@ import { LibraryGeneratorSchema } from './schema';
 
 describe('library generator', () => {
   let tree: Tree;
-  const options: LibraryGeneratorSchema = { 
+  const options: LibraryGeneratorSchema = {
     name: 'test',
-    importPath: '@scope/test'
+    importPath: '@scope/test',
   };
 
   beforeEach(() => {

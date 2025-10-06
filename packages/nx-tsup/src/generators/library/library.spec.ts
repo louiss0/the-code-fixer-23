@@ -9,7 +9,11 @@ describe('library generator', () => {
   vi.mock('./prompt', () => {
     return {
       isInteractive: () => false, // default non-interactive for deterministic fallbacks
-      selectOrDefault: async (_q: string, _choices: string[], defaultChoice: string) => defaultChoice,
+      selectOrDefault: async (
+        _q: string,
+        _choices: string[],
+        defaultChoice: string
+      ) => defaultChoice,
     };
   });
   let tree: Tree;
@@ -164,7 +168,11 @@ describe('library generator', () => {
   it('when both jest and vitest are present and non-interactive, falls back to jest', async () => {
     tree.write(
       'package.json',
-      JSON.stringify({ devDependencies: { jest: '^29.7.0', vitest: '^3.2.4' } }, null, 2)
+      JSON.stringify(
+        { devDependencies: { jest: '^29.7.0', vitest: '^3.2.4' } },
+        null,
+        2
+      )
     );
 
     await libraryGenerator(tree, { ...options });

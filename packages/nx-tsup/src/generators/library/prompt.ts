@@ -5,7 +5,8 @@ export function isInteractive(): boolean {
   if (nxInteractive === 'false') return false;
 
   const isCi = /^1|true$/i.test(String(process.env.CI ?? ''));
-  const tty = typeof process.stdout !== 'undefined' && process.stdout.isTTY === true;
+  const tty =
+    typeof process.stdout !== 'undefined' && process.stdout.isTTY === true;
   return !isCi && tty;
 }
 
@@ -29,7 +30,12 @@ export async function selectOrDefault(
 
     // Fallback to generic prompt API if available
     if (typeof mod.prompt === 'function') {
-      const res = await mod.prompt({ type: 'select', name: 'choice', message: question, choices });
+      const res = await mod.prompt({
+        type: 'select',
+        name: 'choice',
+        message: question,
+        choices,
+      });
       return res?.choice ?? defaultChoice;
     }
   } catch {

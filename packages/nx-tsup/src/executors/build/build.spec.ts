@@ -121,7 +121,10 @@ describe('Build Executor', () => {
 
   it('should handle multiple formats', async () => {
     const execSyncSpy = vi.spyOn(childProcess, 'execSync');
-    const multiFormatOptions = { ...options, format: ['esm', 'cjs'] as ('esm' | 'cjs')[] };
+    const multiFormatOptions = {
+      ...options,
+      format: ['esm', 'cjs'] as ('esm' | 'cjs')[],
+    };
 
     await executor(multiFormatOptions, context);
 
