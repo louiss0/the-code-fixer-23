@@ -65,7 +65,7 @@
       "preVersionCommand": "pnpm dlx nx run-many -t build --exclude='tag:paused'",
       "conventionalCommits": true
     },
-    "releaseTagPattern": "{projectName}@{version}",
+    "releaseTagPattern": "{projectName}@v{version}",
     "changelog": {
       "workspaceChangelog": false,
       "projectChangelogs": true
