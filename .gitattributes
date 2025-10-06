@@ -1,0 +1,17 @@
+# Normalize line endings for cross-platform consistency (prefer LF)
+* text eol=lf
+
+# Lockfiles should always be LF to avoid churn in CI
+pnpm-lock.yaml text eol=lf
+
+# Common script types
+*.sh text eol=lf
+*.ps1 text eol=lf
+
+# Keep these as-is if ever added (binaries)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
