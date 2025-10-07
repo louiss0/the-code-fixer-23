@@ -13,23 +13,14 @@ export async function libraryGenerator(
   tree: Tree,
   options: LibraryGeneratorSchema
 ) {
-  // Standalone mode: if no directory flag provided, generate files in current directory
-  // If directory flag is provided, create/use that directory with project name subfolder
+  // Standalone mode: if no directory flag provided, generate files in current directory (files-only)
+  // If directory flag is provided, create/use that directory with project name subfolder and register Nx project
   const isStandalone = !options.directory || options.directory === '.';
   const projectRoot = isStandalone
-    ? '.' // Generate directly in current directory
-    : `${options.directory}/${options.name}`; // Create directory with project name
+    ? '.'
+    : `${options.directory}/${options.name}`;
   const parsedNames = names(options.name);
   const testRunner = options.testRunner || 'vitest';
-
-  const targets = getProjectTargets(projectRoot, testRunner);
-
-  addProjectConfiguration(tree, options.name, {
-    root: projectRoot,
-    projectType: 'library',
-    sourceRoot: `${projectRoot}/src`,
-    targets,
-  });
 
   const templateOptions = {
     ...options,
@@ -56,6 +47,17 @@ export async function libraryGenerator(
   } else if (testRunner === 'jest') {
     createJestConfig(tree, projectRoot);
     createExampleTest(tree, projectRoot, 'jest');
+  }
+
+  // Only register an Nx project when generating into a subdirectory (monorepo mode)
+  if (!isStandalone) {
+    const targets = getProjectTargets(projectRoot, testRunner);
+    addProjectConfiguration(tree, options.name, {
+      root: projectRoot,
+      projectType: 'library',
+      sourceRoot: `${projectRoot}/src`,
+      targets,
+    });
   }
 
   if (!options.skipFormat) {
@@ -93,6 +95,12 @@ function getProjectTargets(projectRoot: string, testRunner: TestRunner) {
     },
     version: {
       executor: '@code-fixer-23/nx-jsr:version',
+      options: {
+        packageRoot: projectRoot,
+      },
+    },
+    validate: {
+      executor: '@code-fixer-23/nx-jsr:validate',
       options: {
         packageRoot: projectRoot,
       },
@@ -306,6 +314,8 @@ npx nx build ${options.name}
 
 # Run type checking
 npx nx typecheck ${options.name}${testCommand}
+# Validate JSR package (dry-run publish)
+npx nx validate ${options.name}
 # Publish to JSR
 npx nx publish ${options.name}
 \`\`\`

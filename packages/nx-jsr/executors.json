@@ -9,6 +9,11 @@
       "implementation": "./dist/executors/version/version",
       "schema": "./dist/executors/version/schema.json",
       "description": "version executor"
+    },
+    "validate": {
+      "implementation": "./dist/executors/validate/validate",
+      "schema": "./dist/executors/validate/schema.json",
+      "description": "validate jsr package and run jsr publish --dry-run"
     }
   }
 }
