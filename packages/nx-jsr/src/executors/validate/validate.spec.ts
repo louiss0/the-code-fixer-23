@@ -43,7 +43,10 @@ describe('Validate Executor', () => {
 
   it('fails when package directory does not exist', async () => {
     const ctx = makeContext(tempDir);
-    const output = await executor({ packageRoot: 'does-not-exist', dryRun: true }, ctx);
+    const output = await executor(
+      { packageRoot: 'does-not-exist', dryRun: true },
+      ctx
+    );
     expect(output.success).toBe(false);
   });
 
@@ -77,7 +80,11 @@ describe('Validate Executor', () => {
 
     writeFileSync(
       join(absolute, 'jsr.json'),
-      JSON.stringify({ name: '@test/pkg', version: '1.0.0', exports: './src/index.ts' }, null, 2)
+      JSON.stringify(
+        { name: '@test/pkg', version: '1.0.0', exports: './src/index.ts' },
+        null,
+        2
+      )
     );
     writeFileSync(
       join(absolute, 'tsconfig.lib.json'),
@@ -95,7 +102,11 @@ describe('Validate Executor', () => {
 
     writeFileSync(
       join(absolute, 'jsr.json'),
-      JSON.stringify({ name: '@test/pkg', version: '1.0.0', exports: './src/index.ts' }, null, 2)
+      JSON.stringify(
+        { name: '@test/pkg', version: '1.0.0', exports: './src/index.ts' },
+        null,
+        2
+      )
     );
     writeFileSync(
       join(absolute, 'tsconfig.lib.json'),
