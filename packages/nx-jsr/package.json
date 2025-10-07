@@ -62,6 +62,16 @@
           "tsConfig": "packages/nx-jsr/tsconfig.lib.json",
           "noEmit": true
         }
+      },
+      "test": {
+        "executor": "@nx/vite:test",
+        "outputs": [
+          "{projectRoot}/coverage"
+        ],
+        "options": {
+          "config": "packages/nx-jsr/vite.config.ts",
+          "passWithNoTests": true
+        }
       }
     }
   },
