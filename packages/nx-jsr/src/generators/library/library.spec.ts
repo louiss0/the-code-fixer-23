@@ -17,9 +17,9 @@ describe('library generator', () => {
 
   it('should generate in standalone mode by default (current directory)', async () => {
     await libraryGenerator(tree, options);
-    const config = readProjectConfiguration(tree, 'test');
-    expect(config).toBeDefined();
-    expect(config.root).toBe('.');
+    // Standalone: no Nx project should be registered
+    expect(() => readProjectConfiguration(tree, 'test')).toThrow();
+    // Files should exist in current directory
     expect(tree.exists('jsr.json')).toBe(true);
     expect(tree.exists('src/index.ts')).toBe(true);
   });
@@ -35,9 +35,8 @@ describe('library generator', () => {
 
   it('should treat directory="." as standalone mode', async () => {
     await libraryGenerator(tree, { ...options, directory: '.' });
-    const config = readProjectConfiguration(tree, 'test');
-    expect(config).toBeDefined();
-    expect(config.root).toBe('.');
+    // Standalone: no Nx project should be registered
+    expect(() => readProjectConfiguration(tree, 'test')).toThrow();
     expect(tree.exists('jsr.json')).toBe(true);
     expect(tree.exists('src/index.ts')).toBe(true);
   });

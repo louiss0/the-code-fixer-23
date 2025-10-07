@@ -5,13 +5,12 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    "./package.json": "./package.json",
     ".": {
-      "@code-fixer-23/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",
@@ -69,12 +68,12 @@
   "dependencies": {
     "@nx/devkit": "21.6.3",
     "tslib": "^2.3.0",
-    "semver": "^7.7.2"
+    "semver": "^7.7.2",
+    "dotenv": "^16.4.5"
   },
   "generators": "./generators.json",
   "executors": "./executors.json",
   "devDependencies": {
-    "@types/semver": "^7.7.1",
-    "conventional-commits-parser": "^6.2.0"
+    "@types/semver": "^7.7.1"
   }
 }

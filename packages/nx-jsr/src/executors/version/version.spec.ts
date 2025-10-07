@@ -62,6 +62,7 @@ describe('Version Executor', () => {
   it('should fail when package directory does not exist', async () => {
     const options: VersionExecutorSchema = {
       packageRoot: 'non-existent-package',
+      version: '1.0.1',
     };
     const context: ExecutorContext = {
       root: tempDir,
@@ -89,6 +90,7 @@ describe('Version Executor', () => {
 
     const options: VersionExecutorSchema = {
       packageRoot: missingJsonPackage,
+      version: '1.0.1',
     };
     const context: ExecutorContext = {
       root: tempDir,
@@ -112,7 +114,6 @@ describe('Version Executor', () => {
   it('should update version manually', async () => {
     const options: VersionExecutorSchema = {
       packageRoot,
-      mode: 'manual',
       version: '2.0.0',
     };
     const context: ExecutorContext = {
@@ -142,7 +143,6 @@ describe('Version Executor', () => {
   it('should fail manual update with invalid version', async () => {
     const options: VersionExecutorSchema = {
       packageRoot,
-      mode: 'manual',
       version: 'invalid-version',
     };
     const context: ExecutorContext = {
@@ -164,11 +164,10 @@ describe('Version Executor', () => {
     expect(output.success).toBe(false);
   });
 
-  it('should fail manual mode without version option', async () => {
+  it('should fail without version option', async () => {
     const options: VersionExecutorSchema = {
       packageRoot,
-      mode: 'manual',
-    };
+    } as VersionExecutorSchema;
     const context: ExecutorContext = {
       root: tempDir,
       cwd: process.cwd(),
@@ -186,30 +185,5 @@ describe('Version Executor', () => {
 
     const output = await executor(options, context);
     expect(output.success).toBe(false);
-  });
-
-  it('should handle auto mode gracefully when no git repo', async () => {
-    const options: VersionExecutorSchema = {
-      packageRoot,
-      mode: 'auto',
-    };
-    const context: ExecutorContext = {
-      root: tempDir,
-      cwd: process.cwd(),
-      isVerbose: false,
-      projectGraph: {
-        nodes: {},
-        dependencies: {},
-      },
-      projectsConfigurations: {
-        projects: {},
-        version: 2,
-      },
-      nxJsonConfiguration: {},
-    };
-
-    const output = await executor(options, context);
-    // Should succeed but apply default patch bump
-    expect(output.success).toBe(true);
   });
 });

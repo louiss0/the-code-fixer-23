@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "version": 2,
+  "title": "Validate JSR Package",
+  "description": "Validate jsr.json/tsconfig and run jsr publish --dry-run",
+  "type": "object",
+  "properties": {
+    "packageRoot": {
+      "type": "string",
+      "description": "The root directory of the package to validate (inferred if omitted)"
+    },
+    "dryRun": {
+      "type": "boolean",
+      "description": "Always true; runs jsr publish --dry-run",
+      "default": true
+    }
+  }
+}

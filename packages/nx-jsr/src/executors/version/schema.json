@@ -1,44 +1,21 @@
 {
   "$schema": "https://json-schema.org/schema",
   "version": 2,
-  "title": "Version JSR Package",
-  "description": "Update the version of a JSR package manually or automatically based on conventional commits",
+  "title": "Version JSR Package (manual)",
+  "description": "Update the version of a JSR package by setting an explicit semver",
   "type": "object",
   "properties": {
     "packageRoot": {
       "type": "string",
       "description": "The root directory of the package to version"
     },
-    "mode": {
-      "type": "string",
-      "enum": ["manual", "auto"],
-      "description": "Version update mode: manual (specify exact version) or auto (based on conventional commits)",
-      "default": "auto"
-    },
     "version": {
       "type": "string",
-      "description": "Exact version to set (only used in manual mode, e.g., '1.2.3')"
-    },
-    "releaseAs": {
-      "type": "string",
-      "enum": [
-        "major",
-        "minor",
-        "patch",
-        "premajor",
-        "preminor",
-        "prepatch",
-        "prerelease"
-      ],
-      "description": "Force a specific release type in auto mode (overrides conventional commit analysis)"
-    },
-    "preid": {
-      "type": "string",
-      "description": "Prerelease identifier (e.g., 'alpha', 'beta', 'rc'). Used with premajor, preminor, prepatch, or prerelease"
+      "description": "Exact version to set (e.g., '1.2.3')"
     },
     "push": {
       "type": "boolean",
-      "description": "Automatically push changes to GitHub after versioning",
+      "description": "Attempt to create a git tag and push (requires clean working tree and committed changes)",
       "default": false
     },
     "tagPrefix": {
@@ -47,5 +24,5 @@
       "default": "v"
     }
   },
-  "required": ["packageRoot"]
+  "required": ["packageRoot", "version"]
 }
