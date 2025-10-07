@@ -16,7 +16,9 @@ export async function libraryGenerator(
   // Standalone mode: if no directory flag provided, generate files in current directory (files-only)
   // If directory flag is provided, create/use that directory with project name subfolder and register Nx project
   const isStandalone = !options.directory || options.directory === '.';
-  const projectRoot = isStandalone ? '.' : `${options.directory}/${options.name}`;
+  const projectRoot = isStandalone
+    ? '.'
+    : `${options.directory}/${options.name}`;
   const parsedNames = names(options.name);
   const testRunner = options.testRunner || 'vitest';
 
@@ -27,7 +29,12 @@ export async function libraryGenerator(
     template: '',
   };
 
-  generateFiles(tree, path.join(__dirname, 'files'), projectRoot, templateOptions);
+  generateFiles(
+    tree,
+    path.join(__dirname, 'files'),
+    projectRoot,
+    templateOptions
+  );
 
   createJsrJson(tree, projectRoot, options);
   createTsConfig(tree, projectRoot, options);
@@ -276,7 +283,8 @@ function createReadme(
   options: LibraryGeneratorSchema,
   testRunner: TestRunner
 ) {
-  const testingInfo = testRunner !== 'none' ? `**Testing**: ${testRunner}\n\n` : '';
+  const testingInfo =
+    testRunner !== 'none' ? `**Testing**: ${testRunner}\n\n` : '';
 
   const testCommand =
     testRunner !== 'none' ? `\n# Run tests\nnpx nx test ${options.name}\n` : '';

@@ -25,12 +25,18 @@ const runExecutor: PromiseExecutor<ValidateSchema> = async (
 
   if (!projectRoot) {
     try {
-      if (context.projectName && context.projectsConfigurations?.projects?.[context.projectName]) {
-        projectRoot = context.projectsConfigurations.projects[context.projectName].root;
+      if (
+        context.projectName &&
+        context.projectsConfigurations?.projects?.[context.projectName]
+      ) {
+        projectRoot =
+          context.projectsConfigurations.projects[context.projectName].root;
         logger.info(`Inferred packageRoot from project config: ${projectRoot}`);
       } else {
         projectRoot = '.';
-        logger.info('No project context found; defaulting packageRoot to current directory');
+        logger.info(
+          'No project context found; defaulting packageRoot to current directory'
+        );
       }
     } catch {
       projectRoot = '.';
@@ -40,7 +46,9 @@ const runExecutor: PromiseExecutor<ValidateSchema> = async (
 
   const absolutePackageRoot = join(workspaceRoot, projectRoot);
   if (!existsSync(absolutePackageRoot)) {
-    logger.error(`Package root directory does not exist: ${absolutePackageRoot}`);
+    logger.error(
+      `Package root directory does not exist: ${absolutePackageRoot}`
+    );
     return { success: false };
   }
 

@@ -37,14 +37,14 @@ npx nx g @code-fixer-23/nx-jsr:library my-lib --importPath=@scope/my-lib --direc
 
 ### Options
 
-| Option        | Type               | Required | Description                                                                 |
-| ------------- | ------------------ | -------- | --------------------------------------------------------------------------- |
-| `name`        | string             | Yes      | Library name (kebab-case)                                                   |
-| `importPath`  | string             | Yes      | JSR import path (e.g., `@scope/package-name`)                               |
-| `directory`   | string             | No       | If provided, files are created in `<directory>/<name>` and Nx project added |
-| `description` | string             | No       | Package description                                                         |
-| `skipFormat`  | boolean            | No       | Skip formatting files (default: `false`)                                    |
-| `testRunner`  | `vitest` | `jest` | `none` | No       | Choose a test runner                                                        |
+| Option        | Type     | Required | Description                                                                 |
+| ------------- | -------- | -------- | --------------------------------------------------------------------------- | --- | -------------------- |
+| `name`        | string   | Yes      | Library name (kebab-case)                                                   |
+| `importPath`  | string   | Yes      | JSR import path (e.g., `@scope/package-name`)                               |
+| `directory`   | string   | No       | If provided, files are created in `<directory>/<name>` and Nx project added |
+| `description` | string   | No       | Package description                                                         |
+| `skipFormat`  | boolean  | No       | Skip formatting files (default: `false`)                                    |
+| `testRunner`  | `vitest` | `jest`   | `none`                                                                      | No  | Choose a test runner |
 
 ### What Gets Generated
 
@@ -104,10 +104,12 @@ npx nx validate my-lib
 ```
 
 Options:
+
 - `packageRoot` (optional): Root of the package. Inferred from project; falls back to current directory.
 - `dryRun` (boolean): Always runs as dry-run (default true).
 
 Checks:
+
 - jsr.json exists with name, version, and exports
 - tsconfig.lib.json has `declaration: true`
 - Executes `npx jsr publish --dry-run`
@@ -128,14 +130,16 @@ npx nx publish my-lib --token=your-jsr-token
 ```
 
 Token resolution order:
-1) `--token`
-2) `JSR_TOKEN` env var
-3) `.env` in the package root
-4) `.env` in the workspace root
+
+1. `--token`
+2. `JSR_TOKEN` env var
+3. `.env` in the package root
+4. `.env` in the workspace root
 
 If no token is found and `--dryRun` is not set, the executor fails with a helpful message.
 
 Options:
+
 - `packageRoot` (optional): Inferred from project; falls back to current directory.
 - `dryRun` (boolean): Dry-run mode.
 - `token` (string): Explicit JSR token.
@@ -150,12 +154,14 @@ npx nx version my-lib --version=1.2.3
 ```
 
 Options:
+
 - `packageRoot` (required): Root directory of the package.
 - `version` (required): Semver to set.
 - `push` (optional): Attempts to create and push a tag if the working tree is clean. No auto-commit is performed.
 - `tagPrefix` (optional): Defaults to `v`.
 
 Notes:
+
 - Prefer using Nx Release to orchestrate versioning across projects. This executor is a manual setter only.
 
 ## Nx Release (recommended)

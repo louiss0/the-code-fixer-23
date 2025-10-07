@@ -79,7 +79,9 @@ const runExecutor: PromiseExecutor<VersionExecutorSchema> = async (
         logger.error(
           'Working tree has uncommitted changes. Commit changes before tagging/pushing.'
         );
-        logger.info('Hint: commit jsr.json and try again without --push, or tag manually.');
+        logger.info(
+          'Hint: commit jsr.json and try again without --push, or tag manually.'
+        );
         return { success: false };
       }
 
@@ -88,7 +90,8 @@ const runExecutor: PromiseExecutor<VersionExecutorSchema> = async (
       execSync('git push --tags', { cwd: workspaceRoot, stdio: 'inherit' });
       logger.info(`✓ Created and pushed tag ${tagName}`);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       logger.error(`Failed to create/push tag: ${errorMessage}`);
       return { success: false };
     }
@@ -96,7 +99,9 @@ const runExecutor: PromiseExecutor<VersionExecutorSchema> = async (
     logger.info('');
     logger.info('📝 Next steps:');
     logger.info('  1. Review the version change in jsr.json');
-    logger.info(`  2. Commit the change: git add ${projectRoot}/jsr.json && git commit -m "chore(release): ${newVersion}"`);
+    logger.info(
+      `  2. Commit the change: git add ${projectRoot}/jsr.json && git commit -m "chore(release): ${newVersion}"`
+    );
     logger.info(
       `  3. Create a git tag: git tag ${options.tagPrefix || 'v'}${newVersion}`
     );

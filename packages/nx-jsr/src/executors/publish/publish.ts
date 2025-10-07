@@ -15,12 +15,18 @@ const runExecutor: PromiseExecutor<PublishExecutorSchema> = async (
 
   if (!projectRoot) {
     try {
-      if (context.projectName && context.projectsConfigurations?.projects?.[context.projectName]) {
-        projectRoot = context.projectsConfigurations.projects[context.projectName].root;
+      if (
+        context.projectName &&
+        context.projectsConfigurations?.projects?.[context.projectName]
+      ) {
+        projectRoot =
+          context.projectsConfigurations.projects[context.projectName].root;
         logger.info(`Inferred packageRoot from project config: ${projectRoot}`);
       } else {
         projectRoot = '.';
-        logger.info('No project context found; defaulting packageRoot to current directory');
+        logger.info(
+          'No project context found; defaulting packageRoot to current directory'
+        );
       }
     } catch {
       projectRoot = '.';
@@ -65,7 +71,9 @@ const runExecutor: PromiseExecutor<PublishExecutorSchema> = async (
   const env = { ...process.env } as NodeJS.ProcessEnv;
   const token = options.token ?? env.JSR_TOKEN;
   if (!options.dryRun && !token) {
-    logger.error('Missing JSR token. Provide --token, set JSR_TOKEN env var, or define it in .env');
+    logger.error(
+      'Missing JSR token. Provide --token, set JSR_TOKEN env var, or define it in .env'
+    );
     return { success: false };
   }
   if (token) env.JSR_TOKEN = token;
