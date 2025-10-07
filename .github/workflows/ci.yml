@@ -57,6 +57,3 @@ jobs:
 
       - name: Lint/Test/Build/Typecheck (affected, excluding paused)
         run: pnpm exec nx affected -t lint test build typecheck --exclude='tag:paused' --base=$BASE --head=$HEAD
-
-      - run: pnpm exec nx fix-ci
-        if: always()
