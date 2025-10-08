@@ -3,7 +3,7 @@ import { logger } from '@nx/devkit';
 import { execSync } from 'node:child_process';
 import { existsSync, promises as fs } from 'node:fs';
 import { join, resolve } from 'node:path';
-import type { BuildExecutorSchema } from './schema';
+import type { BuildExecutorSchema } from './schema.d.ts';
 
 export default async function runExecutor(
   options: BuildExecutorSchema,

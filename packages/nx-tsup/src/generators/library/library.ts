@@ -8,12 +8,12 @@ import {
   offsetFromRoot,
   logger,
 } from '@nx/devkit';
-import { LibraryGeneratorSchema, TestRunner, Linter } from './schema';
+import type { LibraryGeneratorSchema, TestRunner, Linter } from './schema.d.ts';
 import {
   detectLinterFromRootPackageJson,
   detectTestRunnerFromRootPackageJson,
-} from './detect';
-import { isInteractive, selectOrDefault } from './prompt';
+} from './detect.js';
+import { isInteractive, selectOrDefault } from './prompt.js';
 import { join } from 'node:path';
 
 export async function libraryGenerator(

@@ -1,14 +1,14 @@
 {
-  "name": "@code-fixer-23/nx-jsr",
+  "name": "@code-fixer-23/nx-tsup",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
-  "sourceRoot": "packages/nx-jsr/src",
+  "sourceRoot": "packages/nx-tsup/src",
   "targets": {
     "build": {
       "executor": "@nx/vite:build",
       "outputs": ["{projectRoot}/dist"],
       "options": {
-        "configFile": "packages/nx-jsr/vite.config.ts",
+        "configFile": "packages/nx-tsup/vite.config.ts",
         "mode": "production",
         "outputPath": "{projectRoot}/dist"
       }
@@ -41,18 +41,10 @@
       "options": {
         "main": "{projectRoot}/src/index.ts",
         "outputPath": "dist/{projectName}",
-        "tsConfig": "packages/nx-jsr/tsconfig.lib.json",
+        "tsConfig": "packages/nx-tsup/tsconfig.lib.json",
         "noEmit": true
-      }
-    },
-    "test": {
-      "executor": "@nx/vite:test",
-      "outputs": ["{projectRoot}/coverage"],
-      "options": {
-        "config": "packages/nx-jsr/vite.config.ts",
-        "passWithNoTests": true
       }
     }
   },
-  "tags": ["npm:public", "ongoing"]
+  "tags": []
 }
