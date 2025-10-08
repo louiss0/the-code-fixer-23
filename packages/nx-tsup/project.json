@@ -1,0 +1,39 @@
+{
+  "name": "@code-fixer-23/nx-tsup",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/nx-tsup/src",
+  "targets": {
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": ["{projectRoot}/dist"],
+      "options": {
+        "configFile": "packages/nx-tsup/vite.config.ts",
+        "mode": "production"
+      }
+    },
+    "package": {
+      "executor": "@nx/js:package",
+      "outputs": ["{projectRoot}/dist"],
+      "options": {
+        "outputPath": "{projectRoot}/dist",
+        "packageJson": "{projectRoot}/package.json",
+        "assets": [
+          { "input": "{projectRoot}", "glob": "README.md", "output": "." },
+          { "input": "{projectRoot}", "glob": "LICENSE*", "output": "." },
+          { "input": "{projectRoot}", "glob": "executors.json", "output": "." },
+          { "input": "{projectRoot}", "glob": "generators.json", "output": "." },
+          { "input": "{projectRoot}/src", "glob": "**/schema.json", "output": "schemas" }
+        ]
+      }
+    },
+    "typecheck": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "tsConfig": "packages/nx-tsup/tsconfig.lib.json",
+        "noEmit": true
+      }
+    }
+  },
+  "tags": []
+}
