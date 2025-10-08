@@ -10,24 +10,29 @@ export default defineConfig({
     lib: {
       entry: path.resolve(__dirname, 'src/index.ts'),
       formats: ['es'],
-      fileName: () => 'index'
+      fileName: () => 'index',
     },
     outDir: 'dist',
     emptyOutDir: true,
     sourcemap: true,
     rollupOptions: {
-      external
-    }
+      external,
+    },
   },
   plugins: [
-    dts({ entryRoot: 'src', outDir: 'dist', insertTypesEntry: true, rollupTypes: true }),
+    dts({
+      entryRoot: 'src',
+      outDir: 'dist',
+      insertTypesEntry: true,
+      rollupTypes: true,
+    }),
     viteStaticCopy({
       targets: [
         { src: 'generators.json', dest: '.' },
         { src: 'executors.json', dest: '.' },
-        { src: 'src/**/schema.json', dest: 'schemas' }
-      ]
-    })
+        { src: 'src/**/schema.json', dest: 'schemas' },
+      ],
+    }),
   ],
   test: {
     name: '@code-fixer-23/nx-jsr',
@@ -38,7 +43,7 @@ export default defineConfig({
     reporters: ['default'],
     coverage: {
       reportsDirectory: './test-output/vitest/coverage',
-      provider: 'v8'
-    }
-  }
+      provider: 'v8',
+    },
+  },
 });

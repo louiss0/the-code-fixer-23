@@ -22,8 +22,16 @@
           { "input": "{projectRoot}", "glob": "README.md", "output": "." },
           { "input": "{projectRoot}", "glob": "LICENSE*", "output": "." },
           { "input": "{projectRoot}", "glob": "executors.json", "output": "." },
-          { "input": "{projectRoot}", "glob": "generators.json", "output": "." },
-          { "input": "{projectRoot}/src", "glob": "**/schema.json", "output": "schemas" }
+          {
+            "input": "{projectRoot}",
+            "glob": "generators.json",
+            "output": "."
+          },
+          {
+            "input": "{projectRoot}/src",
+            "glob": "**/schema.json",
+            "output": "schemas"
+          }
         ]
       }
     },
