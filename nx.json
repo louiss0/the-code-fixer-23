@@ -62,7 +62,7 @@
     "projects": ["packages/*", "!tag:paused"],
     "projectsRelationship": "independent",
     "version": {
-      "preVersionCommand": "pnpm dlx nx run-many -t build --exclude='tag:paused'",
+      "preVersionCommand": "pnpm dlx nx run-many -t build package --exclude='tag:paused'",
       "conventionalCommits": true
     },
     "releaseTagPattern": "{projectName}@v{version}",
