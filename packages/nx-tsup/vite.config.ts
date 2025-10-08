@@ -18,6 +18,7 @@ const external = [
 export default defineConfig({
   build: {
     lib: {
+      // Keep root index as entry for package exports
       entry: path.resolve(__dirname, 'src/index.ts'),
       formats: ['es'],
       fileName: () => 'index',
@@ -27,6 +28,20 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       external,
+      // Build generator/executor modules as separate chunks and preserve folder structure
+      input: {
+        index: path.resolve(__dirname, 'src/index.ts'),
+        'generators/library/library': path.resolve(
+          __dirname,
+          'src/generators/library/library.ts'
+        ),
+        'executors/build/build': path.resolve(
+          __dirname,
+          'src/executors/build/build.ts'
+        ),
+      },
+      preserveModules: true,
+      preserveModulesRoot: 'src',
     },
   },
   plugins: [
@@ -35,12 +50,16 @@ export default defineConfig({
       outDir: 'dist',
       insertTypesEntry: true,
       rollupTypes: true,
+      tsconfigPath: path.resolve(__dirname, 'tsconfig.lib.json'),
     }),
     viteStaticCopy({
       targets: [
+        // Keep JSON manifests at package root (they are already source-controlled)
         { src: 'generators.json', dest: '.' },
         { src: 'executors.json', dest: '.' },
-        { src: 'src/**/schema.json', dest: 'schemas' },
+        // Copy generator assets into dist so generators.json dist paths resolve
+        { src: 'src/generators/**/schema.json', dest: 'generators' },
+        { src: 'src/generators/**/files', dest: 'generators' },
       ],
     }),
   ],

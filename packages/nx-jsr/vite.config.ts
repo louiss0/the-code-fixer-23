@@ -17,6 +17,27 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       external,
+      input: {
+        index: path.resolve(__dirname, 'src/index.ts'),
+        'generators/library/library': path.resolve(
+          __dirname,
+          'src/generators/library/library.ts'
+        ),
+        'executors/publish/publish': path.resolve(
+          __dirname,
+          'src/executors/publish/publish.ts'
+        ),
+        'executors/version/version': path.resolve(
+          __dirname,
+          'src/executors/version/version.ts'
+        ),
+        'executors/validate/validate': path.resolve(
+          __dirname,
+          'src/executors/validate/validate.ts'
+        ),
+      },
+      preserveModules: true,
+      preserveModulesRoot: 'src',
     },
   },
   plugins: [
@@ -25,12 +46,14 @@ export default defineConfig({
       outDir: 'dist',
       insertTypesEntry: true,
       rollupTypes: true,
+      tsconfigPath: path.resolve(__dirname, 'tsconfig.lib.json'),
     }),
     viteStaticCopy({
       targets: [
         { src: 'generators.json', dest: '.' },
         { src: 'executors.json', dest: '.' },
-        { src: 'src/**/schema.json', dest: 'schemas' },
+        { src: 'src/generators/**/schema.json', dest: 'generators' },
+        { src: 'src/generators/**/files', dest: 'generators' },
       ],
     }),
   ],
