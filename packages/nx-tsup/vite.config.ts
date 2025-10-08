@@ -3,7 +3,17 @@ import dts from 'vite-plugin-dts';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import path from 'node:path';
 
-const external = [/^@nx\//, '@nx/devkit', 'tslib', 'node:path', 'node:fs', 'node:child_process', 'readline', 'assert', 'enquirer'];
+const external = [
+  /^@nx\//,
+  '@nx/devkit',
+  'tslib',
+  'node:path',
+  'node:fs',
+  'node:child_process',
+  'readline',
+  'assert',
+  'enquirer',
+];
 
 export default defineConfig({
   build: {
