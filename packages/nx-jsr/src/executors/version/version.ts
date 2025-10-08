@@ -3,7 +3,7 @@ import { execSync } from 'child_process';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import * as semver from 'semver';
-import { VersionExecutorSchema } from './schema';
+import type { VersionExecutorSchema } from './schema.d.ts';
 
 interface JsrConfig {
   name: string;

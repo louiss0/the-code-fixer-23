@@ -9,7 +9,8 @@
       "outputs": ["{projectRoot}/dist"],
       "options": {
         "configFile": "packages/nx-tsup/vite.config.ts",
-        "mode": "production"
+        "mode": "production",
+        "outputPath": "{projectRoot}/dist"
       }
     },
     "package": {
@@ -38,6 +39,8 @@
     "typecheck": {
       "executor": "@nx/js:tsc",
       "options": {
+        "main": "{projectRoot}/src/index.ts",
+        "outputPath": "dist/{projectName}",
         "tsConfig": "packages/nx-tsup/tsconfig.lib.json",
         "noEmit": true
       }
