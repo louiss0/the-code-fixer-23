@@ -40,8 +40,11 @@ export default defineConfig({
           'src/executors/build/build.ts'
         ),
       },
-      preserveModules: true,
-      preserveModulesRoot: 'src',
+      output: {
+        preserveModules: true,
+        preserveModulesRoot: 'src',
+        entryFileNames: ({ name }) => `${name}.js`,
+      },
     },
   },
   plugins: [

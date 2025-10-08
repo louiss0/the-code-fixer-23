@@ -3,7 +3,20 @@ import dts from 'vite-plugin-dts';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import path from 'node:path';
 
-const external = [/^@nx\//, '@nx/devkit', 'tslib', 'semver', 'dotenv'];
+const external = [
+  /^@nx\//,
+  '@nx/devkit',
+  'tslib',
+  'semver',
+  'dotenv',
+  // Node built-ins used by executors/generators
+  'path',
+  'fs',
+  'child_process',
+  'node:path',
+  'node:fs',
+  'node:child_process',
+];
 
 export default defineConfig({
   build: {
@@ -36,8 +49,11 @@ export default defineConfig({
           'src/executors/validate/validate.ts'
         ),
       },
-      preserveModules: true,
-      preserveModulesRoot: 'src',
+      output: {
+        preserveModules: true,
+        preserveModulesRoot: 'src',
+        entryFileNames: ({ name }) => `${name}.js`,
+      },
     },
   },
   plugins: [
