@@ -3,5 +3,45 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "sourceRoot": "packages/nx-jsr/src",
+  "targets": {
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": ["{projectRoot}/dist"],
+      "options": {
+        "configFile": "packages/nx-jsr/vite.config.ts",
+        "mode": "production"
+      }
+    },
+    "package": {
+      "executor": "@nx/js:package",
+      "outputs": ["{projectRoot}/dist"],
+      "options": {
+        "outputPath": "{projectRoot}/dist",
+        "packageJson": "{projectRoot}/package.json",
+        "assets": [
+          { "input": "{projectRoot}", "glob": "README.md", "output": "." },
+          { "input": "{projectRoot}", "glob": "LICENSE*", "output": "." },
+          { "input": "{projectRoot}", "glob": "executors.json", "output": "." },
+          { "input": "{projectRoot}", "glob": "generators.json", "output": "." },
+          { "input": "{projectRoot}/src", "glob": "**/schema.json", "output": "schemas" }
+        ]
+      }
+    },
+    "typecheck": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "tsConfig": "packages/nx-jsr/tsconfig.lib.json",
+        "noEmit": true
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{projectRoot}/coverage"],
+      "options": {
+        "config": "packages/nx-jsr/vite.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
   "tags": ["npm:public", "ongoing"]
 }
