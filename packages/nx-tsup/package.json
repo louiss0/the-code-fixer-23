@@ -8,7 +8,8 @@
   "files": [
     "dist",
     "generators.json",
-    "executors.json"
+    "executors.json",
+    "migrations.json"
   ],
   "publishConfig": {
     "access": "public"
@@ -21,7 +22,8 @@
       "default": "./dist/index.js"
     },
     "./generators": "./generators.json",
-    "./executors": "./executors.json"
+    "./executors": "./executors.json",
+    "./migrations": "./migrations.json"
   },
   "dependencies": {
     "@nx/devkit": "21.6.3",
@@ -34,5 +36,8 @@
     "enquirer": "^2.4.1"
   },
   "generators": "./generators.json",
-  "executors": "./executors.json"
+  "executors": "./executors.json",
+  "nx-migrations": {
+    "migrations": "./migrations.json"
+  }
 }
