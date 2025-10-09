@@ -13,6 +13,8 @@ const external = [
   'readline',
   'assert',
   'enquirer',
+  'tsup',
+  'esbuild',
 ];
 
 export default defineConfig({
@@ -39,6 +41,10 @@ export default defineConfig({
           __dirname,
           'src/executors/build/build.ts'
         ),
+        'migrations/rename-outputPath-to-outDir': path.resolve(
+          __dirname,
+          'src/migrations/rename-outputPath-to-outDir.ts'
+        ),
       },
       output: {
         preserveModules: true,
@@ -60,9 +66,12 @@ export default defineConfig({
         // Keep JSON manifests at package root (they are already source-controlled)
         { src: 'generators.json', dest: '.' },
         { src: 'executors.json', dest: '.' },
+        { src: 'migrations.json', dest: '.' },
         // Copy generator assets into dist so generators.json dist paths resolve
         { src: 'src/generators/**/schema.json', dest: 'generators' },
         { src: 'src/generators/**/files', dest: 'generators' },
+        // Copy executor schema
+        { src: 'src/executors/**/schema.json', dest: 'executors' },
       ],
     }),
   ],

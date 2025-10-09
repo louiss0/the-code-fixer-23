@@ -1,7 +1,7 @@
 import type { ExecutorContext } from '@nx/devkit';
 import { logger } from '@nx/devkit';
 import { existsSync, promises as fs } from 'node:fs';
-import { join, relative, resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import type { BuildExecutorSchema } from './schema.d.ts';
 import type { Options as TsupOptions } from 'tsup';
 import { build as tsupBuild } from 'tsup';
@@ -120,22 +120,31 @@ async function loadTsupConfig(
 
     // For TypeScript config files, we need to compile them first
     if (ext === 'ts' || ext === 'mts' || ext === 'cts') {
-      // Try using esbuild to transpile on the fly
-      const esbuild = await import('esbuild');
-      const result = await esbuild.build({
-        entryPoints: [configPath],
-        bundle: true,
-        platform: 'node',
-        format: 'cjs',
-        write: false,
-        external: ['tsup', 'esbuild'],
-      });
+      try {
+        // Try using esbuild to transpile on the fly
+        const esbuild = await import('esbuild');
+        const result = await esbuild.build({
+          entryPoints: [configPath],
+          bundle: true,
+          platform: 'node',
+          format: 'cjs',
+          write: false,
+          external: ['tsup', 'esbuild'],
+        });
 
-      const code = result.outputFiles[0].text;
-      const tempModule = { exports: {} as any };
-      const func = new Function('module', 'exports', 'require', code);
-      func(tempModule, tempModule.exports, require);
-      config = tempModule.exports.default || tempModule.exports;
+        const code = result.outputFiles[0].text;
+        const tempModule = { exports: {} as any };
+        const func = new Function('module', 'exports', 'require', code);
+        func(tempModule, tempModule.exports, require);
+        config = tempModule.exports.default || tempModule.exports;
+      } catch (error: any) {
+        if (error.code === 'ERR_MODULE_NOT_FOUND' || error.message?.includes('Cannot find module')) {
+          logger.warn(`esbuild not found. Using require() for ${configPath}`);
+          config = require(configPath);
+        } else {
+          throw error;
+        }
+      }
     } else {
       // For JS files, use dynamic import
       const imported = await import(configPath);
@@ -232,10 +241,10 @@ async function mergeOptions(params: {
     const baseEsbuildOptions = base.esbuildOptions;
     const projectEsbuildOptions = fromProject.esbuildOptions || {};
 
-    projectOptions.esbuildOptions = (esbuildConfig: any) => {
+    projectOptions.esbuildOptions = (esbuildConfig: any, context: any) => {
       // Apply base config first if it's a function
       if (typeof baseEsbuildOptions === 'function') {
-        baseEsbuildOptions(esbuildConfig);
+        baseEsbuildOptions(esbuildConfig, context);
       } else if (baseEsbuildOptions) {
         Object.assign(esbuildConfig, baseEsbuildOptions);
       }
@@ -256,13 +265,13 @@ async function mergeOptions(params: {
     );
 
     if (!projectOptions.esbuildOptions) {
-      projectOptions.esbuildOptions = (config: any) => {
+      projectOptions.esbuildOptions = (config: any, context: any) => {
         config.plugins = plugins;
       };
     } else {
       const existingFn = projectOptions.esbuildOptions;
-      projectOptions.esbuildOptions = (config: any) => {
-        existingFn(config);
+      projectOptions.esbuildOptions = (config: any, context: any) => {
+        existingFn(config, context);
         config.plugins = [...(config.plugins || []), ...plugins];
       };
     }
