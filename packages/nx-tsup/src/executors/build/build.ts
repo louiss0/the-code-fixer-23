@@ -1,9 +1,12 @@
 import type { ExecutorContext } from '@nx/devkit';
 import { logger } from '@nx/devkit';
-import { execSync } from 'node:child_process';
 import { existsSync, promises as fs } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import type { BuildExecutorSchema } from './schema.d.ts';
+import type { Options as TsupOptions } from 'tsup';
+import { build as tsupBuild } from 'tsup';
+
+type TsupConfig = TsupOptions | TsupOptions[] | ((env: any) => TsupOptions | TsupOptions[] | Promise<TsupOptions | TsupOptions[]>);
 
 export default async function runExecutor(
   options: BuildExecutorSchema,
@@ -11,13 +14,17 @@ export default async function runExecutor(
 ): Promise<{ success: boolean }> {
   try {
     const root = context.root || process.cwd();
+    const projectName = context.projectName || '';
+    const projectConfig = context.projectsConfigurations?.projects?.[projectName];
+    const projectRoot = projectConfig?.root ? resolve(root, projectConfig.root) : root;
 
-    if (!options.outputPath || !options.main || !options.tsConfig) {
-      logger.error('Missing required options: outputPath, main, tsConfig');
+    // Validate required options
+    if (!options.outDir || !options.main || !options.tsConfig) {
+      logger.error('Missing required options: outDir, main, tsConfig');
       return { success: false };
     }
 
-    const outDir = resolve(root, options.outputPath);
+    const outDir = resolve(root, options.outDir);
     const entry = resolve(root, options.main);
     const tsconfig = resolve(root, options.tsConfig);
 
@@ -30,43 +37,254 @@ export default async function runExecutor(
       return { success: false };
     }
 
-    const tsupBin =
-      process.platform === 'win32'
-        ? join(root, 'node_modules', '.bin', 'tsup.cmd')
-        : join(root, 'node_modules', '.bin', 'tsup');
+    // Find and load tsup config file if it exists
+    const configPath = findTsupConfig(projectRoot);
+    const configFromFile = configPath
+      ? await loadTsupConfig(configPath, {
+          watch: options.watch ?? false,
+          format: options.format,
+        })
+      : undefined;
 
-    const fmt = (
-      options.format && options.format.length ? options.format : ['esm']
-    ).join(',');
-    const args: string[] = [
-      `"${entry}"`,
-      `--format=${fmt}`,
-      `--out-dir="${outDir}"`,
-      `--tsconfig="${tsconfig}"`,
-    ];
+    // Merge options from config file and project.json
+    const mergedOptions = await mergeOptions({
+      fromFile: configFromFile,
+      fromProject: options,
+      projectRoot,
+      root,
+    });
 
-    if (options.dts ?? true) args.push('--dts');
-    if (options.clean ?? true) args.push('--clean');
-    if (options.watch) args.push('--watch');
-    if (options.minify) args.push('--minify');
-    if (options.sourcemap) args.push('--sourcemap');
+    // Apply CLI-only flags
+    if (options.watch) {
+      mergedOptions.watch = true;
+    }
+    if (options.format && options.format.length > 0) {
+      mergedOptions.format = options.format;
+    }
 
-    const cmd = `"${tsupBin}" ${args.join(' ')}`;
-    logger.info(`Running: ${cmd}`);
-    execSync(cmd, { stdio: 'inherit', cwd: root });
+    logger.info(`Building ${projectName}...`);
+    logger.info(`Output: ${outDir}`);
 
+    // Run tsup build
+    await tsupBuild(mergedOptions);
+
+    // Copy assets if specified
     if (options.assets?.length) {
       await copyAssets(root, options.assets, outDir);
     }
 
-    logger.info(`Build complete: ${outDir}`);
+    logger.info(`✓ Build complete: ${outDir}`);
     return { success: true };
   } catch (e: any) {
-    logger.error(e?.message ?? String(e));
+    logger.error(`Build failed: ${e?.message ?? String(e)}`);
+    if (e?.stack) {
+      logger.error(e.stack);
+    }
     return { success: false };
   }
 }
 
+/**
+ * Find tsup config file in project root
+ */
+function findTsupConfig(projectRoot: string): string | undefined {
+  const configNames = [
+    'tsup.config.ts',
+    'tsup.config.mts',
+    'tsup.config.cts',
+    'tsup.config.js',
+    'tsup.config.mjs',
+    'tsup.config.cjs',
+  ];
+
+  for (const name of configNames) {
+    const path = join(projectRoot, name);
+    if (existsSync(path)) {
+      return path;
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * Load and normalize tsup config from file
+ */
+async function loadTsupConfig(
+  configPath: string,
+  env: { watch: boolean; format?: string[] }
+): Promise<TsupOptions | TsupOptions[] | undefined> {
+  try {
+    const ext = configPath.split('.').pop();
+    let config: TsupConfig;
+
+    // For TypeScript config files, we need to compile them first
+    if (ext === 'ts' || ext === 'mts' || ext === 'cts') {
+      // Try using esbuild to transpile on the fly
+      const esbuild = await import('esbuild');
+      const result = await esbuild.build({
+        entryPoints: [configPath],
+        bundle: true,
+        platform: 'node',
+        format: 'cjs',
+        write: false,
+        external: ['tsup', 'esbuild'],
+      });
+
+      const code = result.outputFiles[0].text;
+      const tempModule = { exports: {} as any };
+      const func = new Function('module', 'exports', 'require', code);
+      func(tempModule, tempModule.exports, require);
+      config = tempModule.exports.default || tempModule.exports;
+    } else {
+      // For JS files, use dynamic import
+      const imported = await import(configPath);
+      config = imported.default || imported;
+    }
+
+    // Normalize config
+    let normalized: TsupOptions | TsupOptions[];
+
+    if (typeof config === 'function') {
+      const result = await config({
+        watch: env.watch,
+        format: env.format,
+        mode: process.env.NODE_ENV || 'production',
+      });
+      normalized = result;
+    } else {
+      normalized = config;
+    }
+
+    return normalized;
+  } catch (e: any) {
+    logger.warn(`Failed to load config from ${configPath}: ${e.message}`);
+    return undefined;
+  }
+}
+
+/**
+ * Merge options from config file and project.json
+ * project.json takes precedence over config file
+ */
+async function mergeOptions(params: {
+  fromFile: TsupOptions | TsupOptions[] | undefined;
+  fromProject: BuildExecutorSchema;
+  projectRoot: string;
+  root: string;
+}): Promise<TsupOptions> {
+  const { fromFile, fromProject, projectRoot, root } = params;
+
+  // Start with config from file or empty object
+  let base: TsupOptions = Array.isArray(fromFile) ? fromFile[0] : fromFile || {};
+
+  // Build options from project.json (excluding CLI-only flags)
+  const projectOptions: Partial<TsupOptions> = {};
+
+  // Required options
+  projectOptions.outDir = resolve(root, fromProject.outDir);
+  projectOptions.entry = [resolve(root, fromProject.main)];
+  projectOptions.tsconfig = resolve(root, fromProject.tsConfig);
+
+  // Optional boolean/string/array options
+  if (fromProject.dts !== undefined) projectOptions.dts = fromProject.dts;
+  if (fromProject.clean !== undefined) projectOptions.clean = fromProject.clean;
+  if (fromProject.minify !== undefined) projectOptions.minify = fromProject.minify;
+  if (fromProject.sourcemap !== undefined) projectOptions.sourcemap = fromProject.sourcemap;
+  if (fromProject.splitting !== undefined) projectOptions.splitting = fromProject.splitting;
+  if (fromProject.treeshake !== undefined) projectOptions.treeshake = fromProject.treeshake;
+  if (fromProject.target !== undefined) projectOptions.target = fromProject.target;
+  if (fromProject.platform !== undefined) projectOptions.platform = fromProject.platform;
+
+  // Array options (replace, don't concatenate)
+  if (fromProject.external) projectOptions.external = fromProject.external;
+  if (fromProject.noExternal) projectOptions.noExternal = fromProject.noExternal;
+  if (fromProject.inject) projectOptions.inject = fromProject.inject;
+
+  // Object options (deep merge)
+  if (fromProject.banner) {
+    projectOptions.banner = {
+      ...base.banner,
+      ...fromProject.banner,
+    };
+  }
+  if (fromProject.footer) {
+    projectOptions.footer = {
+      ...base.footer,
+      ...fromProject.footer,
+    };
+  }
+  if (fromProject.env) {
+    projectOptions.env = {
+      ...base.env,
+      ...fromProject.env,
+    };
+  }
+  if (fromProject.define) {
+    projectOptions.define = {
+      ...base.define,
+      ...fromProject.define,
+    };
+  }
+
+  // esbuildOptions: compose function to apply project options last
+  if (fromProject.esbuildOptions || base.esbuildOptions) {
+    const baseEsbuildOptions = base.esbuildOptions;
+    const projectEsbuildOptions = fromProject.esbuildOptions || {};
+
+    projectOptions.esbuildOptions = (esbuildConfig: any) => {
+      // Apply base config first if it's a function
+      if (typeof baseEsbuildOptions === 'function') {
+        baseEsbuildOptions(esbuildConfig);
+      } else if (baseEsbuildOptions) {
+        Object.assign(esbuildConfig, baseEsbuildOptions);
+      }
+
+      // Apply project options (these win)
+      Object.assign(esbuildConfig, projectEsbuildOptions);
+    };
+  }
+
+  // esbuildPlugins: resolve paths and load plugins
+  if (fromProject.esbuildPlugins && fromProject.esbuildPlugins.length > 0) {
+    const plugins = await Promise.all(
+      fromProject.esbuildPlugins.map(async (pluginPath) => {
+        const resolvedPath = resolve(projectRoot, pluginPath);
+        const imported = await import(resolvedPath);
+        return imported.default || imported;
+      })
+    );
+
+    if (!projectOptions.esbuildOptions) {
+      projectOptions.esbuildOptions = (config: any) => {
+        config.plugins = plugins;
+      };
+    } else {
+      const existingFn = projectOptions.esbuildOptions;
+      projectOptions.esbuildOptions = (config: any) => {
+        existingFn(config);
+        config.plugins = [...(config.plugins || []), ...plugins];
+      };
+    }
+  }
+
+  // Merge: project options override base
+  const merged: TsupOptions = {
+    ...base,
+    ...projectOptions,
+  };
+
+  // Validate outDir is present
+  if (!merged.outDir) {
+    throw new Error('outDir is required but was not provided');
+  }
+
+  return merged;
+}
+
+/**
+ * Copy assets to output directory
+ */
 async function copyAssets(root: string, assets: string[], outDir: string) {
   for (const rel of assets) {
     const src = resolve(root, rel);
