@@ -134,12 +134,11 @@ function getProjectTargets(
   const targets: any = {
     build: {
       executor: '@code-fixer-23/nx-tsup:build',
-      outputs: ['{options.outputPath}'],
+      outputs: ['{options.outDir}'],
       options: {
-        outputPath: `${projectRoot}/dist`,
+        outDir: `${projectRoot}/dist`,
         main: `${projectRoot}/src/index.ts`,
         tsConfig: `${projectRoot}/tsconfig.lib.json`,
-        format: ['esm'],
         dts: true,
         clean: true,
         sourcemap: false,
