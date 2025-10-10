@@ -78,13 +78,14 @@
   },
   "dependencies": {
     "@nx/devkit": "21.6.3",
-    "semver": "^7.7.2",
     "dotenv": "^16.4.5",
+    "semver": "^7.7.2",
     "vitest": "^3.2.4"
   },
   "generators": "./generators.json",
   "executors": "./executors.json",
   "devDependencies": {
-    "@types/semver": "^7.7.1"
+    "@types/semver": "^7.7.1",
+    "enquirer": "^2.4.1"
   }
 }

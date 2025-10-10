@@ -18,8 +18,8 @@ import {
   detectLinterFromRootPackageJson,
   detectTestRunnerFromRootPackageJson,
   detectFormatterFromRootPackageJson,
-} from './detect';
-import { isInteractive, selectOrDefault } from './prompt';
+} from './detect.js';
+import { isInteractive, selectOrDefault } from './prompt.js';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -511,7 +511,7 @@ async function resolveFormatter(
 
   // Filter out eslint-stylistic if eslint is not the linter
   const validCandidates = candidates.filter(
-    (c) => c !== 'eslint-stylistic' || linter === 'eslint'
+    (c: Formatter) => c !== 'eslint-stylistic' || linter === 'eslint'
   );
 
   if (validCandidates.length >= 2) {
