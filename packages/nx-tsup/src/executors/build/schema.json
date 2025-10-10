@@ -5,28 +5,29 @@
   "description": "Build a TypeScript library using Tsup bundler",
   "type": "object",
   "properties": {
-    "outputPath": {
+    "outDir": {
       "type": "string",
-      "description": "Output path for built files"
+      "description": "Output directory for built files (relative to workspace root)"
     },
     "main": {
       "type": "string",
-      "description": "Entry point file"
+      "description": "Entry point file (relative to workspace root)"
     },
     "tsConfig": {
       "type": "string",
-      "description": "Path to tsconfig file"
+      "description": "Path to tsconfig file (relative to workspace root)"
     },
     "assets": {
       "type": "array",
-      "description": "Additional assets to copy",
+      "description": "Additional assets to copy to output directory",
       "items": {
         "type": "string"
-      }
+      },
+      "default": []
     },
     "format": {
       "type": "array",
-      "description": "Output formats",
+      "description": "Output formats (CLI-only option, not persisted in config)",
       "items": {
         "type": "string",
         "enum": ["esm", "cjs", "iife"]
@@ -35,7 +36,7 @@
     },
     "dts": {
       "type": "boolean",
-      "description": "Generate declaration files",
+      "description": "Generate TypeScript declaration files (.d.ts)",
       "default": true
     },
     "clean": {
@@ -45,19 +46,125 @@
     },
     "watch": {
       "type": "boolean",
-      "description": "Watch mode",
+      "description": "Enable watch mode (CLI-only option, not persisted in config)",
       "default": false
     },
     "minify": {
       "type": "boolean",
-      "description": "Minify output",
+      "description": "Minify output using esbuild",
       "default": false
     },
     "sourcemap": {
-      "type": "boolean",
-      "description": "Generate sourcemaps",
+      "type": ["boolean", "string"],
+      "description": "Generate sourcemaps (true, false, or 'inline')",
       "default": false
+    },
+    "splitting": {
+      "type": "boolean",
+      "description": "Enable code splitting for ESM output",
+      "default": false
+    },
+    "treeshake": {
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string",
+          "enum": ["smallest", "recommended"]
+        }
+      ],
+      "description": "Enable tree shaking (true, false, 'smallest', or 'recommended')",
+      "default": false
+    },
+    "target": {
+      "type": "string",
+      "description": "ECMAScript target version (e.g., 'es2022', 'esnext', 'node18')",
+      "default": "es2022"
+    },
+    "platform": {
+      "type": "string",
+      "enum": ["node", "browser", "neutral"],
+      "description": "Target platform for the bundle",
+      "default": "neutral"
+    },
+    "external": {
+      "type": "array",
+      "description": "External dependencies to exclude from the bundle",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "noExternal": {
+      "type": "array",
+      "description": "Dependencies to force include in the bundle (overrides external)",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "banner": {
+      "type": "object",
+      "description": "Code to prepend to each output file (e.g., { js: '// banner' })",
+      "properties": {
+        "js": {
+          "type": "string"
+        },
+        "css": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "footer": {
+      "type": "object",
+      "description": "Code to append to each output file (e.g., { js: '// footer' })",
+      "properties": {
+        "js": {
+          "type": "string"
+        },
+        "css": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "env": {
+      "type": "object",
+      "description": "Environment variables to define (e.g., { NODE_ENV: 'production' })",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "define": {
+      "type": "object",
+      "description": "Global constants to define at build time (e.g., { __VERSION__: '1.0.0' })",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "inject": {
+      "type": "array",
+      "description": "Files to automatically inject into the bundle",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "esbuildOptions": {
+      "type": "object",
+      "description": "Additional esbuild options to merge (shallow merge with config)",
+      "additionalProperties": true
+    },
+    "esbuildPlugins": {
+      "type": "array",
+      "description": "Paths to esbuild plugin modules (resolved from project root)",
+      "items": {
+        "type": "string"
+      },
+      "default": []
     }
   },
-  "required": ["outputPath", "main", "tsConfig"]
+  "required": ["outDir", "main", "tsConfig"]
 }

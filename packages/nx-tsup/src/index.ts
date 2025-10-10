@@ -1,1 +1,1 @@
-export { libraryGenerator } from './generators/library/library';
+export { libraryGenerator } from './generators/library/library.js';

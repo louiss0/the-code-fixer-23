@@ -8,12 +8,12 @@ import {
   offsetFromRoot,
   logger,
 } from '@nx/devkit';
-import { LibraryGeneratorSchema, TestRunner, Linter } from './schema';
+import type { LibraryGeneratorSchema, TestRunner, Linter } from './schema.d.ts';
 import {
   detectLinterFromRootPackageJson,
   detectTestRunnerFromRootPackageJson,
-} from './detect';
-import { isInteractive, selectOrDefault } from './prompt';
+} from './detect.js';
+import { isInteractive, selectOrDefault } from './prompt.js';
 import { join } from 'node:path';
 
 export async function libraryGenerator(
@@ -131,12 +131,13 @@ function getProjectTargets(
   testRunner: TestRunner,
   linter: Linter
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const targets: any = {
     build: {
       executor: '@code-fixer-23/nx-tsup:build',
-      outputs: ['{options.outputPath}'],
+      outputs: ['{options.outDir}'],
       options: {
-        outputPath: `${projectRoot}/dist`,
+        outDir: `${projectRoot}/dist`,
         main: `${projectRoot}/src/index.ts`,
         tsConfig: `${projectRoot}/tsconfig.lib.json`,
         format: ['esm'],
@@ -239,6 +240,7 @@ function createPackageJson(
   linter: Linter
 ) {
   const isPackageBased = detectPackageBased(tree);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pkg: any = {
     name: options.importPath,
     version: '0.0.0',

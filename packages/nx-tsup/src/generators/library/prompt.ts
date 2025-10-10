@@ -19,7 +19,13 @@ export async function selectOrDefault(
 
   try {
     // Lazy import to avoid hard dependency in non-interactive/CI
-    const mod: any = await import('enquirer');
+    const mod = (await import('enquirer')) as {
+      Select?: new (options: unknown) => { run: () => Promise<string> };
+      prompt?: (options: unknown) => Promise<{ choice?: string }>;
+      default?: {
+        Select?: new (options: unknown) => { run: () => Promise<string> };
+      };
+    };
     const Select = mod.Select ?? mod.default?.Select;
 
     if (Select) {

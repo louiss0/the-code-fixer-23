@@ -1,0 +1,11 @@
+{
+  "generators": {},
+  "packageJsonUpdates": {},
+  "migrations": {
+    "0.1.0-rename-outputPath-to-outDir": {
+      "version": "0.1.0",
+      "description": "Rename outputPath to outDir in all nx-tsup build targets",
+      "implementation": "./src/migrations/rename-outputPath-to-outDir"
+    }
+  }
+}

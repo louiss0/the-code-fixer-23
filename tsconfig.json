@@ -5,6 +5,9 @@
   "references": [
     {
       "path": "./packages/nx-jsr"
+    },
+    {
+      "path": "./packages/nx-tsup"
     }
   ]
 }

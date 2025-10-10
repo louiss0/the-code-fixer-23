@@ -3,19 +3,19 @@ import { Tree } from '@nx/devkit';
 export type DetectedTestRunner = 'jest' | 'vitest';
 export type DetectedLinter = 'eslint' | 'biome';
 
-function readRootPackageJson(tree: Tree): Record<string, any> | null {
+function readRootPackageJson(tree: Tree): Record<string, unknown> | null {
   try {
     const raw = tree.read('package.json', 'utf-8');
     if (!raw) return null;
-    return JSON.parse(raw);
+    return JSON.parse(raw) as Record<string, unknown>;
   } catch {
     return null;
   }
 }
 
-function hasDep(pkg: any, name: string): boolean {
-  const deps = pkg?.dependencies ?? {};
-  const devDeps = pkg?.devDependencies ?? {};
+function hasDep(pkg: Record<string, unknown>, name: string): boolean {
+  const deps = (pkg?.dependencies as Record<string, string>) ?? {};
+  const devDeps = (pkg?.devDependencies as Record<string, string>) ?? {};
   return Boolean(deps[name] || devDeps[name]);
 }
 

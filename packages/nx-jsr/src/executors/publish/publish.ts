@@ -2,7 +2,7 @@ import { ExecutorContext, PromiseExecutor, logger } from '@nx/devkit';
 import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { PublishExecutorSchema } from './schema';
+import type { PublishExecutorSchema } from './schema.d.ts';
 import { config as dotenvConfig } from 'dotenv';
 
 const runExecutor: PromiseExecutor<PublishExecutorSchema> = async (

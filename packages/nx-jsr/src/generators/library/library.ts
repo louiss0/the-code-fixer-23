@@ -7,7 +7,7 @@ import {
   offsetFromRoot,
 } from '@nx/devkit';
 import * as path from 'path';
-import { TestRunner, LibraryGeneratorSchema } from './schema';
+import type { TestRunner, LibraryGeneratorSchema } from './schema.d.ts';
 
 export async function libraryGenerator(
   tree: Tree,

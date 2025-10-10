@@ -129,9 +129,8 @@ describe('library generator', () => {
       description: 'Test library description',
     });
 
-    const packageJson = JSON.parse(
-      tree.read('packages/test-lib/package.json', 'utf-8')!
-    );
+    const content = tree.read('packages/test-lib/package.json', 'utf-8');
+    const packageJson = JSON.parse(content ?? '{}');
     expect(packageJson.name).toBe('@test/test-lib');
     expect(packageJson.version).toBe('0.0.0');
     expect(packageJson.type).toBe('module');

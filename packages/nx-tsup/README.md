@@ -1,17 +1,29 @@
 # @code-fixer-23/nx-tsup
 
-> Note: Minor README touch to seed the first patch bump via conventional commit.
-
 An **NX plugin** for building TypeScript libraries using **[Tsup](https://tsup.egoist.sh/)** - the fastest way to bundle your TypeScript libraries with zero config.
+
+## ⚠️ Breaking Changes in v0.1.0
+
+**Important**: The `outputPath` option has been renamed to `outDir` to align with tsup's native naming conventions.
+
+If you're upgrading from v0.0.x, run the automatic migration:
+
+```bash
+nx migrate @code-fixer-23/nx-tsup@latest
+nx migrate --run-migrations
+```
+
+This will automatically update all your project.json files.
 
 ## Features
 
 - 🚀 **Fast Bundling** - Powered by esbuild through Tsup
 - 📦 **Zero Configuration** - Sensible defaults, works out of the box
 - 🎯 **Type-Safe** - Automatic TypeScript declaration file generation
+- 🔧 **Config Merging** - Smart merging of `tsup.config.ts` and `project.json` options
 - 🧪 **Test Integration** - Optional Vitest or Jest setup with auto-detection
 - 🎨 **Linter Support** - Optional ESLint or Biome integration
-- 🔧 **Customizable** - Full control over Tsup configuration per package
+- ⚙️ **Advanced Options** - Full tsup feature support (splitting, treeshake, external, etc.)
 - 📚 **Monorepo Ready** - Works with both integrated and package-based monorepos
 
 ## Installation
@@ -81,18 +93,50 @@ nx build my-lib --watch
 
 The build executor supports the following options:
 
-| Option       | Type                       | Default    | Description                           |
-| ------------ | -------------------------- | ---------- | ------------------------------------- |
-| `outputPath` | `string`                   | _required_ | Output directory for built files      |
-| `main`       | `string`                   | _required_ | Entry point file                      |
-| `tsConfig`   | `string`                   | _required_ | Path to tsconfig file                 |
-| `format`     | `('esm'\|'cjs'\|'iife')[]` | `['esm']`  | Output formats                        |
-| `dts`        | `boolean`                  | `true`     | Generate TypeScript declaration files |
-| `clean`      | `boolean`                  | `true`     | Clean output directory before build   |
-| `watch`      | `boolean`                  | `false`    | Enable watch mode                     |
-| `minify`     | `boolean`                  | `false`    | Minify output                         |
-| `sourcemap`  | `boolean`                  | `false`    | Generate sourcemaps                   |
-| `assets`     | `string[]`                 | `[]`       | Additional assets to copy to dist     |
+#### Core Options
+
+| Option     | Type                       | Default    | Description                       |
+| ---------- | -------------------------- | ---------- | --------------------------------- |
+| `outDir`   | `string`                   | _required_ | Output directory for built files  |
+| `main`     | `string`                   | _required_ | Entry point file                  |
+| `tsConfig` | `string`                   | _required_ | Path to tsconfig file             |
+| `format`   | `('esm'\|'cjs'\|'iife')[]` | `['esm']`  | Output formats (CLI-only)         |
+| `watch`    | `boolean`                  | `false`    | Enable watch mode (CLI-only)      |
+| `assets`   | `string[]`                 | `[]`       | Additional assets to copy to dist |
+
+#### Build Options
+
+| Option      | Type                                     | Default   | Description                           |
+| ----------- | ---------------------------------------- | --------- | ------------------------------------- |
+| `dts`       | `boolean`                                | `true`    | Generate TypeScript declaration files |
+| `clean`     | `boolean`                                | `true`    | Clean output directory before build   |
+| `minify`    | `boolean`                                | `false`   | Minify output                         |
+| `sourcemap` | `boolean \| 'inline'`                    | `false`   | Generate sourcemaps                   |
+| `splitting` | `boolean`                                | `false`   | Enable code splitting (ESM only)      |
+| `treeshake` | `boolean \| 'smallest' \| 'recommended'` | `false`   | Enable tree shaking                   |
+| `target`    | `string`                                 | `es2022`  | ECMAScript target (e.g., 'esnext')    |
+| `platform`  | `'node' \| 'browser' \| 'neutral'`       | `neutral` | Target platform                       |
+
+#### Dependency Options
+
+| Option       | Type       | Default | Description                             |
+| ------------ | ---------- | ------- | --------------------------------------- |
+| `external`   | `string[]` | `[]`    | External dependencies to exclude        |
+| `noExternal` | `string[]` | `[]`    | Dependencies to force include in bundle |
+
+#### Advanced Options
+
+| Option           | Type                    | Default | Description                              |
+| ---------------- | ----------------------- | ------- | ---------------------------------------- |
+| `banner`         | `object`                | `{}`    | Code to prepend (e.g., `{js: '// ...'}`) |
+| `footer`         | `object`                | `{}`    | Code to append                           |
+| `env`            | `Record<string,string>` | `{}`    | Environment variables to define          |
+| `define`         | `Record<string,string>` | `{}`    | Global constants to define               |
+| `inject`         | `string[]`              | `[]`    | Files to automatically inject            |
+| `esbuildOptions` | `object`                | `{}`    | Additional esbuild options               |
+| `esbuildPlugins` | `string[]`              | `[]`    | Paths to esbuild plugin modules          |
+
+**Note**: `watch` and `format` are CLI-only options and should not be defined in `project.json`. All other options can be configured in both `project.json` and `tsup.config.ts`, with `project.json` taking precedence.
 
 ## Generated Project Structure
 
@@ -153,6 +197,104 @@ export default defineConfig({
   treeshake: true,
 });
 ```
+
+### Configuration Merging Strategy
+
+🆕 **New in v0.1.0**: The plugin now intelligently merges options from `tsup.config.ts` and `project.json`, giving you the best of both worlds.
+
+#### How It Works
+
+1. **Config File Discovery**: The executor searches for `tsup.config.{ts,mts,cts,js,mjs,cjs}` in your project root
+2. **Smart Merging**: Options from `project.json` override those in `tsup.config.ts`
+3. **TypeScript Support**: `.ts` config files are compiled on-the-fly using esbuild
+4. **Function Configs**: Supports function-based configs with environment parameters
+
+#### Supported Config Files (in order of precedence)
+
+- `tsup.config.ts`
+- `tsup.config.mts`
+- `tsup.config.cts`
+- `tsup.config.js`
+- `tsup.config.mjs`
+- `tsup.config.cjs`
+
+#### Merge Rules
+
+- **Primitives** (boolean, string, number): `project.json` value replaces config file value
+- **Arrays**: `project.json` array replaces config file array (no concatenation)
+- **Objects** (`banner`, `footer`, `env`, `define`): Deep merge with `project.json` winning
+- **`esbuildOptions`**: Composed as a function chain, `project.json` applied last
+- **CLI-only flags** (`watch`, `format`): Applied at runtime, not merged
+
+#### Example: Basic Merging
+
+**tsup.config.ts**:
+
+```ts
+import { defineConfig } from 'tsup';
+
+export default defineConfig({
+  target: 'es2020',
+  splitting: false,
+  banner: { js: '// Copyright 2025' },
+});
+```
+
+**project.json**:
+
+```json
+{
+  "targets": {
+    "build": {
+      "executor": "@code-fixer-23/nx-tsup:build",
+      "options": {
+        "outDir": "packages/my-lib/dist",
+        "main": "packages/my-lib/src/index.ts",
+        "tsConfig": "packages/my-lib/tsconfig.lib.json",
+        "target": "esnext",
+        "minify": true
+      }
+    }
+  }
+}
+```
+
+**Result**: Target is `esnext` (from `project.json`), splitting is `false` (from config), minify is `true` (from `project.json`), and banner is preserved.
+
+#### Example: Function-based Config
+
+```ts
+import { defineConfig } from 'tsup';
+
+export default defineConfig((options) => ({
+  target: options.watch ? 'es2022' : 'esnext',
+  minify: !options.watch,
+  dts: true,
+}));
+```
+
+The function receives `{ watch, format, mode }` parameters.
+
+#### Example: Advanced - esbuildOptions & Plugins
+
+**project.json**:
+
+```json
+{
+  "options": {
+    "outDir": "dist",
+    "main": "src/index.ts",
+    "tsConfig": "tsconfig.lib.json",
+    "external": ["react", "react-dom"],
+    "esbuildOptions": {
+      "keepNames": true
+    },
+    "esbuildPlugins": ["./esbuild-plugins/my-plugin.js"]
+  }
+}
+```
+
+Plugins are loaded from paths relative to the project root.
 
 ### Package.json Exports
 
@@ -216,17 +358,21 @@ Override build options in your `project.json`:
     "build": {
       "executor": "@code-fixer-23/nx-tsup:build",
       "options": {
-        "outputPath": "packages/my-lib/dist",
+        "outDir": "packages/my-lib/dist",
         "main": "packages/my-lib/src/index.ts",
         "tsConfig": "packages/my-lib/tsconfig.lib.json",
-        "format": ["esm", "cjs"],
         "minify": true,
-        "sourcemap": true
+        "sourcemap": true,
+        "splitting": true,
+        "treeshake": "smallest",
+        "external": ["react"]
       }
     }
   }
 }
 ```
+
+**Note**: Use `--format` and `--watch` as CLI flags: `nx build my-lib --format=esm,cjs --watch`
 
 ## Testing
 

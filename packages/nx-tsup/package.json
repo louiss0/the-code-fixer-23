@@ -1,14 +1,15 @@
 {
   "name": "@code-fixer-23/nx-tsup",
-  "version": "1.0.0",
-  "type": "commonjs",
+  "version": "0.0.2",
+  "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
     "generators.json",
-    "executors.json"
+    "executors.json",
+    "migrations.json"
   ],
   "publishConfig": {
     "access": "public"
@@ -16,84 +17,27 @@
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "@code-fixer-23/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
     "./generators": "./generators.json",
-    "./executors": "./executors.json"
+    "./executors": "./executors.json",
+    "./migrations": "./migrations.json"
   },
   "dependencies": {
     "@nx/devkit": "21.6.3",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
+    "enquirer": "^2.4.1",
     "tsup": "^8.0.1",
     "typescript": "~5.9.2",
-    "vitest": "^3.0.0",
-    "enquirer": "^2.4.1"
+    "vitest": "^3.0.0"
   },
   "generators": "./generators.json",
   "executors": "./executors.json",
-  "nx": {
-    "targets": {
-      "build": {
-        "executor": "@nx/js:tsc",
-        "outputs": [
-          "{options.outputPath}"
-        ],
-        "options": {
-          "outputPath": "packages/nx-tsup/dist",
-          "main": "packages/nx-tsup/src/index.ts",
-          "tsConfig": "packages/nx-tsup/tsconfig.lib.json",
-          "rootDir": "packages/nx-tsup/src",
-          "generatePackageJson": false,
-          "assets": [
-            {
-              "input": "./packages/nx-tsup/src",
-              "glob": "**/!(*.ts)",
-              "output": "."
-            },
-            {
-              "input": "./packages/nx-tsup/src",
-              "glob": "**/*.d.ts",
-              "output": "."
-            },
-            {
-              "input": "./packages/nx-tsup",
-              "glob": "generators.json",
-              "output": "."
-            },
-            {
-              "input": "./packages/nx-tsup",
-              "glob": "executors.json",
-              "output": "."
-            }
-          ]
-        }
-      },
-      "test": {
-        "executor": "@nx/vite:test",
-        "outputs": [
-          "{projectRoot}/coverage"
-        ],
-        "options": {
-          "passWithNoTests": true
-        }
-      },
-      "typecheck": {
-        "executor": "@nx/js:tsc",
-        "outputs": [
-          "{options.outputPath}"
-        ],
-        "options": {
-          "outputPath": "dist/packages/nx-tsup",
-          "main": "packages/nx-tsup/src/index.ts",
-          "tsConfig": "packages/nx-tsup/tsconfig.lib.json",
-          "noEmit": true
-        }
-      }
-    }
+  "nx-migrations": {
+    "migrations": "./migrations.json"
   }
 }
