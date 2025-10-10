@@ -63,7 +63,8 @@
     "projectsRelationship": "independent",
     "version": {
       "preVersionCommand": "pnpm dlx nx run-many -t build --projects=packages/* --exclude='tag:paused'",
-      "conventionalCommits": true
+      "conventionalCommits": true,
+      "fallbackCurrentVersionResolver": "disk"
     },
     "releaseTagPattern": "{projectName}@v{version}",
     "changelog": {
