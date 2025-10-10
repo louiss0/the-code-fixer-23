@@ -269,10 +269,7 @@ async function mergeOptions(params: {
     );
 
     if (!projectOptions.esbuildOptions) {
-      projectOptions.esbuildOptions = (
-        config: BuildOptions,
-        context: { format: Format }
-      ) => {
+      projectOptions.esbuildOptions = (config: BuildOptions) => {
         config.plugins = plugins;
       };
     } else {
