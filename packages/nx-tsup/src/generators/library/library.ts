@@ -130,8 +130,8 @@ function getProjectTargets(
   projectRoot: string,
   testRunner: TestRunner,
   linter: Linter
-) {
-  const targets: any = {
+): Record<string, unknown> {
+  const targets: Record<string, unknown> = {
     build: {
       executor: '@code-fixer-23/nx-tsup:build',
       outputs: ['{options.outDir}'],
@@ -239,7 +239,7 @@ function createPackageJson(
   linter: Linter
 ) {
   const isPackageBased = detectPackageBased(tree);
-  const pkg: any = {
+  const pkg: Record<string, unknown> = {
     name: options.importPath,
     version: '0.0.0',
     type: 'module',

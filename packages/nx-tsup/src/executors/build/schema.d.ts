@@ -26,6 +26,6 @@ export interface BuildExecutorSchema {
   env?: Record<string, string>;
   define?: Record<string, string>;
   inject?: string[];
-  esbuildOptions?: Record<string, any>;
+  esbuildOptions?: Record<string, unknown>;
   esbuildPlugins?: string[];
 }

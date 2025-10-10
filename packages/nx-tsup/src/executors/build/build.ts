@@ -9,9 +9,11 @@ import { build as tsupBuild } from 'tsup';
 type TsupConfig =
   | TsupOptions
   | TsupOptions[]
-  | ((
-      env: any
-    ) => TsupOptions | TsupOptions[] | Promise<TsupOptions | TsupOptions[]>);
+  | ((env: {
+      watch: boolean;
+      format?: string[];
+      mode?: string;
+    }) => TsupOptions | TsupOptions[] | Promise<TsupOptions | TsupOptions[]>);
 
 export default async function runExecutor(
   options: BuildExecutorSchema,
@@ -83,10 +85,11 @@ export default async function runExecutor(
 
     logger.info(`✓ Build complete: ${outDir}`);
     return { success: true };
-  } catch (e: any) {
-    logger.error(`Build failed: ${e?.message ?? String(e)}`);
-    if (e?.stack) {
-      logger.error(e.stack);
+  } catch (e: unknown) {
+    const error = e as { message?: string; stack?: string };
+    logger.error(`Build failed: ${error?.message ?? String(e)}`);
+    if (error?.stack) {
+      logger.error(error.stack);
     }
     return { success: false };
   }
@@ -151,8 +154,11 @@ async function loadTsupConfig(
     }
 
     return normalized;
-  } catch (e: any) {
-    logger.warn(`Failed to load config from ${configPath}: ${e.message}`);
+  } catch (e: unknown) {
+    const error = e as { message?: string };
+    logger.warn(
+      `Failed to load config from ${configPath}: ${error.message ?? String(e)}`
+    );
     return undefined;
   }
 }
@@ -235,10 +241,12 @@ async function mergeOptions(params: {
     const baseEsbuildOptions = base.esbuildOptions;
     const projectEsbuildOptions = fromProject.esbuildOptions || {};
 
-    projectOptions.esbuildOptions = (esbuildConfig: any, context: any) => {
+    projectOptions.esbuildOptions = (
+      esbuildConfig: Record<string, unknown>
+    ) => {
       // Apply base config first if it's a function
       if (typeof baseEsbuildOptions === 'function') {
-        baseEsbuildOptions(esbuildConfig, context);
+        baseEsbuildOptions(esbuildConfig);
       } else if (baseEsbuildOptions) {
         Object.assign(esbuildConfig, baseEsbuildOptions);
       }
@@ -259,14 +267,17 @@ async function mergeOptions(params: {
     );
 
     if (!projectOptions.esbuildOptions) {
-      projectOptions.esbuildOptions = (config: any, context: any) => {
+      projectOptions.esbuildOptions = (config: Record<string, unknown>) => {
         config.plugins = plugins;
       };
     } else {
       const existingFn = projectOptions.esbuildOptions;
-      projectOptions.esbuildOptions = (config: any, context: any) => {
-        existingFn(config, context);
-        config.plugins = [...(config.plugins || []), ...plugins];
+      projectOptions.esbuildOptions = (config: Record<string, unknown>) => {
+        existingFn(config);
+        const currentPlugins = Array.isArray(config.plugins)
+          ? config.plugins
+          : [];
+        config.plugins = [...currentPlugins, ...plugins];
       };
     }
   }

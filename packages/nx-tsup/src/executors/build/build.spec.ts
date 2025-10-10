@@ -85,8 +85,8 @@ describe('Build Executor', () => {
     });
 
     it('should fail when entry file does not exist', async () => {
-      mockFs.existsSync.mockImplementation((p: any) => {
-        return !p.toString().includes('index.ts');
+      mockFs.existsSync.mockImplementation((p: unknown) => {
+        return !String(p).includes('index.ts');
       });
 
       const result = await executor(options, context);
@@ -95,8 +95,8 @@ describe('Build Executor', () => {
     });
 
     it('should fail when tsconfig does not exist', async () => {
-      mockFs.existsSync.mockImplementation((p: any) => {
-        return !p.toString().includes('tsconfig');
+      mockFs.existsSync.mockImplementation((p: unknown) => {
+        return !String(p).includes('tsconfig');
       });
 
       const result = await executor(options, context);
@@ -107,11 +107,12 @@ describe('Build Executor', () => {
 
   describe('Config File Discovery', () => {
     it('should find tsup.config.ts', async () => {
-      mockFs.existsSync.mockImplementation((p: any) => {
+      mockFs.existsSync.mockImplementation((p: unknown) => {
+        const str = String(p);
         return (
-          p.toString().includes('tsup.config.ts') ||
-          p.toString().includes('index.ts') ||
-          p.toString().includes('tsconfig')
+          str.includes('tsup.config.ts') ||
+          str.includes('index.ts') ||
+          str.includes('tsconfig')
         );
       });
 
@@ -121,11 +122,12 @@ describe('Build Executor', () => {
     });
 
     it('should find tsup.config.js', async () => {
-      mockFs.existsSync.mockImplementation((p: any) => {
+      mockFs.existsSync.mockImplementation((p: unknown) => {
+        const str = String(p);
         return (
-          p.toString().includes('tsup.config.js') ||
-          p.toString().includes('index.ts') ||
-          p.toString().includes('tsconfig')
+          str.includes('tsup.config.js') ||
+          str.includes('index.ts') ||
+          str.includes('tsconfig')
         );
       });
 
@@ -135,10 +137,9 @@ describe('Build Executor', () => {
     });
 
     it('should work without config file (project.json only)', async () => {
-      mockFs.existsSync.mockImplementation((p: any) => {
-        return (
-          p.toString().includes('index.ts') || p.toString().includes('tsconfig')
-        );
+      mockFs.existsSync.mockImplementation((p: unknown) => {
+        const str = String(p);
+        return str.includes('index.ts') || str.includes('tsconfig');
       });
 
       const result = await executor(options, context);
