@@ -2,6 +2,7 @@ import { Tree } from '@nx/devkit';
 
 export type DetectedTestRunner = 'jest' | 'vitest';
 export type DetectedLinter = 'eslint' | 'biome';
+export type DetectedFormatter = 'prettier' | 'biome' | 'eslint-stylistic';
 
 function readRootPackageJson(tree: Tree): Record<string, unknown> | null {
   try {
@@ -42,6 +43,22 @@ export function detectLinterFromRootPackageJson(tree: Tree): {
   const candidates: DetectedLinter[] = [];
   if (hasDep(pkg, 'eslint')) candidates.push('eslint');
   if (hasDep(pkg, '@biomejs/biome')) candidates.push('biome');
+
+  if (candidates.length === 1) {
+    return { detected: candidates[0], candidates };
+  }
+  return { detected: null, candidates };
+}
+
+export function detectFormatterFromRootPackageJson(tree: Tree): {
+  detected: DetectedFormatter | null;
+  candidates: DetectedFormatter[];
+} {
+  const pkg = readRootPackageJson(tree) ?? {};
+  const candidates: DetectedFormatter[] = [];
+  if (hasDep(pkg, 'prettier')) candidates.push('prettier');
+  if (hasDep(pkg, '@biomejs/biome')) candidates.push('biome');
+  if (hasDep(pkg, '@stylistic/eslint-plugin')) candidates.push('eslint-stylistic');
 
   if (candidates.length === 1) {
     return { detected: candidates[0], candidates };

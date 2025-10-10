@@ -8,10 +8,11 @@ import {
   offsetFromRoot,
   logger,
 } from '@nx/devkit';
-import type { LibraryGeneratorSchema, TestRunner, Linter } from './schema.d.ts';
+import type { LibraryGeneratorSchema, TestRunner, Linter, Formatter } from './schema.d.ts';
 import {
   detectLinterFromRootPackageJson,
   detectTestRunnerFromRootPackageJson,
+  detectFormatterFromRootPackageJson,
 } from './detect.js';
 import { isInteractive, selectOrDefault } from './prompt.js';
 import { join } from 'node:path';
@@ -30,11 +31,17 @@ export async function libraryGenerator(
     options.testRunner
   );
   const resolvedLinter: Linter = await resolveLinter(tree, options.linter);
+  const resolvedFormatter: Formatter = await resolveFormatter(
+    tree,
+    options.formatter,
+    resolvedLinter
+  );
 
   const projectTargets = getProjectTargets(
     projectRoot,
     resolvedTestRunner,
-    resolvedLinter
+    resolvedLinter,
+    resolvedFormatter
   );
 
   addProjectConfiguration(tree, name, {
@@ -54,6 +61,7 @@ export async function libraryGenerator(
     offsetFromRoot: offsetFromRoot(projectRoot),
     testRunner: resolvedTestRunner,
     linter: resolvedLinter,
+    formatter: resolvedFormatter,
   });
 
   createTsConfig(tree, projectRoot);
@@ -62,7 +70,8 @@ export async function libraryGenerator(
     projectRoot,
     options,
     resolvedTestRunner,
-    resolvedLinter
+    resolvedLinter,
+    resolvedFormatter
   );
   createReadme(tree, projectRoot, options, resolvedTestRunner);
 
@@ -75,9 +84,14 @@ export async function libraryGenerator(
   }
 
   if (resolvedLinter === 'eslint') {
-    createEslintConfig(tree, projectRoot);
+    createEslintConfig(tree, projectRoot, resolvedFormatter);
   } else if (resolvedLinter === 'biome') {
     createBiomeConfig(tree, projectRoot);
+  }
+
+  // Create formatter configs
+  if (resolvedFormatter === 'prettier') {
+    createPrettierConfig(tree, projectRoot);
   }
 
   if (!options.skipFormat) {
@@ -126,10 +140,59 @@ async function resolveLinter(tree: Tree, option?: Linter): Promise<Linter> {
   return 'eslint';
 }
 
+async function resolveFormatter(
+  tree: Tree,
+  option: Formatter | undefined,
+  linter: Linter
+): Promise<Formatter> {
+  // If biome is the linter, default to biome formatter unless explicitly overridden
+  if (linter === 'biome' && option === undefined) {
+    return 'biome';
+  }
+
+  if (option !== undefined) {
+    // Validate: eslint-stylistic requires eslint as linter
+    if (option === 'eslint-stylistic' && linter !== 'eslint') {
+      logger.warn(
+        'ESLint Stylistic requires ESLint as the linter. Falling back to prettier.'
+      );
+      return 'prettier';
+    }
+    return option;
+  }
+
+  const { detected, candidates } = detectFormatterFromRootPackageJson(tree);
+  
+  // Filter out eslint-stylistic if eslint is not the linter
+  const validCandidates = candidates.filter(
+    (c) => c !== 'eslint-stylistic' || linter === 'eslint'
+  );
+
+  if (validCandidates.length >= 2) {
+    if (isInteractive()) {
+      const choice = (await selectOrDefault(
+        'Multiple formatters detected. Choose one:',
+        validCandidates,
+        validCandidates[0]
+      )) as Formatter;
+      return choice;
+    }
+    return validCandidates[0];
+  }
+
+  if (validCandidates.length === 1) {
+    return validCandidates[0];
+  }
+
+  // Default: prettier for eslint, none for others
+  return linter === 'eslint' ? 'prettier' : 'none';
+}
+
 function getProjectTargets(
   projectRoot: string,
   testRunner: TestRunner,
-  linter: Linter
+  linter: Linter,
+  formatter: Formatter
 ) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const targets: any = {
@@ -196,6 +259,31 @@ function getProjectTargets(
           };
   }
 
+  if (formatter && formatter !== 'none') {
+    if (formatter === 'prettier') {
+      targets.format = {
+        executor: '@nx/workspace:run-commands',
+        options: {
+          commands: [`prettier --write ${projectRoot}`],
+        },
+      };
+    } else if (formatter === 'biome') {
+      targets.format = {
+        executor: '@nx/workspace:run-commands',
+        options: {
+          commands: [`biome format --write ${projectRoot}`],
+        },
+      };
+    } else if (formatter === 'eslint-stylistic') {
+      targets.format = {
+        executor: '@nx/workspace:run-commands',
+        options: {
+          commands: [`eslint --fix ${projectRoot}/**/*.ts`],
+        },
+      };
+    }
+  }
+
   return targets;
 }
 
@@ -237,7 +325,8 @@ function createPackageJson(
   projectRoot: string,
   options: LibraryGeneratorSchema,
   testRunner: TestRunner,
-  linter: Linter
+  linter: Linter,
+  formatter: Formatter
 ) {
   const isPackageBased = detectPackageBased(tree);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -283,6 +372,23 @@ function createPackageJson(
     pkg.devDependencies['@eslint/js'] = '^9.8.0';
   } else if (linter === 'biome') {
     pkg.devDependencies['@biomejs/biome'] = '^1.8.3';
+  }
+
+  // Add formatter dependencies
+  if (formatter === 'prettier') {
+    pkg.devDependencies.prettier = '^3.0.0';
+    pkg.scripts.format = 'prettier --write .';
+  } else if (formatter === 'biome' && linter !== 'biome') {
+    // Only add if not already added by linter
+    pkg.devDependencies['@biomejs/biome'] = '^1.8.3';
+    pkg.scripts.format = 'biome format --write .';
+  } else if (formatter === 'eslint-stylistic') {
+    pkg.devDependencies['@stylistic/eslint-plugin'] = '^2.0.0';
+    pkg.devDependencies['eslint-config-prettier'] = '^9.0.0';
+    pkg.scripts.format = 'eslint --fix .';
+  } else if (formatter === 'biome' && linter === 'biome') {
+    // biome does both, add format script
+    pkg.scripts.format = 'biome format --write .';
   }
 
   if (isPackageBased) {
@@ -354,13 +460,58 @@ describe('hello', () => {
   tree.write(`${projectRoot}/src/index.spec.ts`, testContent);
 }
 
-function createEslintConfig(tree: Tree, projectRoot: string) {
-  const content = `import eslint from '@eslint/js';
+function createEslintConfig(tree: Tree, projectRoot: string, formatter: Formatter) {
+  let content: string;
+  
+  if (formatter === 'eslint-stylistic') {
+    content = `import eslint from '@eslint/js';
+import stylistic from '@stylistic/eslint-plugin';
+import prettier from 'eslint-config-prettier';
+
+export default [
+  eslint.configs.recommended,
+  {
+    plugins: {
+      '@stylistic': stylistic,
+    },
+    rules: {
+      '@stylistic/indent': ['error', 2],
+      '@stylistic/quotes': ['error', 'single'],
+      '@stylistic/semi': ['error', 'always'],
+    },
+  },
+  prettier,
+];
+`;
+  } else {
+    content = `import eslint from '@eslint/js';
 
 export default [eslint.configs.recommended];
 `;
+  }
 
   tree.write(`${projectRoot}/eslint.config.mjs`, content);
+}
+
+function createPrettierConfig(tree: Tree, projectRoot: string) {
+  const content = `{
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "trailingComma": "es5",
+  "printWidth": 80,
+  "arrowParens": "always"
+}
+`;
+
+  tree.write(`${projectRoot}/.prettierrc.json`, content);
+  
+  const ignoreContent = `node_modules
+dist
+coverage
+`;
+  
+  tree.write(`${projectRoot}/.prettierignore`, ignoreContent);
 }
 
 function createBiomeConfig(tree: Tree, projectRoot: string) {

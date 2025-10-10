@@ -47,6 +47,12 @@
       "description": "Linter to use for the library",
       "enum": ["eslint", "biome", "none"],
       "description": "When omitted, this will be auto-detected from the root package.json. If ambiguous or not found, eslint is used by default."
+    },
+    "formatter": {
+      "type": "string",
+      "description": "Code formatter to use for the library",
+      "enum": ["prettier", "biome", "eslint-stylistic", "none"],
+      "description": "Code formatter. When omitted, this will be auto-detected. Biome formats and lints. ESLint Stylistic requires eslint as linter. If biome is selected as linter, formatter defaults to biome."
     }
   },
   "required": ["name", "importPath"]
