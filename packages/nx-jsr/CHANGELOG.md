@@ -1,3 +1,20 @@
+## 1.1.0 (2025-10-10)
+
+### 🚀 Features
+
+- **nx-jsr:** add formatter support with prettier, biome, and eslint-stylistic ([838f68d](https://github.com/louiss0/the-code-fixer-23/commit/838f68d))
+- **nx-jsr:** add schema and detection for linter/formatter support (WIP) ([8449c03](https://github.com/louiss0/the-code-fixer-23/commit/8449c03))
+
+### 🩹 Fixes
+
+- **nx-tsup:** add missing .js extensions to ES module imports ([afb395c](https://github.com/louiss0/the-code-fixer-23/commit/afb395c))
+- **nx-jsr:** fix TypeScript errors and add enquirer dependency ([cbe1a9c](https://github.com/louiss0/the-code-fixer-23/commit/cbe1a9c))
+- **nx-jsr:** add enquirer to external dependencies in vite config ([fe8fdb0](https://github.com/louiss0/the-code-fixer-23/commit/fe8fdb0))
+
+### ❤️ Thank You
+
+- Shelton Louis @louiss0
+
 # 1.0.0 (2025-10-08)
 
 ### 🚀 Features

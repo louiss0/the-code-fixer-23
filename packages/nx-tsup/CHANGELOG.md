@@ -1,3 +1,18 @@
+## 1.1.0 (2025-10-10)
+
+### 🚀 Features
+
+- **nx-tsup:** add prettier formatter support with ESLint Stylistic option ([737a0f7](https://github.com/louiss0/the-code-fixer-23/commit/737a0f7))
+- **nx-tsup:** add prettier and eslint-stylistic formatter support ([5601f5c](https://github.com/louiss0/the-code-fixer-23/commit/5601f5c))
+
+### 🩹 Fixes
+
+- **nx-tsup:** add missing .js extensions to ES module imports ([afb395c](https://github.com/louiss0/the-code-fixer-23/commit/afb395c))
+
+### ❤️ Thank You
+
+- Shelton Louis @louiss0
+
 # 1.0.0 (2025-10-08)
 
 ### 🚀 Features
