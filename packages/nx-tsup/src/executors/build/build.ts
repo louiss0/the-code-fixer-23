@@ -3,8 +3,9 @@ import { logger } from '@nx/devkit';
 import { existsSync, promises as fs } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { BuildExecutorSchema } from './schema.d.ts';
-import type { Options as TsupOptions } from 'tsup';
+import type { Options as TsupOptions, Format } from 'tsup';
 import { build as tsupBuild } from 'tsup';
+import type { BuildOptions } from 'esbuild';
 
 type TsupConfig =
   | TsupOptions
@@ -242,8 +243,8 @@ async function mergeOptions(params: {
     const projectEsbuildOptions = fromProject.esbuildOptions || {};
 
     projectOptions.esbuildOptions = (
-      esbuildConfig: Record<string, unknown>,
-      context: { format: string }
+      esbuildConfig: BuildOptions,
+      context: { format: Format }
     ) => {
       // Apply base config first if it's a function
       if (typeof baseEsbuildOptions === 'function') {
@@ -269,16 +270,16 @@ async function mergeOptions(params: {
 
     if (!projectOptions.esbuildOptions) {
       projectOptions.esbuildOptions = (
-        config: Record<string, unknown>,
-        context: { format: string }
+        config: BuildOptions,
+        context: { format: Format }
       ) => {
         config.plugins = plugins;
       };
     } else {
       const existingFn = projectOptions.esbuildOptions;
       projectOptions.esbuildOptions = (
-        config: Record<string, unknown>,
-        context: { format: string }
+        config: BuildOptions,
+        context: { format: Format }
       ) => {
         existingFn(config, context);
         const currentPlugins = Array.isArray(config.plugins)
