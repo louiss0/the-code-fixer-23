@@ -5,9 +5,16 @@ import {
   Tree,
   names,
   offsetFromRoot,
+  logger,
 } from '@nx/devkit';
 import * as path from 'path';
-import type { TestRunner, LibraryGeneratorSchema } from './schema.d.ts';
+import type { TestRunner, LibraryGeneratorSchema, Linter, Formatter } from './schema.d.ts';
+import {
+  detectLinterFromRootPackageJson,
+  detectTestRunnerFromRootPackageJson,
+  detectFormatterFromRootPackageJson,
+} from './detect';
+import { isInteractive, selectOrDefault } from './prompt';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -20,7 +27,17 @@ export async function libraryGenerator(
     ? '.'
     : `${options.directory}/${options.name}`;
   const parsedNames = names(options.name);
-  const testRunner = options.testRunner || 'vitest';
+  
+  const resolvedTestRunner: TestRunner = await resolveTestRunner(
+    tree,
+    options.testRunner
+  );
+  const resolvedLinter: Linter = await resolveLinter(tree, options.linter);
+  const resolvedFormatter: Formatter = await resolveFormatter(
+    tree,
+    options.formatter,
+    resolvedLinter
+  );
 
   const templateOptions = {
     ...options,
@@ -38,20 +55,31 @@ export async function libraryGenerator(
 
   createJsrJson(tree, projectRoot, options);
   createTsConfig(tree, projectRoot, options);
-  createPackageJson(tree, projectRoot, options, testRunner);
-  createReadme(tree, projectRoot, options, testRunner);
+  createPackageJson(tree, projectRoot, options, resolvedTestRunner, resolvedLinter, resolvedFormatter);
+  createReadme(tree, projectRoot, options, resolvedTestRunner);
 
-  if (testRunner === 'vitest') {
+  if (resolvedTestRunner === 'vitest') {
     createVitestConfig(tree, projectRoot);
     createExampleTest(tree, projectRoot, 'vitest');
-  } else if (testRunner === 'jest') {
+  } else if (resolvedTestRunner === 'jest') {
     createJestConfig(tree, projectRoot);
     createExampleTest(tree, projectRoot, 'jest');
   }
 
+  if (resolvedLinter === 'eslint') {
+    createEslintConfig(tree, projectRoot, resolvedFormatter);
+  } else if (resolvedLinter === 'biome') {
+    createBiomeConfig(tree, projectRoot);
+  }
+
+  // Create formatter configs
+  if (resolvedFormatter === 'prettier') {
+    createPrettierConfig(tree, projectRoot);
+  }
+
   // Only register an Nx project when generating into a subdirectory (monorepo mode)
   if (!isStandalone) {
-    const targets = getProjectTargets(projectRoot, testRunner);
+    const targets = getProjectTargets(projectRoot, resolvedTestRunner, resolvedLinter, resolvedFormatter);
     addProjectConfiguration(tree, options.name, {
       root: projectRoot,
       projectType: 'library',
@@ -65,7 +93,12 @@ export async function libraryGenerator(
   }
 }
 
-function getProjectTargets(projectRoot: string, testRunner: TestRunner) {
+function getProjectTargets(
+  projectRoot: string,
+  testRunner: TestRunner,
+  linter: Linter,
+  formatter: Formatter
+) {
   const targets: any = {
     build: {
       executor: '@nx/js:tsc',
@@ -107,22 +140,65 @@ function getProjectTargets(projectRoot: string, testRunner: TestRunner) {
     },
   };
 
-  if (testRunner === 'vitest') {
-    targets.test = {
-      executor: '@nx/vite:test',
-      outputs: ['{projectRoot}/coverage'],
-      options: {
-        config: `${projectRoot}/vitest.config.ts`,
-      },
-    };
-  } else if (testRunner === 'jest') {
-    targets.test = {
-      executor: '@nx/jest:jest',
-      outputs: ['{projectRoot}/coverage'],
-      options: {
-        jestConfig: `${projectRoot}/jest.config.ts`,
-      },
-    };
+  if (testRunner && testRunner !== 'none') {
+    targets.test =
+      testRunner === 'vitest'
+        ? {
+            executor: '@nx/vite:test',
+            outputs: ['{projectRoot}/coverage'],
+            options: {
+              config: `${projectRoot}/vitest.config.ts`,
+            },
+          }
+        : {
+            executor: '@nx/jest:jest',
+            outputs: ['{projectRoot}/coverage'],
+            options: {
+              jestConfig: `${projectRoot}/jest.config.ts`,
+            },
+          };
+  }
+
+  if (linter && linter !== 'none') {
+    targets.lint =
+      linter === 'eslint'
+        ? {
+            executor: '@nx/eslint:lint',
+            options: {
+              lintFilePatterns: [`${projectRoot}/**/*.ts`],
+            },
+          }
+        : {
+            executor: '@nx/workspace:run-commands',
+            options: {
+              commands: [`biome lint ${projectRoot}`],
+            },
+          };
+  }
+
+  if (formatter && formatter !== 'none') {
+    if (formatter === 'prettier') {
+      targets.format = {
+        executor: '@nx/workspace:run-commands',
+        options: {
+          commands: [`prettier --write ${projectRoot}`],
+        },
+      };
+    } else if (formatter === 'biome') {
+      targets.format = {
+        executor: '@nx/workspace:run-commands',
+        options: {
+          commands: [`biome format --write ${projectRoot}`],
+        },
+      };
+    } else if (formatter === 'eslint-stylistic') {
+      targets.format = {
+        executor: '@nx/workspace:run-commands',
+        options: {
+          commands: [`eslint --fix ${projectRoot}/**/*.ts`],
+        },
+      };
+    }
   }
 
   return targets;
@@ -246,18 +322,44 @@ function createPackageJson(
   tree: Tree,
   projectRoot: string,
   options: LibraryGeneratorSchema,
-  testRunner: TestRunner
+  testRunner: TestRunner,
+  linter: Linter,
+  formatter: Formatter
 ) {
   const devDependencies: Record<string, string> = {};
+  const scripts: Record<string, string> = {};
 
   if (testRunner === 'vitest') {
     devDependencies.vitest = '^2.0.0';
     devDependencies['@vitest/ui'] = '^2.0.0';
     devDependencies['happy-dom'] = '^15.0.0';
+    scripts.test = 'vitest run';
   } else if (testRunner === 'jest') {
     devDependencies.jest = '^29.0.0';
     devDependencies['@types/jest'] = '^29.0.0';
     devDependencies['ts-jest'] = '^29.0.0';
+    scripts.test = 'jest';
+  }
+
+  if (linter === 'eslint') {
+    devDependencies.eslint = '^9.9.0';
+    devDependencies['@eslint/js'] = '^9.8.0';
+  } else if (linter === 'biome') {
+    devDependencies['@biomejs/biome'] = '^1.8.3';
+  }
+
+  if (formatter === 'prettier') {
+    devDependencies.prettier = '^3.0.0';
+    scripts.format = 'prettier --write .';
+  } else if (formatter === 'biome' && linter !== 'biome') {
+    devDependencies['@biomejs/biome'] = '^1.8.3';
+    scripts.format = 'biome format --write .';
+  } else if (formatter === 'eslint-stylistic') {
+    devDependencies['@stylistic/eslint-plugin'] = '^2.0.0';
+    devDependencies['eslint-config-prettier'] = '^9.0.0';
+    scripts.format = 'eslint --fix .';
+  } else if (formatter === 'biome' && linter === 'biome') {
+    scripts.format = 'biome format --write .';
   }
 
   const packageJson: any = {
@@ -266,6 +368,10 @@ function createPackageJson(
     description: options.description || '',
     type: 'module',
   };
+
+  if (Object.keys(scripts).length > 0) {
+    packageJson.scripts = scripts;
+  }
 
   if (Object.keys(devDependencies).length > 0) {
     packageJson.devDependencies = devDependencies;
@@ -322,6 +428,158 @@ npx nx publish ${options.name}
 `;
 
   tree.write(`${projectRoot}/README.md`, content);
+}
+
+async function resolveTestRunner(
+  tree: Tree,
+  option?: TestRunner
+): Promise<TestRunner> {
+  if (option !== undefined) return option;
+  const { detected, candidates } = detectTestRunnerFromRootPackageJson(tree);
+  if (candidates.length === 2) {
+    if (isInteractive()) {
+      const choice = (await selectOrDefault(
+        'Both Jest and Vitest are detected in the workspace. Choose a test runner:',
+        ['jest', 'vitest'],
+        'jest'
+      )) as TestRunner;
+      return choice;
+    }
+    return 'jest';
+  }
+  if (detected) return detected as TestRunner;
+  return 'vitest';
+}
+
+async function resolveLinter(tree: Tree, option?: Linter): Promise<Linter> {
+  if (option !== undefined) return option;
+  const { detected, candidates } = detectLinterFromRootPackageJson(tree);
+  if (candidates.length === 2) {
+    if (isInteractive()) {
+      const choice = (await selectOrDefault(
+        'Both ESLint and Biome are detected in the workspace. Choose a linter:',
+        ['eslint', 'biome'],
+        'eslint'
+      )) as Linter;
+      return choice;
+    }
+    return 'eslint';
+  }
+  if (detected) return detected as Linter;
+  return 'eslint';
+}
+
+async function resolveFormatter(
+  tree: Tree,
+  option: Formatter | undefined,
+  linter: Linter
+): Promise<Formatter> {
+  // If biome is the linter, default to biome formatter unless explicitly overridden
+  if (linter === 'biome' && option === undefined) {
+    return 'biome';
+  }
+
+  if (option !== undefined) {
+    // Validate: eslint-stylistic requires eslint as linter
+    if (option === 'eslint-stylistic' && linter !== 'eslint') {
+      logger.warn(
+        'ESLint Stylistic requires ESLint as the linter. Falling back to prettier.'
+      );
+      return 'prettier';
+    }
+    return option;
+  }
+
+  const { candidates } = detectFormatterFromRootPackageJson(tree);
+  
+  // Filter out eslint-stylistic if eslint is not the linter
+  const validCandidates = candidates.filter(
+    (c) => c !== 'eslint-stylistic' || linter === 'eslint'
+  );
+
+  if (validCandidates.length >= 2) {
+    if (isInteractive()) {
+      const choice = (await selectOrDefault(
+        'Multiple formatters detected. Choose one:',
+        validCandidates,
+        validCandidates[0]
+      )) as Formatter;
+      return choice;
+    }
+    return validCandidates[0];
+  }
+
+  if (validCandidates.length === 1) {
+    return validCandidates[0];
+  }
+
+  // Default: prettier for eslint, none for others
+  return linter === 'eslint' ? 'prettier' : 'none';
+}
+
+function createEslintConfig(tree: Tree, projectRoot: string, formatter: Formatter) {
+  let content: string;
+  
+  if (formatter === 'eslint-stylistic') {
+    content = `import eslint from '@eslint/js';
+import stylistic from '@stylistic/eslint-plugin';
+import prettier from 'eslint-config-prettier';
+
+export default [
+  eslint.configs.recommended,
+  {
+    plugins: {
+      '@stylistic': stylistic,
+    },
+    rules: {
+      '@stylistic/indent': ['error', 2],
+      '@stylistic/quotes': ['error', 'single'],
+      '@stylistic/semi': ['error', 'always'],
+    },
+  },
+  prettier,
+];
+`;
+  } else {
+    content = `import eslint from '@eslint/js';
+
+export default [eslint.configs.recommended];
+`;
+  }
+
+  tree.write(`${projectRoot}/eslint.config.mjs`, content);
+}
+
+function createPrettierConfig(tree: Tree, projectRoot: string) {
+  const content = `{
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "trailingComma": "es5",
+  "printWidth": 80,
+  "arrowParens": "always"
+}
+`;
+
+  tree.write(`${projectRoot}/.prettierrc.json`, content);
+  
+  const ignoreContent = `node_modules
+dist
+coverage
+`;
+  
+  tree.write(`${projectRoot}/.prettierignore`, ignoreContent);
+}
+
+function createBiomeConfig(tree: Tree, projectRoot: string) {
+  const content = `{
+  "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
+  "formatter": { "enabled": true },
+  "linter": { "enabled": true }
+}
+`;
+
+  tree.write(`${projectRoot}/biome.json`, content);
 }
 
 export default libraryGenerator;
