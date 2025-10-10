@@ -242,11 +242,12 @@ async function mergeOptions(params: {
     const projectEsbuildOptions = fromProject.esbuildOptions || {};
 
     projectOptions.esbuildOptions = (
-      esbuildConfig: Record<string, unknown>
+      esbuildConfig: Record<string, unknown>,
+      context: { format: string }
     ) => {
       // Apply base config first if it's a function
       if (typeof baseEsbuildOptions === 'function') {
-        baseEsbuildOptions(esbuildConfig);
+        baseEsbuildOptions(esbuildConfig, context);
       } else if (baseEsbuildOptions) {
         Object.assign(esbuildConfig, baseEsbuildOptions);
       }
@@ -267,13 +268,19 @@ async function mergeOptions(params: {
     );
 
     if (!projectOptions.esbuildOptions) {
-      projectOptions.esbuildOptions = (config: Record<string, unknown>) => {
+      projectOptions.esbuildOptions = (
+        config: Record<string, unknown>,
+        context: { format: string }
+      ) => {
         config.plugins = plugins;
       };
     } else {
       const existingFn = projectOptions.esbuildOptions;
-      projectOptions.esbuildOptions = (config: Record<string, unknown>) => {
-        existingFn(config);
+      projectOptions.esbuildOptions = (
+        config: Record<string, unknown>,
+        context: { format: string }
+      ) => {
+        existingFn(config, context);
         const currentPlugins = Array.isArray(config.plugins)
           ? config.plugins
           : [];

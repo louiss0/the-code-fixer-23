@@ -130,8 +130,9 @@ function getProjectTargets(
   projectRoot: string,
   testRunner: TestRunner,
   linter: Linter
-): Record<string, unknown> {
-  const targets: Record<string, unknown> = {
+) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const targets: any = {
     build: {
       executor: '@code-fixer-23/nx-tsup:build',
       outputs: ['{options.outDir}'],
@@ -239,7 +240,8 @@ function createPackageJson(
   linter: Linter
 ) {
   const isPackageBased = detectPackageBased(tree);
-  const pkg: Record<string, unknown> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pkg: any = {
     name: options.importPath,
     version: '0.0.0',
     type: 'module',
