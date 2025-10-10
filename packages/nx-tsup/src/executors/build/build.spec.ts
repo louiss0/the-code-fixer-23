@@ -108,9 +108,11 @@ describe('Build Executor', () => {
   describe('Config File Discovery', () => {
     it('should find tsup.config.ts', async () => {
       existsSyncSpy.mockImplementation((p: any) => {
-        return p.toString().includes('tsup.config.ts') || 
-               p.toString().includes('index.ts') || 
-               p.toString().includes('tsconfig');
+        return (
+          p.toString().includes('tsup.config.ts') ||
+          p.toString().includes('index.ts') ||
+          p.toString().includes('tsconfig')
+        );
       });
 
       await executor(options, context);
@@ -120,9 +122,11 @@ describe('Build Executor', () => {
 
     it('should find tsup.config.js', async () => {
       existsSyncSpy.mockImplementation((p: any) => {
-        return p.toString().includes('tsup.config.js') || 
-               p.toString().includes('index.ts') || 
-               p.toString().includes('tsconfig');
+        return (
+          p.toString().includes('tsup.config.js') ||
+          p.toString().includes('index.ts') ||
+          p.toString().includes('tsconfig')
+        );
       });
 
       await executor(options, context);
@@ -132,7 +136,9 @@ describe('Build Executor', () => {
 
     it('should work without config file (project.json only)', async () => {
       existsSyncSpy.mockImplementation((p: any) => {
-        return p.toString().includes('index.ts') || p.toString().includes('tsconfig');
+        return (
+          p.toString().includes('index.ts') || p.toString().includes('tsconfig')
+        );
       });
 
       const result = await executor(options, context);
@@ -305,7 +311,10 @@ describe('Build Executor', () => {
     });
 
     it('should merge env object', async () => {
-      const env = { NODE_ENV: 'production', API_URL: 'https://api.example.com' };
+      const env = {
+        NODE_ENV: 'production',
+        API_URL: 'https://api.example.com',
+      };
       await executor({ ...options, env }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
@@ -378,7 +387,9 @@ describe('Build Executor', () => {
   describe('Asset Copying', () => {
     it('should copy assets when specified', async () => {
       const cpSpy = vi.spyOn(fs.promises, 'cp').mockResolvedValue(undefined);
-      const mkdirSpy = vi.spyOn(fs.promises, 'mkdir').mockResolvedValue(undefined);
+      const mkdirSpy = vi
+        .spyOn(fs.promises, 'mkdir')
+        .mockResolvedValue(undefined);
 
       await executor({ ...options, assets: ['README.md', 'LICENSE'] }, context);
 

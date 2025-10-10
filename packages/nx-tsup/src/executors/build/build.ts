@@ -6,7 +6,12 @@ import type { BuildExecutorSchema } from './schema.d.ts';
 import type { Options as TsupOptions } from 'tsup';
 import { build as tsupBuild } from 'tsup';
 
-type TsupConfig = TsupOptions | TsupOptions[] | ((env: any) => TsupOptions | TsupOptions[] | Promise<TsupOptions | TsupOptions[]>);
+type TsupConfig =
+  | TsupOptions
+  | TsupOptions[]
+  | ((
+      env: any
+    ) => TsupOptions | TsupOptions[] | Promise<TsupOptions | TsupOptions[]>);
 
 export default async function runExecutor(
   options: BuildExecutorSchema,
@@ -15,8 +20,11 @@ export default async function runExecutor(
   try {
     const root = context.root || process.cwd();
     const projectName = context.projectName || '';
-    const projectConfig = context.projectsConfigurations?.projects?.[projectName];
-    const projectRoot = projectConfig?.root ? resolve(root, projectConfig.root) : root;
+    const projectConfig =
+      context.projectsConfigurations?.projects?.[projectName];
+    const projectRoot = projectConfig?.root
+      ? resolve(root, projectConfig.root)
+      : root;
 
     // Validate required options
     if (!options.outDir || !options.main || !options.tsConfig) {
@@ -138,7 +146,10 @@ async function loadTsupConfig(
         func(tempModule, tempModule.exports, require);
         config = tempModule.exports.default || tempModule.exports;
       } catch (error: any) {
-        if (error.code === 'ERR_MODULE_NOT_FOUND' || error.message?.includes('Cannot find module')) {
+        if (
+          error.code === 'ERR_MODULE_NOT_FOUND' ||
+          error.message?.includes('Cannot find module')
+        ) {
           logger.warn(`esbuild not found. Using require() for ${configPath}`);
           config = require(configPath);
         } else {
@@ -185,7 +196,9 @@ async function mergeOptions(params: {
   const { fromFile, fromProject, projectRoot, root } = params;
 
   // Start with config from file or empty object
-  let base: TsupOptions = Array.isArray(fromFile) ? fromFile[0] : fromFile || {};
+  let base: TsupOptions = Array.isArray(fromFile)
+    ? fromFile[0]
+    : fromFile || {};
 
   // Build options from project.json (excluding CLI-only flags)
   const projectOptions: Partial<TsupOptions> = {};
@@ -198,16 +211,23 @@ async function mergeOptions(params: {
   // Optional boolean/string/array options
   if (fromProject.dts !== undefined) projectOptions.dts = fromProject.dts;
   if (fromProject.clean !== undefined) projectOptions.clean = fromProject.clean;
-  if (fromProject.minify !== undefined) projectOptions.minify = fromProject.minify;
-  if (fromProject.sourcemap !== undefined) projectOptions.sourcemap = fromProject.sourcemap;
-  if (fromProject.splitting !== undefined) projectOptions.splitting = fromProject.splitting;
-  if (fromProject.treeshake !== undefined) projectOptions.treeshake = fromProject.treeshake;
-  if (fromProject.target !== undefined) projectOptions.target = fromProject.target;
-  if (fromProject.platform !== undefined) projectOptions.platform = fromProject.platform;
+  if (fromProject.minify !== undefined)
+    projectOptions.minify = fromProject.minify;
+  if (fromProject.sourcemap !== undefined)
+    projectOptions.sourcemap = fromProject.sourcemap;
+  if (fromProject.splitting !== undefined)
+    projectOptions.splitting = fromProject.splitting;
+  if (fromProject.treeshake !== undefined)
+    projectOptions.treeshake = fromProject.treeshake;
+  if (fromProject.target !== undefined)
+    projectOptions.target = fromProject.target;
+  if (fromProject.platform !== undefined)
+    projectOptions.platform = fromProject.platform;
 
   // Array options (replace, don't concatenate)
   if (fromProject.external) projectOptions.external = fromProject.external;
-  if (fromProject.noExternal) projectOptions.noExternal = fromProject.noExternal;
+  if (fromProject.noExternal)
+    projectOptions.noExternal = fromProject.noExternal;
   if (fromProject.inject) projectOptions.inject = fromProject.inject;
 
   // Object options (deep merge)

@@ -95,46 +95,46 @@ The build executor supports the following options:
 
 #### Core Options
 
-| Option     | Type                       | Default    | Description                            |
-| ---------- | -------------------------- | ---------- | -------------------------------------- |
-| `outDir`   | `string`                   | _required_ | Output directory for built files       |
-| `main`     | `string`                   | _required_ | Entry point file                       |
-| `tsConfig` | `string`                   | _required_ | Path to tsconfig file                  |
-| `format`   | `('esm'\|'cjs'\|'iife')[]` | `['esm']`  | Output formats (CLI-only)              |
-| `watch`    | `boolean`                  | `false`    | Enable watch mode (CLI-only)           |
-| `assets`   | `string[]`                 | `[]`       | Additional assets to copy to dist      |
+| Option     | Type                       | Default    | Description                       |
+| ---------- | -------------------------- | ---------- | --------------------------------- |
+| `outDir`   | `string`                   | _required_ | Output directory for built files  |
+| `main`     | `string`                   | _required_ | Entry point file                  |
+| `tsConfig` | `string`                   | _required_ | Path to tsconfig file             |
+| `format`   | `('esm'\|'cjs'\|'iife')[]` | `['esm']`  | Output formats (CLI-only)         |
+| `watch`    | `boolean`                  | `false`    | Enable watch mode (CLI-only)      |
+| `assets`   | `string[]`                 | `[]`       | Additional assets to copy to dist |
 
 #### Build Options
 
-| Option      | Type                                        | Default   | Description                             |
-| ----------- | ------------------------------------------- | --------- | --------------------------------------- |
-| `dts`       | `boolean`                                   | `true`    | Generate TypeScript declaration files   |
-| `clean`     | `boolean`                                   | `true`    | Clean output directory before build     |
-| `minify`    | `boolean`                                   | `false`   | Minify output                           |
-| `sourcemap` | `boolean \| 'inline'`                       | `false`   | Generate sourcemaps                     |
-| `splitting` | `boolean`                                   | `false`   | Enable code splitting (ESM only)        |
-| `treeshake` | `boolean \| 'smallest' \| 'recommended'`    | `false`   | Enable tree shaking                     |
-| `target`    | `string`                                    | `es2022`  | ECMAScript target (e.g., 'esnext')      |
-| `platform`  | `'node' \| 'browser' \| 'neutral'`          | `neutral` | Target platform                         |
+| Option      | Type                                     | Default   | Description                           |
+| ----------- | ---------------------------------------- | --------- | ------------------------------------- |
+| `dts`       | `boolean`                                | `true`    | Generate TypeScript declaration files |
+| `clean`     | `boolean`                                | `true`    | Clean output directory before build   |
+| `minify`    | `boolean`                                | `false`   | Minify output                         |
+| `sourcemap` | `boolean \| 'inline'`                    | `false`   | Generate sourcemaps                   |
+| `splitting` | `boolean`                                | `false`   | Enable code splitting (ESM only)      |
+| `treeshake` | `boolean \| 'smallest' \| 'recommended'` | `false`   | Enable tree shaking                   |
+| `target`    | `string`                                 | `es2022`  | ECMAScript target (e.g., 'esnext')    |
+| `platform`  | `'node' \| 'browser' \| 'neutral'`       | `neutral` | Target platform                       |
 
 #### Dependency Options
 
-| Option        | Type       | Default | Description                               |
-| ------------- | ---------- | ------- | ----------------------------------------- |
-| `external`    | `string[]` | `[]`    | External dependencies to exclude          |
-| `noExternal`  | `string[]` | `[]`    | Dependencies to force include in bundle   |
+| Option       | Type       | Default | Description                             |
+| ------------ | ---------- | ------- | --------------------------------------- |
+| `external`   | `string[]` | `[]`    | External dependencies to exclude        |
+| `noExternal` | `string[]` | `[]`    | Dependencies to force include in bundle |
 
 #### Advanced Options
 
-| Option            | Type                   | Default | Description                               |
-| ----------------- | ---------------------- | ------- | ----------------------------------------- |
-| `banner`          | `object`               | `{}`    | Code to prepend (e.g., `{js: '// ...'}`) |
-| `footer`          | `object`               | `{}`    | Code to append                            |
-| `env`             | `Record<string,string>`| `{}`    | Environment variables to define           |
-| `define`          | `Record<string,string>`| `{}`    | Global constants to define                |
-| `inject`          | `string[]`             | `[]`    | Files to automatically inject             |
-| `esbuildOptions`  | `object`               | `{}`    | Additional esbuild options                |
-| `esbuildPlugins`  | `string[]`             | `[]`    | Paths to esbuild plugin modules           |
+| Option           | Type                    | Default | Description                              |
+| ---------------- | ----------------------- | ------- | ---------------------------------------- |
+| `banner`         | `object`                | `{}`    | Code to prepend (e.g., `{js: '// ...'}`) |
+| `footer`         | `object`                | `{}`    | Code to append                           |
+| `env`            | `Record<string,string>` | `{}`    | Environment variables to define          |
+| `define`         | `Record<string,string>` | `{}`    | Global constants to define               |
+| `inject`         | `string[]`              | `[]`    | Files to automatically inject            |
+| `esbuildOptions` | `object`                | `{}`    | Additional esbuild options               |
+| `esbuildPlugins` | `string[]`              | `[]`    | Paths to esbuild plugin modules          |
 
 **Note**: `watch` and `format` are CLI-only options and should not be defined in `project.json`. All other options can be configured in both `project.json` and `tsup.config.ts`, with `project.json` taking precedence.
 
@@ -229,6 +229,7 @@ export default defineConfig({
 #### Example: Basic Merging
 
 **tsup.config.ts**:
+
 ```ts
 import { defineConfig } from 'tsup';
 
@@ -240,6 +241,7 @@ export default defineConfig({
 ```
 
 **project.json**:
+
 ```json
 {
   "targets": {
@@ -276,6 +278,7 @@ The function receives `{ watch, format, mode }` parameters.
 #### Example: Advanced - esbuildOptions & Plugins
 
 **project.json**:
+
 ```json
 {
   "options": {
@@ -286,9 +289,7 @@ The function receives `{ watch, format, mode }` parameters.
     "esbuildOptions": {
       "keepNames": true
     },
-    "esbuildPlugins": [
-      "./esbuild-plugins/my-plugin.js"
-    ]
+    "esbuildPlugins": ["./esbuild-plugins/my-plugin.js"]
   }
 }
 ```
