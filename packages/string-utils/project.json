@@ -1,0 +1,22 @@
+{
+  "name": "@code-fixer-23/string-utils",
+  "sourceRoot": "packages/string-utils/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@code-fixer-23/nx-tsup:build",
+      "outputs": ["{projectRoot}/dist"],
+      "options": {
+        "entry": ["{projectRoot}/src/index.ts"],
+        "format": ["cjs", "esm"],
+        "dts": true,
+        "sourcemap": true,
+        "minify": false,
+        "clean": true,
+        "outDir": "{projectRoot}/dist",
+        "tsconfig": "{projectRoot}/tsconfig.lib.json"
+      }
+    }
+  },
+  "tags": []
+}
