@@ -8,7 +8,12 @@ import {
   offsetFromRoot,
   logger,
 } from '@nx/devkit';
-import type { LibraryGeneratorSchema, TestRunner, Linter, Formatter } from './schema.d.ts';
+import type {
+  LibraryGeneratorSchema,
+  TestRunner,
+  Linter,
+  Formatter,
+} from './schema.d.ts';
 import {
   detectLinterFromRootPackageJson,
   detectTestRunnerFromRootPackageJson,
@@ -162,7 +167,7 @@ async function resolveFormatter(
   }
 
   const { candidates } = detectFormatterFromRootPackageJson(tree);
-  
+
   // Filter out eslint-stylistic if eslint is not the linter
   const validCandidates = candidates.filter(
     (c) => c !== 'eslint-stylistic' || linter === 'eslint'
@@ -460,9 +465,13 @@ describe('hello', () => {
   tree.write(`${projectRoot}/src/index.spec.ts`, testContent);
 }
 
-function createEslintConfig(tree: Tree, projectRoot: string, formatter: Formatter) {
+function createEslintConfig(
+  tree: Tree,
+  projectRoot: string,
+  formatter: Formatter
+) {
   let content: string;
-  
+
   if (formatter === 'eslint-stylistic') {
     content = `import eslint from '@eslint/js';
 import stylistic from '@stylistic/eslint-plugin';
@@ -505,12 +514,12 @@ function createPrettierConfig(tree: Tree, projectRoot: string) {
 `;
 
   tree.write(`${projectRoot}/.prettierrc.json`, content);
-  
+
   const ignoreContent = `node_modules
 dist
 coverage
 `;
-  
+
   tree.write(`${projectRoot}/.prettierignore`, ignoreContent);
 }
 

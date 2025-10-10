@@ -8,7 +8,12 @@ import {
   logger,
 } from '@nx/devkit';
 import * as path from 'path';
-import type { TestRunner, LibraryGeneratorSchema, Linter, Formatter } from './schema.d.ts';
+import type {
+  TestRunner,
+  LibraryGeneratorSchema,
+  Linter,
+  Formatter,
+} from './schema.d.ts';
 import {
   detectLinterFromRootPackageJson,
   detectTestRunnerFromRootPackageJson,
@@ -27,7 +32,7 @@ export async function libraryGenerator(
     ? '.'
     : `${options.directory}/${options.name}`;
   const parsedNames = names(options.name);
-  
+
   const resolvedTestRunner: TestRunner = await resolveTestRunner(
     tree,
     options.testRunner
@@ -55,7 +60,14 @@ export async function libraryGenerator(
 
   createJsrJson(tree, projectRoot, options);
   createTsConfig(tree, projectRoot, options);
-  createPackageJson(tree, projectRoot, options, resolvedTestRunner, resolvedLinter, resolvedFormatter);
+  createPackageJson(
+    tree,
+    projectRoot,
+    options,
+    resolvedTestRunner,
+    resolvedLinter,
+    resolvedFormatter
+  );
   createReadme(tree, projectRoot, options, resolvedTestRunner);
 
   if (resolvedTestRunner === 'vitest') {
@@ -79,7 +91,12 @@ export async function libraryGenerator(
 
   // Only register an Nx project when generating into a subdirectory (monorepo mode)
   if (!isStandalone) {
-    const targets = getProjectTargets(projectRoot, resolvedTestRunner, resolvedLinter, resolvedFormatter);
+    const targets = getProjectTargets(
+      projectRoot,
+      resolvedTestRunner,
+      resolvedLinter,
+      resolvedFormatter
+    );
     addProjectConfiguration(tree, options.name, {
       root: projectRoot,
       projectType: 'library',
@@ -491,7 +508,7 @@ async function resolveFormatter(
   }
 
   const { candidates } = detectFormatterFromRootPackageJson(tree);
-  
+
   // Filter out eslint-stylistic if eslint is not the linter
   const validCandidates = candidates.filter(
     (c) => c !== 'eslint-stylistic' || linter === 'eslint'
@@ -517,9 +534,13 @@ async function resolveFormatter(
   return linter === 'eslint' ? 'prettier' : 'none';
 }
 
-function createEslintConfig(tree: Tree, projectRoot: string, formatter: Formatter) {
+function createEslintConfig(
+  tree: Tree,
+  projectRoot: string,
+  formatter: Formatter
+) {
   let content: string;
-  
+
   if (formatter === 'eslint-stylistic') {
     content = `import eslint from '@eslint/js';
 import stylistic from '@stylistic/eslint-plugin';
@@ -562,12 +583,12 @@ function createPrettierConfig(tree: Tree, projectRoot: string) {
 `;
 
   tree.write(`${projectRoot}/.prettierrc.json`, content);
-  
+
   const ignoreContent = `node_modules
 dist
 coverage
 `;
-  
+
   tree.write(`${projectRoot}/.prettierignore`, ignoreContent);
 }
 

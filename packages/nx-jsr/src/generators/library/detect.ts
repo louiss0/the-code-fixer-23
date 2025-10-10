@@ -58,7 +58,8 @@ export function detectFormatterFromRootPackageJson(tree: Tree): {
   const candidates: DetectedFormatter[] = [];
   if (hasDep(pkg, 'prettier')) candidates.push('prettier');
   if (hasDep(pkg, '@biomejs/biome')) candidates.push('biome');
-  if (hasDep(pkg, '@stylistic/eslint-plugin')) candidates.push('eslint-stylistic');
+  if (hasDep(pkg, '@stylistic/eslint-plugin'))
+    candidates.push('eslint-stylistic');
 
   if (candidates.length === 1) {
     return { detected: candidates[0], candidates };
