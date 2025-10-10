@@ -126,36 +126,10 @@ async function loadTsupConfig(
     const ext = configPath.split('.').pop();
     let config: TsupConfig;
 
-    // For TypeScript config files, we need to compile them first
+    // For TypeScript config files, use require()
+    // This works because ts-node or tsx is typically configured in the project
     if (ext === 'ts' || ext === 'mts' || ext === 'cts') {
-      try {
-        // Try using esbuild to transpile on the fly
-        const esbuild = await import('esbuild');
-        const result = await esbuild.build({
-          entryPoints: [configPath],
-          bundle: true,
-          platform: 'node',
-          format: 'cjs',
-          write: false,
-          external: ['tsup', 'esbuild'],
-        });
-
-        const code = result.outputFiles[0].text;
-        const tempModule = { exports: {} as any };
-        const func = new Function('module', 'exports', 'require', code);
-        func(tempModule, tempModule.exports, require);
-        config = tempModule.exports.default || tempModule.exports;
-      } catch (error: any) {
-        if (
-          error.code === 'ERR_MODULE_NOT_FOUND' ||
-          error.message?.includes('Cannot find module')
-        ) {
-          logger.warn(`esbuild not found. Using require() for ${configPath}`);
-          config = require(configPath);
-        } else {
-          throw error;
-        }
-      }
+      config = require(configPath);
     } else {
       // For JS files, use dynamic import
       const imported = await import(configPath);
