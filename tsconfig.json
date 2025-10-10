@@ -8,9 +8,6 @@
     },
     {
       "path": "./packages/nx-tsup"
-    },
-    {
-      "path": "./packages/string-utils"
     }
   ]
 }
