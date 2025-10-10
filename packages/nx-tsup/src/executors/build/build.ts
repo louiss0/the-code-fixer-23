@@ -5,7 +5,6 @@ import { join, resolve } from 'node:path';
 import type { BuildExecutorSchema } from './schema.d.ts';
 import type { Options as TsupOptions, Format } from 'tsup';
 import { build as tsupBuild } from 'tsup';
-import type { BuildOptions } from 'esbuild';
 
 type TsupConfig =
   | TsupOptions
@@ -243,7 +242,7 @@ async function mergeOptions(params: {
     const projectEsbuildOptions = fromProject.esbuildOptions || {};
 
     projectOptions.esbuildOptions = (
-      esbuildConfig: BuildOptions,
+      esbuildConfig: any,
       context: { format: Format }
     ) => {
       // Apply base config first if it's a function
@@ -269,13 +268,13 @@ async function mergeOptions(params: {
     );
 
     if (!projectOptions.esbuildOptions) {
-      projectOptions.esbuildOptions = (config: BuildOptions) => {
+      projectOptions.esbuildOptions = (config: any) => {
         config.plugins = plugins;
       };
     } else {
       const existingFn = projectOptions.esbuildOptions;
       projectOptions.esbuildOptions = (
-        config: BuildOptions,
+        config: any,
         context: { format: Format }
       ) => {
         existingFn(config, context);
