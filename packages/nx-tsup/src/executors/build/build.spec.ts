@@ -12,6 +12,10 @@ vi.mock('tsup', () => ({
 vi.mock('node:fs', () => ({
   existsSync: vi.fn(),
   readdirSync: vi.fn(),
+  promises: {
+    cp: vi.fn(),
+    mkdir: vi.fn(),
+  },
 }));
 
 const mockTsupBuild = vi.mocked((await import('tsup')).build);
@@ -382,23 +386,21 @@ describe('Build Executor', () => {
 
   describe('Asset Copying', () => {
     it('should copy assets when specified', async () => {
-      const cpSpy = vi.spyOn(fs.promises, 'cp').mockResolvedValue(undefined);
-      const mkdirSpy = vi
-        .spyOn(fs.promises, 'mkdir')
-        .mockResolvedValue(undefined);
+      mockFs.promises.cp.mockResolvedValue(undefined);
+      mockFs.promises.mkdir.mockResolvedValue(undefined);
 
       await executor({ ...options, assets: ['README.md', 'LICENSE'] }, context);
 
-      expect(mkdirSpy).toHaveBeenCalled();
-      expect(cpSpy).toHaveBeenCalled();
+      expect(mockFs.promises.mkdir).toHaveBeenCalled();
+      expect(mockFs.promises.cp).toHaveBeenCalled();
     });
 
     it('should not copy assets when array is empty', async () => {
-      const cpSpy = vi.spyOn(fs.promises, 'cp').mockResolvedValue(undefined);
+      mockFs.promises.cp.mockClear();
 
       await executor({ ...options, assets: [] }, context);
 
-      expect(cpSpy).not.toHaveBeenCalled();
+      expect(mockFs.promises.cp).not.toHaveBeenCalled();
     });
   });
 
