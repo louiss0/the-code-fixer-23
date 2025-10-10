@@ -5,16 +5,17 @@
   "targets": {
     "build": {
       "executor": "@code-fixer-23/nx-tsup:build",
-      "outputs": ["{projectRoot}/dist"],
+      "outputs": ["{options.outDir}"],
       "options": {
-        "entry": ["{projectRoot}/src/index.ts"],
+        "main": "packages/string-utils/src/index.ts",
+        "outputPath": "packages/string-utils/dist",
+        "outDir": "packages/string-utils/dist",
         "format": ["cjs", "esm"],
-        "dts": true,
+        "dts": false,
         "sourcemap": true,
         "minify": false,
         "clean": true,
-        "outDir": "{projectRoot}/dist",
-        "tsconfig": "{projectRoot}/tsconfig.lib.json"
+        "tsConfig": "packages/string-utils/tsconfig.lib.json"
       }
     }
   },
