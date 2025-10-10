@@ -6,7 +6,7 @@ import {
   detectLinterFromRootPackageJson,
 } from './detect';
 
-function writeRootPkg(tree: Tree, pkg: any) {
+function writeRootPkg(tree: Tree, pkg: Record<string, unknown>) {
   tree.write('package.json', JSON.stringify(pkg, null, 2));
 }
 
