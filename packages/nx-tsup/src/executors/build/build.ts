@@ -170,7 +170,7 @@ async function mergeOptions(params: {
   const { fromFile, fromProject, projectRoot, root } = params;
 
   // Start with config from file or empty object
-  let base: TsupOptions = Array.isArray(fromFile)
+  const base: TsupOptions = Array.isArray(fromFile)
     ? fromFile[0]
     : fromFile || {};
 
