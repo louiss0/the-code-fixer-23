@@ -68,16 +68,16 @@ nx generate @code-fixer-23/nx-tsup:library my-lib \\
 
 ### Generator Options
 
-| Option        | Type                                                       | Default                          | Description                               |
-| ------------- | ---------------------------------------------------------- | -------------------------------- | ----------------------------------------- |
-| `name`        | `string`                                                   | _required_                       | Library name (kebab-case)                 |
-| `importPath`  | `string`                                                   | _required_                       | Import path (e.g., `@scope/package-name`) |
-| `directory`   | `string`                                                   | `packages`                       | Directory where library will be created   |
-| `description` | `string`                                                   | `""`                             | Package description                       |
-| `testRunner`  | `vitest` \| `jest` \| `none`                               | auto-detect (fallback: `jest`)   | Test framework to use                     |
-| `linter`      | `eslint` \| `biome` \| `none`                              | auto-detect (fallback: `eslint`) | Linter to configure                       |
-| `formatter`   | `prettier` \| `biome` \| `eslint-stylistic` \| `none`     | auto-detect                      | Code formatter to use                     |
-| `skipFormat`  | `boolean`                                                  | `false`                          | Skip formatting generated files           |
+| Option        | Type                                                  | Default                          | Description                               |
+| ------------- | ----------------------------------------------------- | -------------------------------- | ----------------------------------------- |
+| `name`        | `string`                                              | _required_                       | Library name (kebab-case)                 |
+| `importPath`  | `string`                                              | _required_                       | Import path (e.g., `@scope/package-name`) |
+| `directory`   | `string`                                              | `packages`                       | Directory where library will be created   |
+| `description` | `string`                                              | `""`                             | Package description                       |
+| `testRunner`  | `vitest` \| `jest` \| `none`                          | auto-detect (fallback: `jest`)   | Test framework to use                     |
+| `linter`      | `eslint` \| `biome` \| `none`                         | auto-detect (fallback: `eslint`) | Linter to configure                       |
+| `formatter`   | `prettier` \| `biome` \| `eslint-stylistic` \| `none` | auto-detect                      | Code formatter to use                     |
+| `skipFormat`  | `boolean`                                             | `false`                          | Skip formatting generated files           |
 
 ### Build Your Library
 
@@ -442,6 +442,7 @@ The generator supports three formatter options:
 #### Prettier
 
 Creates `.prettierrc.json` and `.prettierignore` files with sensible defaults:
+
 - Semi-colons enabled
 - Single quotes
 - Tab width: 2
@@ -457,6 +458,7 @@ Uses Biome for both linting and formatting. Creates `biome.json` with formatter 
 
 **Requires ESLint as linter**. Uses `@stylistic/eslint-plugin` for formatting through ESLint.
 Configures `eslint.config.mjs` with stylistic rules:
+
 - Indent: 2 spaces
 - Quotes: single
 - Semi-colons: always
