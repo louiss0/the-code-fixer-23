@@ -23,6 +23,7 @@ This will automatically update all your project.json files.
 - 🔧 **Config Merging** - Smart merging of `tsup.config.ts` and `project.json` options
 - 🧪 **Test Integration** - Optional Vitest or Jest setup with auto-detection
 - 🎨 **Linter Support** - Optional ESLint or Biome integration
+- ✨ **Formatter Support** - Optional Prettier, Biome, or ESLint Stylistic integration
 - ⚙️ **Advanced Options** - Full tsup feature support (splitting, treeshake, external, etc.)
 - 📚 **Monorepo Ready** - Works with both integrated and package-based monorepos
 
@@ -61,20 +62,22 @@ nx generate @code-fixer-23/nx-tsup:library my-lib \\
   --importPath=@my-scope/my-lib \\
   --description="My awesome library" \\
   --testRunner=vitest \\
-  --linter=eslint
+  --linter=eslint \\
+  --formatter=prettier
 ```
 
 ### Generator Options
 
-| Option        | Type       | Default    | Description                               |
-| ------------- | ---------- | ---------- | ----------------------------------------- | -------------------------------- | --------------------- |
-| `name`        | `string`   | _required_ | Library name (kebab-case)                 |
-| `importPath`  | `string`   | _required_ | Import path (e.g., `@scope/package-name`) |
-| `directory`   | `string`   | `packages` | Directory where library will be created   |
-| `description` | `string`   | `""`       | Package description                       |
-| `testRunner`  | `vitest \\ | jest \\    | none`                                     | auto-detect (fallback: `jest`)   | Test framework to use |
-| `linter`      | `eslint \\ | biome \\   | none`                                     | auto-detect (fallback: `eslint`) | Linter to configure   |
-| `skipFormat`  | `boolean`  | `false`    | Skip formatting generated files           |
+| Option        | Type                                                  | Default                          | Description                               |
+| ------------- | ----------------------------------------------------- | -------------------------------- | ----------------------------------------- |
+| `name`        | `string`                                              | _required_                       | Library name (kebab-case)                 |
+| `importPath`  | `string`                                              | _required_                       | Import path (e.g., `@scope/package-name`) |
+| `directory`   | `string`                                              | `packages`                       | Directory where library will be created   |
+| `description` | `string`                                              | `""`                             | Package description                       |
+| `testRunner`  | `vitest` \| `jest` \| `none`                          | auto-detect (fallback: `jest`)   | Test framework to use                     |
+| `linter`      | `eslint` \| `biome` \| `none`                         | auto-detect (fallback: `eslint`) | Linter to configure                       |
+| `formatter`   | `prettier` \| `biome` \| `eslint-stylistic` \| `none` | auto-detect                      | Code formatter to use                     |
+| `skipFormat`  | `boolean`                                             | `false`                          | Skip formatting generated files           |
 
 ### Build Your Library
 
@@ -157,23 +160,32 @@ packages/my-lib/
 ├── README.md                 # Package documentation
 ├── vitest.config.ts          # Vitest config (if selected)
 ├── jest.config.ts            # Jest config (if selected)
-└── eslint.config.mjs         # ESLint config (if selected)
+├── eslint.config.mjs         # ESLint config (if selected)
+├── .prettierrc.json          # Prettier config (if selected)
+├── .prettierignore           # Prettier ignore file (if selected)
+└── biome.json                # Biome config (if linter/formatter selected)
 ```
 
 ## Auto-detection behavior
 
-When you omit `--testRunner` and/or `--linter`, the generator inspects your workspace root `package.json` to detect installed tools by their official package names:
+When you omit `--testRunner`, `--linter`, and/or `--formatter`, the generator inspects your workspace root `package.json` to detect installed tools by their official package names:
 
 - Test runners: `jest`, `vitest`
 - Linters: `eslint`, `@biomejs/biome`
+- Formatters: `prettier`, `@biomejs/biome`, `@stylistic/eslint-plugin`
 
 Selection rules:
 
 - If exactly one candidate is present, it is selected automatically.
-- If both are present, you will be prompted to choose in interactive mode. In non-interactive/CI environments, the fallback is `jest` for tests and `eslint` for linting.
-- If none are present, the fallback is `jest` and `eslint`.
+- If multiple candidates are present, you will be prompted to choose in interactive mode. In non-interactive/CI environments:
+  - Test runner fallback: `jest`
+  - Linter fallback: `eslint`
+  - Formatter fallback: `prettier` (for ESLint), `biome` (for Biome linter), or `none` otherwise
+- If none are present, the defaults are `jest`, `eslint`, and `prettier`.
+- **Special rule**: ESLint Stylistic requires ESLint as the linter. If you select `eslint-stylistic` with a different linter, it will fall back to `prettier`.
+- **Special rule**: If Biome is selected as the linter and no formatter is specified, Biome will be used as the formatter (since Biome handles both linting and formatting).
 
-To override detection, pass explicit flags, e.g. `--testRunner=vitest --linter=eslint`.
+To override detection, pass explicit flags, e.g. `--testRunner=vitest --linter=eslint --formatter=prettier`.
 
 ## Configuration
 
@@ -410,6 +422,50 @@ nx typecheck my-lib
 # Type-check all libraries
 nx run-many -t typecheck
 ```
+
+## Formatting
+
+If you selected a formatter during generation, you can format your code:
+
+```bash
+# Format a specific library
+nx format my-lib
+
+# Format all libraries
+nx run-many -t format
+```
+
+### Formatter Options
+
+The generator supports three formatter options:
+
+#### Prettier
+
+Creates `.prettierrc.json` and `.prettierignore` files with sensible defaults:
+
+- Semi-colons enabled
+- Single quotes
+- Tab width: 2
+- Trailing commas: ES5
+- Print width: 80
+- Arrow parens: always
+
+#### Biome
+
+Uses Biome for both linting and formatting. Creates `biome.json` with formatter enabled.
+
+#### ESLint Stylistic
+
+**Requires ESLint as linter**. Uses `@stylistic/eslint-plugin` for formatting through ESLint.
+Configures `eslint.config.mjs` with stylistic rules:
+
+- Indent: 2 spaces
+- Quotes: single
+- Semi-colons: always
+
+#### None
+
+No formatter configuration or dependencies will be added.
 
 ## Troubleshoots
 

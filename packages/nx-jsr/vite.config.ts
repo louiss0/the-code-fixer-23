@@ -9,6 +9,7 @@ const external = [
   'tslib',
   'semver',
   'dotenv',
+  'enquirer',
   // Node built-ins used by executors/generators
   'path',
   'fs',

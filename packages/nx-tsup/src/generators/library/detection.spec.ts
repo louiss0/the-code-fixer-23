@@ -4,6 +4,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import {
   detectTestRunnerFromRootPackageJson,
   detectLinterFromRootPackageJson,
+  detectFormatterFromRootPackageJson,
 } from './detect';
 
 function writeRootPkg(tree: Tree, pkg: Record<string, unknown>) {
@@ -78,6 +79,77 @@ describe('detect utilities', () => {
       const res = detectLinterFromRootPackageJson(tree);
       expect(res.detected).toBeNull();
       expect(res.candidates.sort()).toEqual(['biome', 'eslint']);
+    });
+  });
+
+  describe('formatter detection', () => {
+    it('detects prettier only', () => {
+      writeRootPkg(tree, { devDependencies: { prettier: '^3.0.0' } });
+      const res = detectFormatterFromRootPackageJson(tree);
+      expect(res.detected).toBe('prettier');
+      expect(res.candidates).toEqual(['prettier']);
+    });
+
+    it('detects biome only', () => {
+      writeRootPkg(tree, { devDependencies: { '@biomejs/biome': '^1.9.4' } });
+      const res = detectFormatterFromRootPackageJson(tree);
+      expect(res.detected).toBe('biome');
+      expect(res.candidates).toEqual(['biome']);
+    });
+
+    it('detects eslint-stylistic only', () => {
+      writeRootPkg(tree, {
+        devDependencies: { '@stylistic/eslint-plugin': '^2.0.0' },
+      });
+      const res = detectFormatterFromRootPackageJson(tree);
+      expect(res.detected).toBe('eslint-stylistic');
+      expect(res.candidates).toEqual(['eslint-stylistic']);
+    });
+
+    it('detects none', () => {
+      writeRootPkg(tree, { devDependencies: {} });
+      const res = detectFormatterFromRootPackageJson(tree);
+      expect(res.detected).toBeNull();
+      expect(res.candidates).toEqual([]);
+    });
+
+    it('detects prettier and biome', () => {
+      writeRootPkg(tree, {
+        devDependencies: {
+          prettier: '^3.0.0',
+          '@biomejs/biome': '^1.9.4',
+        },
+      });
+      const res = detectFormatterFromRootPackageJson(tree);
+      expect(res.detected).toBeNull();
+      expect(res.candidates.sort()).toEqual(['biome', 'prettier']);
+    });
+
+    it('detects all three formatters', () => {
+      writeRootPkg(tree, {
+        devDependencies: {
+          prettier: '^3.0.0',
+          '@biomejs/biome': '^1.9.4',
+          '@stylistic/eslint-plugin': '^2.0.0',
+        },
+      });
+      const res = detectFormatterFromRootPackageJson(tree);
+      expect(res.detected).toBeNull();
+      expect(res.candidates.sort()).toEqual([
+        'biome',
+        'eslint-stylistic',
+        'prettier',
+      ]);
+    });
+
+    it('checks both dependencies and devDependencies', () => {
+      writeRootPkg(tree, {
+        dependencies: { prettier: '^3.0.0' },
+        devDependencies: { '@biomejs/biome': '^1.9.4' },
+      });
+      const res = detectFormatterFromRootPackageJson(tree);
+      expect(res.detected).toBeNull();
+      expect(res.candidates.sort()).toEqual(['biome', 'prettier']);
     });
   });
 });
