@@ -1,7 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { ExecutorContext } from '@nx/devkit';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
 import executor from './build';
 import type { BuildExecutorSchema } from './schema';
 
@@ -10,20 +8,18 @@ vi.mock('tsup', () => ({
   build: vi.fn().mockResolvedValue(undefined),
 }));
 
-// Mock esbuild for config loading
-vi.mock('esbuild', () => ({
-  build: vi.fn().mockResolvedValue({
-    outputFiles: [{ text: 'module.exports = { target: "es2020" };' }],
-  }),
+// Mock node:fs module to be mockable
+vi.mock('node:fs', () => ({
+  existsSync: vi.fn(),
+  readdirSync: vi.fn(),
 }));
 
 const mockTsupBuild = vi.mocked((await import('tsup')).build);
+const mockFs = vi.mocked(await import('node:fs'));
 
 describe('Build Executor', () => {
   let context: ExecutorContext;
   let options: BuildExecutorSchema;
-  let existsSyncSpy: any;
-  let readdirSyncSpy: any;
 
   beforeEach(() => {
     context = {
@@ -53,8 +49,8 @@ describe('Build Executor', () => {
     };
 
     // Setup default mocks
-    existsSyncSpy = vi.spyOn(fs, 'existsSync').mockReturnValue(true);
-    readdirSyncSpy = vi.spyOn(fs, 'readdirSync').mockReturnValue([]);
+    mockFs.existsSync.mockReturnValue(true);
+    mockFs.readdirSync.mockReturnValue([]);
     mockTsupBuild.mockClear();
   });
 
@@ -85,7 +81,7 @@ describe('Build Executor', () => {
     });
 
     it('should fail when entry file does not exist', async () => {
-      existsSyncSpy.mockImplementation((p: any) => {
+      mockFs.existsSync.mockImplementation((p: any) => {
         return !p.toString().includes('index.ts');
       });
 
@@ -95,7 +91,7 @@ describe('Build Executor', () => {
     });
 
     it('should fail when tsconfig does not exist', async () => {
-      existsSyncSpy.mockImplementation((p: any) => {
+      mockFs.existsSync.mockImplementation((p: any) => {
         return !p.toString().includes('tsconfig');
       });
 
@@ -107,7 +103,7 @@ describe('Build Executor', () => {
 
   describe('Config File Discovery', () => {
     it('should find tsup.config.ts', async () => {
-      existsSyncSpy.mockImplementation((p: any) => {
+      mockFs.existsSync.mockImplementation((p: any) => {
         return (
           p.toString().includes('tsup.config.ts') ||
           p.toString().includes('index.ts') ||
@@ -121,7 +117,7 @@ describe('Build Executor', () => {
     });
 
     it('should find tsup.config.js', async () => {
-      existsSyncSpy.mockImplementation((p: any) => {
+      mockFs.existsSync.mockImplementation((p: any) => {
         return (
           p.toString().includes('tsup.config.js') ||
           p.toString().includes('index.ts') ||
@@ -135,7 +131,7 @@ describe('Build Executor', () => {
     });
 
     it('should work without config file (project.json only)', async () => {
-      existsSyncSpy.mockImplementation((p: any) => {
+      mockFs.existsSync.mockImplementation((p: any) => {
         return (
           p.toString().includes('index.ts') || p.toString().includes('tsconfig')
         );
