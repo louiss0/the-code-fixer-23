@@ -1,3 +1,7 @@
+## 1.1.1 (2026-04-09)
+
+This was a version bump only for @code-fixer-23/nx-jsr to align it with other projects, there were no code changes.
+
 ## 1.1.0 (2025-10-10)
 
 ### 🚀 Features
