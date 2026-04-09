@@ -80,7 +80,7 @@
     "@nx/devkit": "21.6.3",
     "dotenv": "^16.4.5",
     "enquirer": "^2.4.1",
-    "semver": "^7.7.2",
+    "semver": "^7.7.4",
     "vitest": "^3.2.4"
   },
   "generators": "./generators.json",
