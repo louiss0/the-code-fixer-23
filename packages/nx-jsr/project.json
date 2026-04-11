@@ -13,6 +13,11 @@
         "outputPath": "{projectRoot}/dist"
       }
     },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "{projectRoot}/dist"
+      }
+    },
     "package": {
       "executor": "@nx/js:package",
       "outputs": ["{projectRoot}/dist"],
@@ -52,6 +57,13 @@
         "config": "packages/nx-jsr/vite.config.ts",
         "passWithNoTests": true
       }
+    }
+  },
+  "release": {
+    "version": {
+      "manifestRootsToUpdate": ["{projectRoot}", "{projectRoot}/dist"],
+      "currentVersionResolver": "git-tag",
+      "fallbackCurrentVersionResolver": "disk"
     }
   },
   "tags": ["npm:public", "ongoing"]

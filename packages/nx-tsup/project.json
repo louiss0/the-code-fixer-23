@@ -13,6 +13,11 @@
         "outputPath": "{projectRoot}/dist"
       }
     },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "{projectRoot}/dist"
+      }
+    },
     "package": {
       "executor": "@nx/js:package",
       "outputs": ["{projectRoot}/dist"],
@@ -44,6 +49,13 @@
         "tsConfig": "packages/nx-tsup/tsconfig.lib.json",
         "noEmit": true
       }
+    }
+  },
+  "release": {
+    "version": {
+      "manifestRootsToUpdate": ["{projectRoot}", "{projectRoot}/dist"],
+      "currentVersionResolver": "git-tag",
+      "fallbackCurrentVersionResolver": "disk"
     }
   },
   "tags": []
