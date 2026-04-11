@@ -37,14 +37,14 @@ npx nx g @code-fixer-23/nx-jsr:library my-lib --importPath=@scope/my-lib --direc
 
 ### Options
 
-| Option        | Type                           | Required | Description                                                                 |
-| ------------- | ------------------------------ | -------- | --------------------------------------------------------------------------- |
-| `name`        | `string`                       | Yes      | Library name in kebab-case                                                  |
-| `importPath`  | `string`                       | Yes      | JSR import path, for example `@scope/package-name`                          |
-| `directory`   | `string`                       | No       | Create files in `<directory>/<name>` and register an Nx project             |
-| `description` | `string`                       | No       | Package description                                                         |
-| `skipFormat`  | `boolean`                      | No       | Skip formatting generated files                                             |
-| `testRunner`  | `vitest` \| `jest` \| `none` | No       | Choose a test runner for generated projects                                 |
+| Option        | Type                         | Required | Description                                                     |
+| ------------- | ---------------------------- | -------- | --------------------------------------------------------------- |
+| `name`        | `string`                     | Yes      | Library name in kebab-case                                      |
+| `importPath`  | `string`                     | Yes      | JSR import path, for example `@scope/package-name`              |
+| `directory`   | `string`                     | No       | Create files in `<directory>/<name>` and register an Nx project |
+| `description` | `string`                     | No       | Package description                                             |
+| `skipFormat`  | `boolean`                    | No       | Skip formatting generated files                                 |
+| `testRunner`  | `vitest` \| `jest` \| `none` | No       | Choose a test runner for generated projects                     |
 
 ### What Gets Generated
 
