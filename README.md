@@ -40,6 +40,18 @@ pnpm nx release
 
 Release configuration lives in [nx.json](./nx.json).
 
+### GitHub Actions + 1Password
+
+The release workflow loads the npm token from 1Password using `1password/load-secrets-action`.
+
+Required GitHub secret:
+
+- `OP_SERVICE_ACCOUNT_TOKEN`
+
+1Password reference used by the workflow:
+
+- `op://Development/Code Fixer 23 NPM Token/credential`
+
 ## Notes
 
 - Projects tagged `paused` are excluded from release automation.

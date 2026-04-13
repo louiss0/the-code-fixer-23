@@ -54,9 +54,17 @@ jobs:
       - name: Lint (excluding paused)
         run: pnpm exec nx run-many -t lint --exclude='tag:paused'
 
+      - name: Load npm token from 1Password
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          NPM_TOKEN: op://Development/Code Fixer 23 NPM Token/credential
+
       - name: Release (version + publish via conventional commits)
         run: |
           pnpm exec nx release --yes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ env.NPM_TOKEN }}
