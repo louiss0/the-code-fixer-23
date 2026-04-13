@@ -56,6 +56,7 @@
         "executor": "@nx/js:verdaccio",
         "options": {
           "port": 4873,
+          "location": "project",
           "config": ".verdaccio/config.yml",
           "storage": "tmp/local-registry/storage"
         }

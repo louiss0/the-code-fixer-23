@@ -44,6 +44,8 @@ Release configuration lives in [nx.json](./nx.json).
 
 This workspace is configured with Nx's Verdaccio local registry target.
 
+It now uses `location=project`, so Nx writes registry overrides to this repo's `.npmrc` instead of changing your user-level npm registry.
+
 ```sh
 # Start the local registry
 pnpm nx run @code-fixer-23/source:local-registry
