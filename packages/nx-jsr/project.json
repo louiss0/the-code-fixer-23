@@ -43,11 +43,10 @@
       }
     },
     "test": {
-      "executor": "@nx/vite:test",
+      "executor": "nx:run-commands",
       "outputs": ["{projectRoot}/coverage"],
       "options": {
-        "config": "packages/nx-jsr/vitest.config.ts",
-        "passWithNoTests": true
+        "command": "pnpm exec vitest run --config packages/nx-jsr/vitest.config.ts"
       }
     }
   },
