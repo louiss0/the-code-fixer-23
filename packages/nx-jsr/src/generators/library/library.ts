@@ -20,6 +20,9 @@ import {
   detectFormatterFromRootPackageJson,
 } from './detect.js';
 import { isInteractive, selectOrDefault } from './prompt.js';
+import { fileURLToPath } from 'node:url';
+
+const generatorFilesPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'files');
 
 export async function libraryGenerator(
   tree: Tree,
@@ -51,12 +54,7 @@ export async function libraryGenerator(
     template: '',
   };
 
-  generateFiles(
-    tree,
-    path.join(__dirname, 'files'),
-    projectRoot,
-    templateOptions
-  );
+  generateFiles(tree, generatorFilesPath, projectRoot, templateOptions);
 
   createJsrJson(tree, projectRoot, options);
   createTsConfig(tree, projectRoot, options);

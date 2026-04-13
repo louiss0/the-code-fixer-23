@@ -20,7 +20,10 @@ import {
   detectFormatterFromRootPackageJson,
 } from './detect.js';
 import { isInteractive, selectOrDefault } from './prompt.js';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const generatorFilesPath = join(dirname(fileURLToPath(import.meta.url)), 'files');
 
 export async function libraryGenerator(
   tree: Tree,
@@ -58,7 +61,7 @@ export async function libraryGenerator(
   });
 
   // Templates
-  generateFiles(tree, join(__dirname, 'files'), projectRoot, {
+  generateFiles(tree, generatorFilesPath, projectRoot, {
     ...options,
     description: options.description || 'A TypeScript library built with Tsup.',
     tmpl: '',
