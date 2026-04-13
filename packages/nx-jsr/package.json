@@ -22,70 +22,16 @@
   "publishConfig": {
     "access": "public"
   },
-  "nx": {
-    "tags": [
-      "ongoing"
-    ],
-    "targets": {
-      "build": {
-        "executor": "@nx/js:tsc",
-        "outputs": [
-          "{options.outputPath}"
-        ],
-        "options": {
-          "outputPath": "packages/nx-jsr/dist",
-          "main": "packages/nx-jsr/src/index.ts",
-          "tsConfig": "packages/nx-jsr/tsconfig.lib.json",
-          "rootDir": "packages/nx-jsr/src",
-          "generatePackageJson": false,
-          "assets": [
-            {
-              "input": "./packages/nx-jsr/src",
-              "glob": "**/!(*.ts)",
-              "output": "."
-            },
-            {
-              "input": "./packages/nx-jsr/src",
-              "glob": "**/*.d.ts",
-              "output": "."
-            }
-          ]
-        }
-      },
-      "typecheck": {
-        "executor": "@nx/js:tsc",
-        "outputs": [
-          "{options.outputPath}"
-        ],
-        "options": {
-          "outputPath": "dist/packages/nx-jsr",
-          "main": "packages/nx-jsr/src/index.ts",
-          "tsConfig": "packages/nx-jsr/tsconfig.lib.json",
-          "noEmit": true
-        }
-      },
-      "test": {
-        "executor": "@nx/vite:test",
-        "outputs": [
-          "{projectRoot}/coverage"
-        ],
-        "options": {
-          "config": "packages/nx-jsr/vite.config.ts",
-          "passWithNoTests": true
-        }
-      }
-    }
-  },
   "dependencies": {
     "@nx/devkit": "21.6.3",
     "dotenv": "^16.4.5",
     "enquirer": "^2.4.1",
-    "semver": "^7.7.4",
-    "vitest": "^3.2.4"
+    "semver": "^7.7.4"
   },
   "generators": "./generators.json",
   "executors": "./executors.json",
   "devDependencies": {
-    "@types/semver": "^7.7.1"
+    "@types/semver": "^7.7.1",
+    "vitest": "^3.2.4"
   }
 }

@@ -40,6 +40,18 @@ pnpm nx release
 
 Release configuration lives in [nx.json](./nx.json).
 
+## Local registry with Verdaccio
+
+This workspace is configured with Nx's Verdaccio local registry target.
+
+```sh
+# Start the local registry
+pnpm nx run @code-fixer-23/source:local-registry
+
+# Publish to the local registry
+pnpm nx release publish --registry=http://localhost:4873
+```
+
 ### GitHub Actions + 1Password
 
 The release workflow loads the npm token from 1Password using `1password/load-secrets-action`.

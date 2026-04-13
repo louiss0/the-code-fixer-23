@@ -5,40 +5,32 @@
   "sourceRoot": "packages/nx-jsr/src",
   "targets": {
     "build": {
-      "executor": "@nx/vite:build",
-      "outputs": ["{projectRoot}/dist"],
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
       "options": {
-        "configFile": "packages/nx-jsr/vite.config.ts",
-        "mode": "production",
-        "outputPath": "{projectRoot}/dist"
-      }
-    },
-    "nx-release-publish": {
-      "options": {
-        "packageRoot": "{projectRoot}/dist"
-      }
-    },
-    "package": {
-      "executor": "@nx/js:package",
-      "outputs": ["{projectRoot}/dist"],
-      "options": {
-        "outputPath": "{projectRoot}/dist",
-        "packageJson": "{projectRoot}/package.json",
+        "outputPath": "packages/nx-jsr/dist",
+        "main": "packages/nx-jsr/src/index.ts",
+        "tsConfig": "packages/nx-jsr/tsconfig.lib.json",
+        "rootDir": "packages/nx-jsr/src",
+        "generatePackageJson": false,
         "assets": [
-          { "input": "{projectRoot}", "glob": "README.md", "output": "." },
-          { "input": "{projectRoot}", "glob": "LICENSE*", "output": "." },
-          { "input": "{projectRoot}", "glob": "executors.json", "output": "." },
           {
-            "input": "{projectRoot}",
-            "glob": "generators.json",
+            "input": "packages/nx-jsr/src",
+            "glob": "**/schema.json",
             "output": "."
           },
           {
-            "input": "{projectRoot}/src",
-            "glob": "**/schema.json",
-            "output": "schemas"
+            "input": "packages/nx-jsr/src",
+            "glob": "**/files/**/*",
+            "output": "."
           }
         ]
+      }
+    },
+    "nx-release-publish": {
+      "dependsOn": ["build"],
+      "options": {
+        "packageRoot": "{projectRoot}"
       }
     },
     "typecheck": {
@@ -54,14 +46,14 @@
       "executor": "@nx/vite:test",
       "outputs": ["{projectRoot}/coverage"],
       "options": {
-        "config": "packages/nx-jsr/vite.config.ts",
+        "config": "packages/nx-jsr/vitest.config.ts",
         "passWithNoTests": true
       }
     }
   },
   "release": {
     "version": {
-      "manifestRootsToUpdate": ["{projectRoot}", "{projectRoot}/dist"],
+      "manifestRootsToUpdate": ["{projectRoot}"],
       "currentVersionResolver": "git-tag",
       "fallbackCurrentVersionResolver": "disk"
     }
