@@ -23,7 +23,10 @@ import { isInteractive, selectOrDefault } from './prompt.js';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const generatorFilesPath = join(dirname(fileURLToPath(import.meta.url)), 'files');
+const generatorFilesPath = join(
+  dirname(fileURLToPath(import.meta.url)),
+  'files'
+);
 
 export async function libraryGenerator(
   tree: Tree,
@@ -402,7 +405,9 @@ function createPackageJson(
   if (isPackageBased) {
     pkg.devDependencies.tsup = '^8.0.1';
   } else if (tree.exists('package.json')) {
-    const workspacePackageJson = JSON.parse(tree.read('package.json', 'utf-8') || '{}');
+    const workspacePackageJson = JSON.parse(
+      tree.read('package.json', 'utf-8') || '{}'
+    );
     workspacePackageJson.devDependencies ??= {};
     workspacePackageJson.devDependencies.tsup ??= '^8.0.1';
     tree.write('package.json', JSON.stringify(workspacePackageJson, null, 2));

@@ -76,7 +76,8 @@ export default async function runExecutor(
     logger.info(`Building ${projectName}...`);
     logger.info(`Output: ${outDir}`);
 
-    const shouldChangeDirectory = !process.env.VITEST && existsSync(projectRoot);
+    const shouldChangeDirectory =
+      !process.env.VITEST && existsSync(projectRoot);
     const previousCwd = process.cwd();
 
     if (shouldChangeDirectory) {

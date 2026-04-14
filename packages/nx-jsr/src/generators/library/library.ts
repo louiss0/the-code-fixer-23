@@ -22,7 +22,10 @@ import {
 import { isInteractive, selectOrDefault } from './prompt.js';
 import { fileURLToPath } from 'node:url';
 
-const generatorFilesPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'files');
+const generatorFilesPath = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  'files'
+);
 
 export async function libraryGenerator(
   tree: Tree,
