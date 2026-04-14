@@ -16,7 +16,7 @@ concurrency:
 jobs:
   release:
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, 'chore(release)')"
+    if: github.event.head_commit.message != 'chore(release): publish versions'
     env:
       NX_INTERACTIVE: 'false'
       NX_TASKS_RUNNER: 'local'
@@ -51,8 +51,11 @@ jobs:
       - name: Check formatting
         run: pnpm exec nx format:check --all
 
-      - name: Lint (excluding paused)
-        run: pnpm exec nx run-many -t lint --exclude='tag:paused'
+      - name: Validate releasable packages
+        run: pnpm exec nx run-many -t lint test build typecheck --exclude='tag:paused'
+
+      - name: Install 1Password CLI
+        uses: 1password/install-cli-action@v1
 
       - name: Load npm token from 1Password
         uses: 1password/load-secrets-action@v2
@@ -62,9 +65,8 @@ jobs:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           NPM_TOKEN: op://Development/Code Fixer 23 NPM Token/credential
 
-      - name: Release (version + publish via conventional commits)
-        run: |
-          pnpm exec nx release --yes
+      - name: Release packages with Nx Release
+        run: pnpm exec nx release --yes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ env.NPM_TOKEN }}
