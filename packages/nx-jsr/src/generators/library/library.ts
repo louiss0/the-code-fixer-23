@@ -187,7 +187,7 @@ function getProjectTargets(
             },
           }
         : {
-            executor: '@nx/workspace:run-commands',
+            executor: 'nx:run-commands',
             options: {
               commands: [`biome lint ${projectRoot}`],
             },
@@ -197,21 +197,21 @@ function getProjectTargets(
   if (formatter && formatter !== 'none') {
     if (formatter === 'prettier') {
       targets.format = {
-        executor: '@nx/workspace:run-commands',
+        executor: 'nx:run-commands',
         options: {
           commands: [`prettier --write ${projectRoot}`],
         },
       };
     } else if (formatter === 'biome') {
       targets.format = {
-        executor: '@nx/workspace:run-commands',
+        executor: 'nx:run-commands',
         options: {
           commands: [`biome format --write ${projectRoot}`],
         },
       };
     } else if (formatter === 'eslint-stylistic') {
       targets.format = {
-        executor: '@nx/workspace:run-commands',
+        executor: 'nx:run-commands',
         options: {
           commands: [`eslint --fix ${projectRoot}/**/*.ts`],
         },
