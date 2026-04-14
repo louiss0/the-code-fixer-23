@@ -16,7 +16,7 @@ concurrency:
 jobs:
   release:
     runs-on: ubuntu-latest
-    if: github.event.head_commit.message != 'chore(release): publish versions'
+    if: "github.event.head_commit.message != 'chore(release): publish versions'"
     env:
       NX_INTERACTIVE: 'false'
       NX_TASKS_RUNNER: 'local'
