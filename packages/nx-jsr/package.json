@@ -26,7 +26,8 @@
     "@nx/devkit": "21.6.3",
     "dotenv": "^16.4.5",
     "enquirer": "^2.4.1",
-    "semver": "^7.7.4"
+    "semver": "^7.7.4",
+    "tslib": "^2.3.0"
   },
   "generators": "./generators.json",
   "executors": "./executors.json",

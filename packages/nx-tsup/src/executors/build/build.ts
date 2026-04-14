@@ -139,10 +139,8 @@ async function loadTsupConfig(
   env: { watch: boolean; format?: string[] }
 ): Promise<TsupOptions | TsupOptions[] | undefined> {
   try {
-    let config: TsupConfig;
-
     const imported = await import(pathToFileURL(configPath).href);
-    config = imported.default || imported;
+    const config: TsupConfig = imported.default || imported;
 
     // Normalize config
     let normalized: TsupOptions | TsupOptions[];
