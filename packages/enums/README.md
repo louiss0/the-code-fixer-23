@@ -34,7 +34,7 @@ const role = createEnum('symbol', 'admin', 'editor');
 
 ## `createLabeledEnum(labels)`
 
-Create labeled string enums from caller-provided key/value pairs.
+Create labeled string enums from caller-provided key/value pairs. The returned enum uses a Proxy so enum values and helper methods are available on the same object.
 
 ```ts
 import { ParseError, createLabeledEnum, isParseError } from '@code-fixer-23/enums';
@@ -43,6 +43,9 @@ const priority = createLabeledEnum({
   low: 'Low',
   high: 'High',
 });
+
+priority.low;
+// 'low'
 
 priority.values.low;
 // 'low'
@@ -82,6 +85,7 @@ priority.labelOf('high');
 
 A labeled enum returns:
 
+- direct enum value properties such as `priority.low`
 - `values`: the generated enum values
 - `labels`: the original label map
 - `names`: the member names in declaration order

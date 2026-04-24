@@ -14,27 +14,27 @@ export type EnumShape<
 
 export type EnumLabels<TValue extends string = string> = Record<TValue, string>;
 
-export class ParseError {
+export class ParseError extends Error {
   readonly input: string;
-  readonly message: string;
-  readonly name = 'ParseError';
 
   constructor(input: string, message = 'Could not parse enum label.') {
+    super(message);
     this.input = input;
-    this.message = message;
+    this.name = 'ParseError';
   }
 }
 
-export type LabeledEnum<TValue extends string = string> = {
-  entries: readonly [TValue, TValue][];
-  hasLabel(label: string): boolean;
-  labelOf(value: string): string | undefined;
-  labels: EnumLabels<TValue>;
-  names: readonly TValue[];
-  parse(label: string): TValue | ParseError;
-  validate(value: unknown): value is TValue;
-  values: Readonly<Record<TValue, TValue>>;
-};
+export type LabeledEnum<TValue extends string = string> =
+  Readonly<Record<TValue, TValue>> & {
+    entries: readonly [TValue, TValue][];
+    hasLabel(label: string): boolean;
+    labelOf(value: string): string | undefined;
+    labels: EnumLabels<TValue>;
+    names: readonly TValue[];
+    parse(label: string): TValue | ParseError;
+    validate(value: unknown): value is TValue;
+    values: Readonly<Record<TValue, TValue>>;
+  };
 
 export function isParseError(value: unknown): value is ParseError {
   return value instanceof ParseError;
@@ -78,8 +78,7 @@ export function createLabeledEnum<const TValue extends string>(
   const valueLabels = new Map<TValue, string>(
     names.map((name) => [values[name], labels[name]] as const)
   );
-
-  return Object.freeze({
+  const api = Object.freeze({
     values,
     labels: labelsMap,
     names: Object.freeze([...names]),
@@ -97,6 +96,41 @@ export function createLabeledEnum<const TValue extends string>(
       return valuesSet.has(value as TValue);
     },
   });
+
+  return new Proxy(api, {
+    get(target, property, receiver) {
+      if (typeof property === 'string' && property in values) {
+        return values[property as TValue];
+      }
+
+      return Reflect.get(target, property, receiver);
+    },
+    has(target, property) {
+      if (typeof property === 'string' && property in values) {
+        return true;
+      }
+
+      return Reflect.has(target, property);
+    },
+    ownKeys(target) {
+      const propertyKeys = Reflect.ownKeys(target);
+      const valueKeys = names.filter((name) => !propertyKeys.includes(name));
+
+      return [...valueKeys, ...propertyKeys];
+    },
+    getOwnPropertyDescriptor(target, property) {
+      if (typeof property === 'string' && property in values) {
+        return {
+          configurable: true,
+          enumerable: true,
+          value: values[property as TValue],
+          writable: false,
+        };
+      }
+
+      return Reflect.getOwnPropertyDescriptor(target, property);
+    },
+  }) as LabeledEnum<TValue>;
 }
 
 function createEnumValue(kind: EnumKind, name: string, index: number) {

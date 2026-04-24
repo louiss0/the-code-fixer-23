@@ -46,16 +46,14 @@ describe('createEnum', () => {
 });
 
 describe('createLabeledEnum', () => {
-  it('uses caller-provided values and labels', () => {
+  it('exposes enum values as direct properties alongside methods', () => {
     const articleStatus = createLabeledEnum({
       draft: 'Draft',
       published: 'Published',
     });
 
-    expect(articleStatus.values).toEqual({
-      draft: 'draft',
-      published: 'published',
-    });
+    expect(articleStatus.draft).toBe('draft');
+    expect(articleStatus.published).toBe('published');
     expect(articleStatus.labels).toEqual({
       draft: 'Draft',
       published: 'Published',
@@ -75,9 +73,11 @@ describe('createLabeledEnum', () => {
 
     expect(parseResult).toBeInstanceOf(ParseError);
     expect(isParseError(parseResult)).toBe(true);
+    expect(parseResult).toBeInstanceOf(Error);
     expect(parseResult).toMatchObject({
       input: 'Archived',
       message: 'Could not parse enum label.',
+      name: 'ParseError',
     });
   });
 
