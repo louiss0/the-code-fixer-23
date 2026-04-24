@@ -1,7 +1,7 @@
 {
   "generators": {
     "library": {
-      "factory": "./dist/generators/library/library",
+      "factory": "./dist/generators/library/library.js",
       "schema": "./dist/generators/library/schema.json",
       "description": "library generator"
     }

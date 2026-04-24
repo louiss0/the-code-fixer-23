@@ -5,35 +5,32 @@
   "sourceRoot": "packages/nx-tsup/src",
   "targets": {
     "build": {
-      "executor": "@nx/vite:build",
-      "outputs": ["{projectRoot}/dist"],
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
       "options": {
-        "configFile": "packages/nx-tsup/vite.config.ts",
-        "mode": "production",
-        "outputPath": "{projectRoot}/dist"
-      }
-    },
-    "package": {
-      "executor": "@nx/js:package",
-      "outputs": ["{projectRoot}/dist"],
-      "options": {
-        "outputPath": "{projectRoot}/dist",
-        "packageJson": "{projectRoot}/package.json",
+        "outputPath": "packages/nx-tsup/dist",
+        "main": "packages/nx-tsup/src/index.ts",
+        "tsConfig": "packages/nx-tsup/tsconfig.lib.json",
+        "rootDir": "packages/nx-tsup/src",
+        "generatePackageJson": false,
         "assets": [
-          { "input": "{projectRoot}", "glob": "README.md", "output": "." },
-          { "input": "{projectRoot}", "glob": "LICENSE*", "output": "." },
-          { "input": "{projectRoot}", "glob": "executors.json", "output": "." },
           {
-            "input": "{projectRoot}",
-            "glob": "generators.json",
+            "input": "packages/nx-tsup/src",
+            "glob": "**/schema.json",
             "output": "."
           },
           {
-            "input": "{projectRoot}/src",
-            "glob": "**/schema.json",
-            "output": "schemas"
+            "input": "packages/nx-tsup/src",
+            "glob": "**/files/**/*",
+            "output": "."
           }
         ]
+      }
+    },
+    "nx-release-publish": {
+      "dependsOn": ["build"],
+      "options": {
+        "packageRoot": "{projectRoot}"
       }
     },
     "typecheck": {
@@ -44,6 +41,20 @@
         "tsConfig": "packages/nx-tsup/tsconfig.lib.json",
         "noEmit": true
       }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/coverage"],
+      "options": {
+        "command": "pnpm exec vitest run --config packages/nx-tsup/vitest.config.ts"
+      }
+    }
+  },
+  "release": {
+    "version": {
+      "manifestRootsToUpdate": ["{projectRoot}"],
+      "currentVersionResolver": "git-tag",
+      "fallbackCurrentVersionResolver": "disk"
     }
   },
   "tags": []

@@ -1,3 +1,22 @@
+## 1.1.3 (2026-04-14)
+
+### 🩹 Fixes
+
+- **nx-jsr:** use nx run-commands in generator targets ([8023be5](https://github.com/louiss0/the-code-fixer-23/commit/8023be5))
+- **workspace:** resolve release lint blockers ([027a691](https://github.com/louiss0/the-code-fixer-23/commit/027a691))
+- **packages:** resolve esm generator file paths ([470a672](https://github.com/louiss0/the-code-fixer-23/commit/470a672))
+- **packages:** publish verified verdaccio builds ([09793e8](https://github.com/louiss0/the-code-fixer-23/commit/09793e8))
+- **packages:** correct package test and pack setup ([9215fcb](https://github.com/louiss0/the-code-fixer-23/commit/9215fcb))
+- **release:** format tracked files for workflow ([302ff1f](https://github.com/louiss0/the-code-fixer-23/commit/302ff1f))
+
+### ❤️ Thank You
+
+- louiss0 @louiss0
+
+## 1.1.1 (2026-04-09)
+
+This was a version bump only for @code-fixer-23/nx-jsr to align it with other projects, there were no code changes.
+
 ## 1.1.0 (2025-10-10)
 
 ### 🚀 Features
