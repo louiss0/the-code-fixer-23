@@ -69,13 +69,24 @@ describe('library generator', () => {
     expect(tree.exists('packages/test-lib/src/index.spec.ts')).toBe(true);
   });
 
-  it('should add test target when testRunner is jest', async () => {
+  it('should add an ESM-safe jest setup when testRunner is jest', async () => {
     await libraryGenerator(tree, { ...options, testRunner: 'jest' });
 
     const config = readProjectConfiguration(tree, 'test-lib');
+    const jestConfig = tree.read('packages/test-lib/jest.config.ts', 'utf-8');
+    const specTsConfig = tree.read(
+      'packages/test-lib/tsconfig.spec.json',
+      'utf-8'
+    );
+
     expect(config.targets?.test).toBeDefined();
     expect(config.targets?.test.executor).toBe('@nx/jest:jest');
-    expect(tree.exists('packages/test-lib/jest.config.ts')).toBe(true);
+    expect(jestConfig).toContain("extensionsToTreatAsEsm: ['.ts']");
+    expect(jestConfig).toContain('useESM: true');
+    expect(jestConfig).toContain("'^(\\\\.{1,2}/.*)\\\\.js$': '$1'");
+    expect(specTsConfig).toContain('"types": [');
+    expect(specTsConfig).toContain('"jest"');
+    expect(specTsConfig).toContain('"node"');
     expect(tree.exists('packages/test-lib/src/index.spec.ts')).toBe(true);
   });
 
