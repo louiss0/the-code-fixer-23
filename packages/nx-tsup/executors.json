@@ -1,7 +1,7 @@
 {
   "executors": {
     "build": {
-      "implementation": "./dist/executors/build/build",
+      "implementation": "./dist/executors/build/build.js",
       "schema": "./dist/executors/build/schema.json",
       "description": "Build a library using Tsup bundler"
     }
