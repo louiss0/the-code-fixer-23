@@ -10,7 +10,7 @@ export type EnumValue<TKind extends EnumKind> =
 export type EnumShape<
   TKind extends EnumKind,
   TName extends string = string,
-> = Record<TName, EnumValue<TKind>>;
+> = Readonly<Record<TName, EnumValue<TKind>>>;
 
 export type EnumLabels<TValue extends string = string> = Record<TValue, string>;
 
@@ -61,6 +61,7 @@ export function createLabeledEnum<const TValue extends string>(
   const names = Object.keys(labels) as TValue[];
   const labelValues = Object.values(labels) as string[];
 
+  assertNoReservedEnumKeys(names);
   assertUniqueValues(labelValues, 'Enum labels must be unique.');
 
   const values = Object.freeze(
@@ -132,6 +133,23 @@ function createEnumValue(kind: EnumKind, name: string, index: number) {
   }
 
   return Symbol.for(`@code-fixer-23/enums/${name}`);
+}
+
+const reservedLabeledEnumKeys = new Set([
+  'entries',
+  'hasLabel',
+  'labelOf',
+  'labels',
+  'names',
+  'parse',
+  'validate',
+  'values',
+]);
+
+function assertNoReservedEnumKeys(keys: readonly string[]) {
+  if (keys.some((key) => reservedLabeledEnumKeys.has(key))) {
+    throw new Error('Enum keys cannot use reserved helper names.');
+  }
 }
 
 function assertUniqueValues(values: readonly string[], message: string) {

@@ -32,9 +32,6 @@ describe('createEnum', () => {
     const color = createEnum('string', 'red', 'blue');
 
     expect(() => {
-      color.red = 'changed';
-    }).toThrowError('Cannot assign to immutable enum key "red".');
-    expect(() => {
       Reflect.set(color, 'blue', 'changed');
     }).toThrowError('Cannot assign to immutable enum key "blue".');
     expect(color.red).toBe('red');
@@ -78,9 +75,6 @@ describe('createLabeledEnum', () => {
       published: 'Published',
     });
 
-    expect(() => {
-      articleStatus.draft = 'changed';
-    }).toThrowError('Cannot assign to immutable enum key "draft".');
     expect(() => {
       Reflect.set(articleStatus, 'published', 'changed');
     }).toThrowError('Cannot assign to immutable enum key "published".');
@@ -138,5 +132,13 @@ describe('createLabeledEnum', () => {
         published: 'Shared',
       })
     ).toThrowError('Enum labels must be unique.');
+  });
+
+  it('rejects helper-name collisions in enum keys', () => {
+    expect(() =>
+      createLabeledEnum({
+        parse: 'Parse',
+      })
+    ).toThrowError('Enum keys cannot use reserved helper names.');
   });
 });
