@@ -47,6 +47,6 @@ vite.config.*.timestamp*
 vitest.config.*.timestamp*
 .npmrc
 .verdaccio-*.log
-.verdaccio-smoke.pid
-.verdaccio-smoke.port
+.verdaccio-*.pid
+.verdaccio-*.port
 nul
