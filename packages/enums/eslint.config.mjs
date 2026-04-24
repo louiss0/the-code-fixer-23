@@ -1,3 +1,8 @@
-import eslint from '@eslint/js';
+import baseConfig from '../../eslint.config.mjs';
 
-export default [eslint.configs.recommended];
+export default [
+  ...baseConfig,
+  {
+    ignores: ['dist/**', 'node_modules/**'],
+  },
+];
