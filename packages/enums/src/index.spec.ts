@@ -63,6 +63,22 @@ describe('createLabeledEnum', () => {
     expect(articleStatus.validate('archived')).toBe(false);
   });
 
+  it('keeps enum keys immutable', () => {
+    const articleStatus = createLabeledEnum({
+      draft: 'Draft',
+      published: 'Published',
+    });
+
+    expect(() => {
+      articleStatus.draft = 'changed';
+    }).toThrowError('Cannot assign to immutable enum key "draft".');
+    expect(() => {
+      Reflect.set(articleStatus, 'published', 'changed');
+    }).toThrowError('Cannot assign to immutable enum key "published".');
+    expect(articleStatus.draft).toBe('draft');
+    expect(articleStatus.published).toBe('published');
+  });
+
   it('returns a ParseError when a label cannot be parsed', () => {
     const articleStatus = createLabeledEnum({
       draft: 'Draft',

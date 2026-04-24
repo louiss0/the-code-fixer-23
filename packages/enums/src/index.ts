@@ -79,6 +79,7 @@ export function createLabeledEnum<const TValue extends string>(
     names.map((name) => [values[name], labels[name]] as const)
   );
   const api = Object.freeze({
+    ...values,
     values,
     labels: labelsMap,
     names: Object.freeze([...names]),
@@ -98,37 +99,12 @@ export function createLabeledEnum<const TValue extends string>(
   });
 
   return new Proxy(api, {
-    get(target, property, receiver) {
+    set(_target, property) {
       if (typeof property === 'string' && property in values) {
-        return values[property as TValue];
+        throw new Error(`Cannot assign to immutable enum key "${property}".`);
       }
 
-      return Reflect.get(target, property, receiver);
-    },
-    has(target, property) {
-      if (typeof property === 'string' && property in values) {
-        return true;
-      }
-
-      return Reflect.has(target, property);
-    },
-    ownKeys(target) {
-      const propertyKeys = Reflect.ownKeys(target);
-      const valueKeys = names.filter((name) => !propertyKeys.includes(name));
-
-      return [...valueKeys, ...propertyKeys];
-    },
-    getOwnPropertyDescriptor(target, property) {
-      if (typeof property === 'string' && property in values) {
-        return {
-          configurable: true,
-          enumerable: true,
-          value: values[property as TValue],
-          writable: false,
-        };
-      }
-
-      return Reflect.getOwnPropertyDescriptor(target, property);
+      throw new Error(`Cannot assign to immutable labeled enum property "${String(property)}".`);
     },
   }) as LabeledEnum<TValue>;
 }
