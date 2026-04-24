@@ -40,7 +40,11 @@ role.admin;
 Create labeled string enums from caller-provided key/value pairs. The returned enum uses a Proxy so enum values and helper methods are available on the same object.
 
 ```ts
-import { ParseError, createLabeledEnum, isParseError } from '@code-fixer-23/enums';
+import {
+  ParseError,
+  createLabeledEnum,
+  isParseError,
+} from '@code-fixer-23/enums';
 
 const priority = createLabeledEnum({
   low: 'Low',

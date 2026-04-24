@@ -1,15 +1,14 @@
 export type EnumKind = 'string' | 'number' | 'symbol';
 
-export type EnumValue<TKind extends EnumKind> =
-  TKind extends 'string'
-    ? string
-    : TKind extends 'number'
-      ? number
-      : symbol;
+export type EnumValue<TKind extends EnumKind> = TKind extends 'string'
+  ? string
+  : TKind extends 'number'
+  ? number
+  : symbol;
 
 export type EnumShape<
   TKind extends EnumKind,
-  TName extends string = string,
+  TName extends string = string
 > = Readonly<Record<TName, EnumValue<TKind>>>;
 
 export type EnumLabels<TValue extends string = string> = Record<TValue, string>;
@@ -24,31 +23,34 @@ export class ParseError extends Error {
   }
 }
 
-export type LabeledEnum<TValue extends string = string> =
-  Readonly<Record<TValue, TValue>> & {
-    entries: readonly [TValue, TValue][];
-    hasLabel(label: string): boolean;
-    labelOf(value: string): string | undefined;
-    labels: EnumLabels<TValue>;
-    names: readonly TValue[];
-    parse(label: string): TValue | ParseError;
-    validate(value: unknown): value is TValue;
-    values: Readonly<Record<TValue, TValue>>;
-  };
+export type LabeledEnum<TValue extends string = string> = Readonly<
+  Record<TValue, TValue>
+> & {
+  entries: readonly [TValue, TValue][];
+  hasLabel(label: string): boolean;
+  labelOf(value: string): string | undefined;
+  labels: EnumLabels<TValue>;
+  names: readonly TValue[];
+  parse(label: string): TValue | ParseError;
+  validate(value: unknown): value is TValue;
+  values: Readonly<Record<TValue, TValue>>;
+};
 
 export function isParseError(value: unknown): value is ParseError {
   return value instanceof ParseError;
 }
 
-export function createEnum<
-  TKind extends EnumKind,
-  const TName extends string,
->(kind: TKind, ...names: TName[]): EnumShape<TKind, TName> {
+export function createEnum<TKind extends EnumKind, const TName extends string>(
+  kind: TKind,
+  ...names: TName[]
+): EnumShape<TKind, TName> {
   assertUniqueValues(names, 'Enum names must be unique.');
 
   const values = Object.freeze(
     Object.fromEntries(
-      names.map((name, index) => [name, createEnumValue(kind, name, index)] as const)
+      names.map(
+        (name, index) => [name, createEnumValue(kind, name, index)] as const
+      )
     )
   ) as Readonly<Record<TName, EnumValue<TKind>>>;
 
@@ -105,12 +107,16 @@ export function createLabeledEnum<const TValue extends string>(
   ) as LabeledEnum<TValue>;
 }
 
-function createImmutableEnumProxy<TValue extends string | number | symbol, TObject extends object>(
+function createImmutableEnumProxy<
+  TValue extends string | number | symbol,
+  TObject extends object
+>(
   target: TObject,
   values?: Readonly<Record<string, TValue>>,
   otherPropertyMessage = 'Cannot assign to immutable enum property "{property}".'
 ) {
-  const immutableValues = values ?? (target as Readonly<Record<string, TValue>>);
+  const immutableValues =
+    values ?? (target as Readonly<Record<string, TValue>>);
 
   return new Proxy(target, {
     set(_target, property) {
@@ -118,7 +124,9 @@ function createImmutableEnumProxy<TValue extends string | number | symbol, TObje
         throw new Error(`Cannot assign to immutable enum key "${property}".`);
       }
 
-      throw new Error(otherPropertyMessage.replace('{property}', String(property)));
+      throw new Error(
+        otherPropertyMessage.replace('{property}', String(property))
+      );
     },
   });
 }
