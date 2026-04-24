@@ -32,14 +32,14 @@ const role = createEnum('symbol', 'admin', 'editor');
 - `symbol` creates global symbols with `Symbol.for('@code-fixer-23/enums/<name>')`.
 - duplicate member names are rejected.
 
-## `createLabeledEnum(kind, labels)`
+## `createLabeledEnum(labels)`
 
-Create enum values alongside user-facing labels and helper methods.
+Create labeled string enums from caller-provided key/value pairs.
 
 ```ts
-import { createLabeledEnum } from '@code-fixer-23/enums';
+import { ParseError, createLabeledEnum, isParseError } from '@code-fixer-23/enums';
 
-const priority = createLabeledEnum('string', {
+const priority = createLabeledEnum({
   low: 'Low',
   high: 'High',
 });
@@ -50,8 +50,14 @@ priority.values.low;
 priority.labels.high;
 // 'High'
 
-priority.parse('High');
+const parsedPriority = priority.parse('High');
 // 'high'
+
+const missingPriority = priority.parse('Urgent');
+if (isParseError(missingPriority)) {
+  missingPriority.name;
+  // 'ParseError'
+}
 
 priority.validate('low');
 // true
@@ -80,11 +86,23 @@ A labeled enum returns:
 - `labels`: the original label map
 - `names`: the member names in declaration order
 - `entries`: `[name, value]` tuples in declaration order
-- `parse(label)`: returns the matching enum value, or `undefined`
+- `parse(label)`: returns the matching enum value or a `ParseError`
 - `hasLabel(label)`: returns `true` when the label exists
 - `labelOf(value)`: returns the matching label, or `undefined`
 - `validate(value)`: returns `true` when the value belongs to the enum
 - duplicate labels are rejected to keep parsing unambiguous
+
+### Parse errors
+
+Parsing never throws. Instead, parse failures return a `ParseError` value:
+
+```ts
+const result = priority.parse('Urgent');
+
+if (result instanceof ParseError) {
+  console.log(result.message);
+}
+```
 
 ## Development
 

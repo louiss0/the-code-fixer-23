@@ -12,21 +12,33 @@ export type EnumShape<
   TName extends string = string,
 > = Record<TName, EnumValue<TKind>>;
 
-export type EnumLabels<TName extends string = string> = Record<TName, string>;
+export type EnumLabels<TValue extends string = string> = Record<TValue, string>;
 
-export type LabeledEnum<
-  TKind extends EnumKind,
-  TName extends string = string,
-> = {
-  entries: readonly [TName, EnumValue<TKind>][];
+export class ParseError {
+  readonly input: string;
+  readonly message: string;
+  readonly name = 'ParseError';
+
+  constructor(input: string, message = 'Could not parse enum label.') {
+    this.input = input;
+    this.message = message;
+  }
+}
+
+export type LabeledEnum<TValue extends string = string> = {
+  entries: readonly [TValue, TValue][];
   hasLabel(label: string): boolean;
-  labelOf(value: EnumValue<TKind>): string | undefined;
-  labels: EnumLabels<TName>;
-  names: readonly TName[];
-  parse(label: string): EnumValue<TKind> | undefined;
-  validate(value: unknown): value is EnumValue<TKind>;
-  values: EnumShape<TKind, TName>;
+  labelOf(value: string): string | undefined;
+  labels: EnumLabels<TValue>;
+  names: readonly TValue[];
+  parse(label: string): TValue | ParseError;
+  validate(value: unknown): value is TValue;
+  values: Readonly<Record<TValue, TValue>>;
 };
+
+export function isParseError(value: unknown): value is ParseError {
+  return value instanceof ParseError;
+}
 
 export function createEnum<
   TKind extends EnumKind,
@@ -44,26 +56,26 @@ export function createEnum<
   ) as EnumShape<TKind, TName>;
 }
 
-export function createLabeledEnum<
-  TKind extends EnumKind,
-  const TName extends string,
->(kind: TKind, labels: EnumLabels<TName>): LabeledEnum<TKind, TName> {
-  const names = Object.keys(labels) as TName[];
-  const labelValues = Object.values(labels);
+export function createLabeledEnum<const TValue extends string>(
+  labels: EnumLabels<TValue>
+): LabeledEnum<TValue> {
+  const names = Object.keys(labels) as TValue[];
+  const labelValues = Object.values(labels) as string[];
 
   assertUniqueValues(labelValues, 'Enum labels must be unique.');
 
-  const values = createEnum(kind, ...names);
-  const valuesSet = new Set(Object.values(values));
+  const values = Object.freeze(
+    Object.fromEntries(names.map((name) => [name, name] as const))
+  ) as Readonly<Record<TValue, TValue>>;
+  const valuesSet = new Set<TValue>(names);
   const labelsMap = Object.freeze({ ...labels });
   const entries = Object.freeze(
-    names.map((name) => [name, values[name]] as [TName, EnumValue<TKind>])
+    names.map((name) => [name, values[name]] as [TValue, TValue])
   );
-  const parsedEntries = names.map(
-    (name) => [labels[name], values[name]] as const
+  const parsedValues = new Map<string, TValue>(
+    names.map((name) => [labels[name], values[name]] as const)
   );
-  const parsedValues = new Map<string, EnumValue<TKind>>(parsedEntries);
-  const valueLabels = new Map<EnumValue<TKind>, string>(
+  const valueLabels = new Map<TValue, string>(
     names.map((name) => [values[name], labels[name]] as const)
   );
 
@@ -73,16 +85,16 @@ export function createLabeledEnum<
     names: Object.freeze([...names]),
     entries,
     parse(label: string) {
-      return parsedValues.get(label);
+      return parsedValues.get(label) ?? new ParseError(label);
     },
     hasLabel(label: string) {
       return parsedValues.has(label);
     },
-    labelOf(value: EnumValue<TKind>) {
-      return valueLabels.get(value);
+    labelOf(value: string) {
+      return valueLabels.get(value as TValue);
     },
-    validate(value: unknown): value is EnumValue<TKind> {
-      return valuesSet.has(value as EnumValue<TKind>);
+    validate(value: unknown): value is TValue {
+      return valuesSet.has(value as TValue);
     },
   });
 }
