@@ -1,6 +1,6 @@
 # @code-fixer-23/enums
 
-Typed enum factories for string, number, and symbol values.
+Typed enum factories for string, number, and symbol values. Both enum factories return immutable proxy objects so values are accessed as properties while writes are rejected.
 
 ## Installation
 
@@ -16,13 +16,16 @@ Create enum values from member names.
 import { createEnum } from '@code-fixer-23/enums';
 
 const color = createEnum('string', 'red', 'blue');
-// { red: 'red', blue: 'blue' }
+color.red;
+// 'red'
 
 const status = createEnum('number', 'pending', 'done');
-// { pending: 0, done: 1 }
+status.pending;
+// 0
 
 const role = createEnum('symbol', 'admin', 'editor');
-// { admin: Symbol.for('@code-fixer-23/enums/admin'), ... }
+role.admin;
+// Symbol.for('@code-fixer-23/enums/admin')
 ```
 
 ### Kinds

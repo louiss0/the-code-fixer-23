@@ -10,19 +10,15 @@ describe('createEnum', () => {
   it('creates string enums from member names', () => {
     const color = createEnum('string', 'red', 'blue');
 
-    expect(color).toEqual({
-      red: 'red',
-      blue: 'blue',
-    });
+    expect(color.red).toBe('red');
+    expect(color.blue).toBe('blue');
   });
 
   it('creates number enums from member names', () => {
     const status = createEnum('number', 'pending', 'done');
 
-    expect(status).toEqual({
-      pending: 0,
-      done: 1,
-    });
+    expect(status.pending).toBe(0);
+    expect(status.done).toBe(1);
   });
 
   it('creates symbol enums from member names', () => {
@@ -30,6 +26,19 @@ describe('createEnum', () => {
 
     expect(role.admin).toBe(Symbol.for('@code-fixer-23/enums/admin'));
     expect(role.editor).toBe(Symbol.for('@code-fixer-23/enums/editor'));
+  });
+
+  it('keeps enum keys immutable through the proxy', () => {
+    const color = createEnum('string', 'red', 'blue');
+
+    expect(() => {
+      color.red = 'changed';
+    }).toThrowError('Cannot assign to immutable enum key "red".');
+    expect(() => {
+      Reflect.set(color, 'blue', 'changed');
+    }).toThrowError('Cannot assign to immutable enum key "blue".');
+    expect(color.red).toBe('red');
+    expect(color.blue).toBe('blue');
   });
 
   it('freezes enum values', () => {

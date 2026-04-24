@@ -46,14 +46,13 @@ export function createEnum<
 >(kind: TKind, ...names: TName[]): EnumShape<TKind, TName> {
   assertUniqueValues(names, 'Enum names must be unique.');
 
-  const entries = names.map((name, index) => [
-    name,
-    createEnumValue(kind, name, index),
-  ] as const);
+  const values = Object.freeze(
+    Object.fromEntries(
+      names.map((name, index) => [name, createEnumValue(kind, name, index)] as const)
+    )
+  ) as Readonly<Record<TName, EnumValue<TKind>>>;
 
-  return Object.freeze(
-    Object.fromEntries(entries)
-  ) as EnumShape<TKind, TName>;
+  return createImmutableEnumProxy(values) as EnumShape<TKind, TName>;
 }
 
 export function createLabeledEnum<const TValue extends string>(
@@ -98,15 +97,29 @@ export function createLabeledEnum<const TValue extends string>(
     },
   });
 
-  return new Proxy(api, {
+  return createImmutableEnumProxy(
+    api,
+    values,
+    'Cannot assign to immutable labeled enum property "{property}".'
+  ) as LabeledEnum<TValue>;
+}
+
+function createImmutableEnumProxy<TValue extends string | number | symbol, TObject extends object>(
+  target: TObject,
+  values?: Readonly<Record<string, TValue>>,
+  otherPropertyMessage = 'Cannot assign to immutable enum property "{property}".'
+) {
+  const immutableValues = values ?? (target as Readonly<Record<string, TValue>>);
+
+  return new Proxy(target, {
     set(_target, property) {
-      if (typeof property === 'string' && property in values) {
+      if (typeof property === 'string' && property in immutableValues) {
         throw new Error(`Cannot assign to immutable enum key "${property}".`);
       }
 
-      throw new Error(`Cannot assign to immutable labeled enum property "${String(property)}".`);
+      throw new Error(otherPropertyMessage.replace('{property}', String(property)));
     },
-  }) as LabeledEnum<TValue>;
+  });
 }
 
 function createEnumValue(kind: EnumKind, name: string, index: number) {
