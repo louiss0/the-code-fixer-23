@@ -1,0 +1,40 @@
+{
+  "name": "create-pi-package",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "root": "packages/create-pi-package",
+  "sourceRoot": "packages/create-pi-package/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/packages/create-pi-package"],
+      "options": {
+        "cwd": "packages/create-pi-package",
+        "command": "pnpm exec tsup --config tsup.config.ts"
+      }
+    },
+    "typecheck": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "outputPath": "dist/out-tsc/packages/create-pi-package",
+        "main": "packages/create-pi-package/src/index.ts",
+        "tsConfig": "packages/create-pi-package/tsconfig.lib.json",
+        "noEmit": true
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{projectRoot}/coverage"],
+      "options": {
+        "config": "packages/create-pi-package/vitest.config.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["packages/create-pi-package/**/*.ts"]
+      }
+    }
+  },
+  "tags": []
+}

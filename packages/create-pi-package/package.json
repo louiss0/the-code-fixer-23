@@ -1,0 +1,18 @@
+{
+  "name": "@code-fixer-23/create-pi-package",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Scaffold PI packages with prompts, skills, and extensions.",
+  "keywords": [
+    "cli",
+    "generator",
+    "pi-package",
+    "scaffold"
+  ],
+  "scripts": {
+    "build": "pnpm exec nx build create-pi-package",
+    "test": "pnpm exec nx test create-pi-package",
+    "typecheck": "pnpm exec nx typecheck create-pi-package",
+    "lint": "pnpm exec nx lint create-pi-package"
+  }
+}
