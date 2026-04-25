@@ -1,0 +1,40 @@
+{
+  "name": "enums",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "root": "packages/enums",
+  "sourceRoot": "packages/enums/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/packages/enums"],
+      "options": {
+        "cwd": "packages/enums",
+        "command": "pnpm exec tsup --config tsup.config.ts"
+      }
+    },
+    "typecheck": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "outputPath": "dist/out-tsc/packages/enums",
+        "main": "packages/enums/src/index.ts",
+        "tsConfig": "packages/enums/tsconfig.lib.json",
+        "noEmit": true
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{projectRoot}/coverage"],
+      "options": {
+        "config": "packages/enums/vitest.config.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["packages/enums/**/*.ts"]
+      }
+    }
+  },
+  "tags": []
+}

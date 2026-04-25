@@ -1,0 +1,17 @@
+{
+  "name": "@code-fixer-23/enums",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Enum helpers for string, number, and labeled enum values.",
+  "keywords": [
+    "enum",
+    "typescript",
+    "utilities"
+  ],
+  "scripts": {
+    "build": "pnpm exec nx build enums",
+    "test": "pnpm exec nx test enums",
+    "typecheck": "pnpm exec nx typecheck enums",
+    "lint": "pnpm exec nx lint enums"
+  }
+}
