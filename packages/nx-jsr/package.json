@@ -15,6 +15,7 @@
   },
   "files": [
     "dist",
+    "src/executors/**/schema.json",
     "!**/*.tsbuildinfo",
     "generators.json",
     "executors.json"
@@ -86,6 +87,9 @@
   "generators": "./generators.json",
   "executors": "./executors.json",
   "devDependencies": {
-    "@types/semver": "^7.7.1"
+    "@types/semver": "^7.7.1",
+    "vite": "^7.0.0",
+    "vite-plugin-dts": "^4.3.0",
+    "vite-plugin-static-copy": "^1.0.5"
   }
 }

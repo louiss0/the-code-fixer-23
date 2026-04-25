@@ -7,6 +7,7 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
+    "src/executors/**/schema.json",
     "generators.json",
     "executors.json",
     "migrations.json"
@@ -33,6 +34,9 @@
     "enquirer": "^2.4.1",
     "tsup": "^8.0.1",
     "typescript": "~5.9.2",
+    "vite": "^7.0.0",
+    "vite-plugin-dts": "^4.3.0",
+    "vite-plugin-static-copy": "^1.0.5",
     "vitest": "^3.0.0"
   },
   "generators": "./generators.json",

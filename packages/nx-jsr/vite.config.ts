@@ -67,10 +67,23 @@ export default defineConfig({
     }),
     viteStaticCopy({
       targets: [
-        { src: 'generators.json', dest: '.' },
-        { src: 'executors.json', dest: '.' },
-        { src: 'src/generators/**/schema.json', dest: 'generators' },
-        { src: 'src/generators/**/files', dest: 'generators' },
+        { src: path.resolve(__dirname, 'generators.json'), dest: '.' },
+        { src: path.resolve(__dirname, 'executors.json'), dest: '.' },
+        {
+          src: path.resolve(__dirname, 'src/generators/**/schema.json'),
+          dest: 'generators',
+          structured: true,
+        },
+        {
+          src: path.resolve(__dirname, 'src/generators/**/files/**/*'),
+          dest: 'generators',
+          structured: true,
+        },
+        {
+          src: path.resolve(__dirname, 'src/executors/**/schema.json'),
+          dest: 'executors',
+          structured: true,
+        },
       ],
     }),
   ],

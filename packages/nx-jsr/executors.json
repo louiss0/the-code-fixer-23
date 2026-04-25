@@ -2,17 +2,17 @@
   "executors": {
     "publish": {
       "implementation": "./dist/executors/publish/publish",
-      "schema": "./dist/executors/publish/schema.json",
+      "schema": "./src/executors/publish/schema.json",
       "description": "publish executor"
     },
     "version": {
       "implementation": "./dist/executors/version/version",
-      "schema": "./dist/executors/version/schema.json",
+      "schema": "./src/executors/version/schema.json",
       "description": "version executor"
     },
     "validate": {
       "implementation": "./dist/executors/validate/validate",
-      "schema": "./dist/executors/validate/schema.json",
+      "schema": "./src/executors/validate/schema.json",
       "description": "validate jsr package and run jsr publish --dry-run"
     }
   }
