@@ -8,5 +8,5 @@ export default defineConfig({
   minify: false,
   sourcemap: false,
   target: 'node20',
-  tsconfig: './tsconfig.tsup.json'
+  tsconfig: './tsconfig.tsup.json',
 });

@@ -8,9 +8,9 @@ const tempDirectories: string[] = [];
 
 afterEach(async () => {
   await Promise.all(
-    tempDirectories.splice(0).map((directory) =>
-      rm(directory, { force: true, recursive: true })
-    )
+    tempDirectories
+      .splice(0)
+      .map((directory) => rm(directory, { force: true, recursive: true }))
   );
 });
 
@@ -32,9 +32,13 @@ describe('createPiPackage', () => {
     ) as { exports: Record<string, unknown>; scripts: Record<string, string> };
 
     expect(result.skippedFiles).toEqual([]);
-    expect(packageJson.exports['.']).toMatchObject({ import: './lib/index.ts' });
-    expect(packageJson.scripts.build).toContain("loadPiPackage");
-    expect(await readFile(path.join(targetDirectory, 'pi-package.json'), 'utf8')).toContain('source');
+    expect(packageJson.exports['.']).toMatchObject({
+      import: './lib/index.ts',
+    });
+    expect(packageJson.scripts.build).toContain('loadPiPackage');
+    expect(
+      await readFile(path.join(targetDirectory, 'pi-package.json'), 'utf8')
+    ).toContain('source');
   });
 
   it('creates a bundle-mode package with tsup support', async () => {
@@ -53,10 +57,19 @@ describe('createPiPackage', () => {
       await readFile(path.join(targetDirectory, 'package.json'), 'utf8')
     ) as { exports: Record<string, unknown>; scripts: Record<string, string> };
 
-    expect(packageJson.exports['.']).toMatchObject({ import: './dist/lib/index.js' });
+    expect(packageJson.exports['.']).toMatchObject({
+      import: './dist/lib/index.js',
+    });
     expect(packageJson.scripts.build).toContain('tsup --config tsup.config.ts');
-    expect(await readFile(path.join(targetDirectory, 'tsup.config.ts'), 'utf8')).toContain('minify: true');
-    expect(await readFile(path.join(targetDirectory, 'scripts/prepare-dist.mjs'), 'utf8')).toContain('cpSync');
+    expect(
+      await readFile(path.join(targetDirectory, 'tsup.config.ts'), 'utf8')
+    ).toContain('minify: true');
+    expect(
+      await readFile(
+        path.join(targetDirectory, 'scripts/prepare-dist.mjs'),
+        'utf8'
+      )
+    ).toContain('cpSync');
   });
 });
 

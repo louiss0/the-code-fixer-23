@@ -6,14 +6,40 @@ import { readOptionalFile, writeManagedFile } from './io.js';
 import { isKebabCaseName } from './name.js';
 import { selectChoice } from './prompt.js';
 import { getManagedFileContentByPath } from './templates.js';
-import type { CreatePiPackageOptions, CreatePiPackageResult, PackageMode, TestRunner, ToolingPreset } from './types.js';
+import type {
+  CreatePiPackageOptions,
+  CreatePiPackageResult,
+  PackageMode,
+  TestRunner,
+  ToolingPreset,
+} from './types.js';
 
-export async function createPiPackage(options: CreatePiPackageOptions): Promise<CreatePiPackageResult> {
+export async function createPiPackage(
+  options: CreatePiPackageOptions
+): Promise<CreatePiPackageResult> {
   const targetDirectory = path.resolve(options.directory ?? process.cwd());
   const packageName = resolvePackageName(targetDirectory, options.name);
-  const tooling = await resolveOption('tooling', options.tooling, options.yes, ['eslint-prettier', 'biome'], defaultChoices.tooling);
-  const testRunner = await resolveOption('test runner', options.testRunner, options.yes, ['vitest', 'jest'], defaultChoices.testRunner);
-  const mode = await resolveOption('mode', options.mode, options.yes, ['source', 'bundle'], defaultChoices.mode);
+  const tooling = await resolveOption(
+    'tooling',
+    options.tooling,
+    options.yes,
+    ['eslint-prettier', 'biome'],
+    defaultChoices.tooling
+  );
+  const testRunner = await resolveOption(
+    'test runner',
+    options.testRunner,
+    options.yes,
+    ['vitest', 'jest'],
+    defaultChoices.testRunner
+  );
+  const mode = await resolveOption(
+    'mode',
+    options.mode,
+    options.yes,
+    ['source', 'bundle'],
+    defaultChoices.mode
+  );
 
   await mkdir(targetDirectory, { recursive: true });
 
@@ -62,9 +88,15 @@ export async function createPiPackage(options: CreatePiPackageOptions): Promise<
     `Mode: ${mode}`,
     `Tooling: ${tooling}`,
     `Test runner: ${testRunner}`,
-    createdFiles.length > 0 ? `Created: ${createdFiles.join(', ')}` : 'Created: none',
-    overwrittenFiles.length > 0 ? `Overwritten: ${overwrittenFiles.join(', ')}` : 'Overwritten: none',
-    skippedFiles.length > 0 ? `Skipped: ${skippedFiles.join(', ')}` : 'Skipped: none',
+    createdFiles.length > 0
+      ? `Created: ${createdFiles.join(', ')}`
+      : 'Created: none',
+    overwrittenFiles.length > 0
+      ? `Overwritten: ${overwrittenFiles.join(', ')}`
+      : 'Overwritten: none',
+    skippedFiles.length > 0
+      ? `Skipped: ${skippedFiles.join(', ')}`
+      : 'Skipped: none',
     'Next steps:',
     '  npm install',
     '  npm run check',

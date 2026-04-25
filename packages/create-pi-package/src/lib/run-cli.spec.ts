@@ -14,21 +14,25 @@ beforeEach(() => {
 afterEach(async () => {
   vi.restoreAllMocks();
   await Promise.all(
-    tempDirectories.splice(0).map((directory) =>
-      rm(directory, { force: true, recursive: true })
-    )
+    tempDirectories
+      .splice(0)
+      .map((directory) => rm(directory, { force: true, recursive: true }))
   );
 });
 
 describe('runCli', () => {
   it('fails fast in non-interactive mode when required options are missing', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const errorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined);
 
     const statusCode = await runCli([]);
 
     expect(statusCode).toBe(1);
     expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Missing required options in non-interactive mode')
+      expect.stringContaining(
+        'Missing required options in non-interactive mode'
+      )
     );
   });
 
@@ -45,7 +49,9 @@ describe('runCli', () => {
     ]);
 
     expect(statusCode).toBe(0);
-    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('Mode: source'));
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Mode: source')
+    );
   });
 });
 

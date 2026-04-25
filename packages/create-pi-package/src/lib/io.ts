@@ -5,7 +5,9 @@ export async function ensureParentDirectory(filePath: string) {
   await mkdir(path.dirname(filePath), { recursive: true });
 }
 
-export async function readOptionalFile(filePath: string): Promise<string | null> {
+export async function readOptionalFile(
+  filePath: string
+): Promise<string | null> {
   try {
     return await readFile(filePath, 'utf8');
   } catch {

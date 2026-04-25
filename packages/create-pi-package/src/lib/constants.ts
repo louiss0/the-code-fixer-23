@@ -20,13 +20,13 @@ export const managedFilePaths = [
   '.prettierignore',
   'biome.json',
   'tsup.config.ts',
-  'scripts/prepare-dist.mjs'
+  'scripts/prepare-dist.mjs',
 ] as const;
 
 export const defaultChoices = {
   mode: 'source',
   testRunner: 'vitest',
-  tooling: 'eslint-prettier'
+  tooling: 'eslint-prettier',
 } as const;
 
 export const packageKeywords = [
@@ -34,5 +34,5 @@ export const packageKeywords = [
   'pi-package',
   'prompts',
   'skills',
-  'extensions'
+  'extensions',
 ] as const;

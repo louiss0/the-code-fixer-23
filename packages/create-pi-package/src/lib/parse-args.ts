@@ -1,5 +1,10 @@
 import path from 'node:path';
-import type { CreatePiPackageOptions, PackageMode, TestRunner, ToolingPreset } from './types.js';
+import type {
+  CreatePiPackageOptions,
+  PackageMode,
+  TestRunner,
+  ToolingPreset,
+} from './types.js';
 
 const validTooling = new Set<ToolingPreset>(['eslint-prettier', 'biome']);
 const validTestRunners = new Set<TestRunner>(['vitest', 'jest']);

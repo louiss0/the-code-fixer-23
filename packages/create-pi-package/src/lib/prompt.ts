@@ -10,7 +10,9 @@ export async function selectChoice<T extends string>(options: {
   defaultChoice: T;
   label: string;
 }) {
-  const promptLabel = `${options.label} (${options.choices.join('/')}) [${options.defaultChoice}]: `;
+  const promptLabel = `${options.label} (${options.choices.join('/')}) [${
+    options.defaultChoice
+  }]: `;
   const reader = readline.createInterface({ input, output });
 
   try {

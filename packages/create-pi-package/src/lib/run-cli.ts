@@ -17,7 +17,12 @@ export async function runCli(args: string[]) {
     const existingEntries = await readDirectoryEntries(targetDirectory);
     const needsConfirmation = existingEntries.length > 0;
 
-    if (!options.yes && !options.force && needsConfirmation && isInteractiveSession()) {
+    if (
+      !options.yes &&
+      !options.force &&
+      needsConfirmation &&
+      isInteractiveSession()
+    ) {
       console.error(
         'Target directory is not empty. Re-run with --force to overwrite managed files or --yes once the directory is ready.'
       );

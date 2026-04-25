@@ -10,17 +10,29 @@ interface TemplateContext {
 }
 
 export function getManagedFileContentByPath(context: TemplateContext) {
-  const scopedPackageName = getScopedPackageName(defaultScope, context.packageName);
+  const scopedPackageName = getScopedPackageName(
+    defaultScope,
+    context.packageName
+  );
   const files = new Map<string, string>();
 
   files.set('.gitignore', getGitIgnoreContent(context.mode));
   files.set('LICENSE', getLicenseContent());
   files.set('README.md', getReadmeContent({ ...context, scopedPackageName }));
-  files.set('package.json', getPackageJsonContent({ ...context, scopedPackageName }));
-  files.set('pi-package.json', JSON.stringify({ mode: context.mode }, null, 2) + '\n');
+  files.set(
+    'package.json',
+    getPackageJsonContent({ ...context, scopedPackageName })
+  );
+  files.set(
+    'pi-package.json',
+    JSON.stringify({ mode: context.mode }, null, 2) + '\n'
+  );
   files.set('tsconfig.json', getTsConfigContent());
   files.set('lib/index.ts', getHelperContent());
-  files.set('extensions/weather-tools/package.json', getExtensionPackageJsonContent());
+  files.set(
+    'extensions/weather-tools/package.json',
+    getExtensionPackageJsonContent()
+  );
   files.set('extensions/weather-tools/README.md', getExtensionReadmeContent());
   files.set('skills/weather-brief/SKILL.md', getSkillContent());
   files.set('prompts/weather-report.md', getPromptContent());
@@ -52,13 +64,16 @@ export function getManagedFileContentByPath(context: TemplateContext) {
   return files;
 }
 
-function getPackageJsonContent(context: TemplateContext & { scopedPackageName: string }) {
+function getPackageJsonContent(
+  context: TemplateContext & { scopedPackageName: string }
+) {
   const packageJson = {
     name: context.scopedPackageName,
     version: '0.1.0',
     private: false,
     type: 'module',
-    description: 'A scaffolded PI package with prompts, skills, and extensions.',
+    description:
+      'A scaffolded PI package with prompts, skills, and extensions.',
     keywords: [...packageKeywords],
     license: 'MIT',
     engines: {
@@ -73,7 +88,11 @@ function getPackageJsonContent(context: TemplateContext & { scopedPackageName: s
           types: './dist/lib/index.d.ts',
         }
       : {}),
-    devDependencies: getDevDependencies(context.mode, context.testRunner, context.tooling),
+    devDependencies: getDevDependencies(
+      context.mode,
+      context.testRunner,
+      context.tooling
+    ),
   };
 
   return JSON.stringify(packageJson, null, 2) + '\n';
@@ -95,18 +114,21 @@ function getPublishedFiles(mode: PackageMode) {
   ];
 }
 
-function getScripts(mode: PackageMode, testRunner: TestRunner, tooling: ToolingPreset) {
+function getScripts(
+  mode: PackageMode,
+  testRunner: TestRunner,
+  tooling: ToolingPreset
+) {
   const test = testRunner === 'vitest' ? 'vitest run' : 'jest --runInBand';
   const testWatch = testRunner === 'vitest' ? 'vitest' : 'jest --watch';
-  const lint =
-    tooling === 'biome' ? 'biome check .' : 'eslint .';
+  const lint = tooling === 'biome' ? 'biome check .' : 'eslint .';
   const format =
     tooling === 'biome' ? 'biome format --write .' : 'prettier --write .';
   const typecheck = 'tsc -p tsconfig.json --noEmit';
   const build =
     mode === 'bundle'
       ? 'tsup --config tsup.config.ts && node ./scripts/prepare-dist.mjs'
-      : 'node -e "import(\'./lib/index.ts\').then(({ loadPiPackage }) => { const result = loadPiPackage(process.cwd()); if (!result.isValid) { console.error(result.messages.join(\'\\n\')); process.exit(1); } })"';
+      : "node -e \"import('./lib/index.ts').then(({ loadPiPackage }) => { const result = loadPiPackage(process.cwd()); if (!result.isValid) { console.error(result.messages.join('\\n')); process.exit(1); } })\"";
 
   return {
     build,
@@ -138,7 +160,11 @@ function getExports(mode: PackageMode) {
   };
 }
 
-function getDevDependencies(mode: PackageMode, testRunner: TestRunner, tooling: ToolingPreset) {
+function getDevDependencies(
+  mode: PackageMode,
+  testRunner: TestRunner,
+  tooling: ToolingPreset
+) {
   const devDependencies: Record<string, string> = {
     typescript: '^5.9.2',
     '@types/node': '^24.6.2',
@@ -168,7 +194,9 @@ function getDevDependencies(mode: PackageMode, testRunner: TestRunner, tooling: 
   return devDependencies;
 }
 
-function getReadmeContent(context: TemplateContext & { scopedPackageName: string }) {
+function getReadmeContent(
+  context: TemplateContext & { scopedPackageName: string }
+) {
   const modeNotes =
     context.mode === 'bundle'
       ? [
@@ -216,23 +244,25 @@ function getReadmeContent(context: TemplateContext & { scopedPackageName: string
 }
 
 function getTsConfigContent() {
-  return JSON.stringify(
-    {
-      compilerOptions: {
-        module: 'nodenext',
-        moduleResolution: 'nodenext',
-        target: 'es2022',
-        strict: true,
-        noEmit: true,
-        resolveJsonModule: true,
-        esModuleInterop: true,
-        types: ['node'],
+  return (
+    JSON.stringify(
+      {
+        compilerOptions: {
+          module: 'nodenext',
+          moduleResolution: 'nodenext',
+          target: 'es2022',
+          strict: true,
+          noEmit: true,
+          resolveJsonModule: true,
+          esModuleInterop: true,
+          types: ['node'],
+        },
+        include: ['lib/**/*.ts', 'test/**/*.ts'],
       },
-      include: ['lib/**/*.ts', 'test/**/*.ts'],
-    },
-    null,
-    2
-  ) + '\n';
+      null,
+      2
+    ) + '\n'
+  );
 }
 
 function getHelperContent() {
@@ -303,16 +333,19 @@ export function loadPiPackage(packageRoot: string): LoadPiPackageResult {
 }
 
 function getExtensionPackageJsonContent() {
-  return JSON.stringify(
-    {
-      name: 'weather-tools',
-      version: '0.1.0',
-      private: true,
-      description: 'Starter PI extension example for weather-oriented package flows.',
-    },
-    null,
-    2
-  ) + '\n';
+  return (
+    JSON.stringify(
+      {
+        name: 'weather-tools',
+        version: '0.1.0',
+        private: true,
+        description:
+          'Starter PI extension example for weather-oriented package flows.',
+      },
+      null,
+      2
+    ) + '\n'
+  );
 }
 
 function getExtensionReadmeContent() {
