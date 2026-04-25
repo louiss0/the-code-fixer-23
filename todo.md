@@ -25,6 +25,7 @@
   - Compare with package-level configs that already work.
 - Decide the correct fix for both generators.
   - Prefer using the Nx CLI/project initialization flow for ESLint after project creation instead of hand-writing another minimal config.
+  - The next agent should actively reproduce the issue through the CLI path first, then implement the fix through that same CLI-driven setup if possible.
   - Only fall back to generating a package-level flat config if the CLI path cannot produce the required result.
 - Update both generators consistently:
   - `packages/nx-tsup/src/generators/library/library.ts`
