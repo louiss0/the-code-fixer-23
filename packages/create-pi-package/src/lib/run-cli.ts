@@ -1,9 +1,9 @@
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
 
-import { createPiPackage } from './create-pi-package.js';
-import { parseArgs } from './parse-args.js';
-import { isInteractiveSession } from './prompt.js';
+import { createPiPackage } from './create-pi-package';
+import { parseArgs } from './parse-args';
+import { isInteractiveSession } from './prompt';
 
 export async function runCli(args: string[]) {
   try {

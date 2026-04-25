@@ -1,4 +1,4 @@
-import type { PiPackageMode, TestRunner, ToolingPreset } from './types.js';
+import type { PiPackageMode, TestRunner, ToolingPreset } from './types';
 
 export const defaultScope = '@pi-packages';
 

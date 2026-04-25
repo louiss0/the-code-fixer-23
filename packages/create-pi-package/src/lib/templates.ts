@@ -1,11 +1,11 @@
-import { defaultScope, packageKeywords } from './constants.js';
-import { getScopedPackageName } from './name.js';
+import { defaultScope, packageKeywords } from './constants';
+import { getScopedPackageName } from './name';
 import type {
   PiPackageMode,
   TemplateContext,
   TestRunner,
   ToolingPreset,
-} from './types.js';
+} from './types';
 
 export function getManagedFileContentByPath(context: {
   mode: PiPackageMode;

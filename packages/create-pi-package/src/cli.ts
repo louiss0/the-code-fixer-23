@@ -1,4 +1,4 @@
-import { runCli } from './lib/run-cli.js';
+import { runCli } from './lib/run-cli';
 
 const statusCode = await runCli(process.argv.slice(2));
 

@@ -4,8 +4,8 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { createPiPackage } from './lib/create-pi-package.js';
-import { parseArgs } from './lib/parse-args.js';
+import { createPiPackage } from './lib/create-pi-package';
+import { parseArgs } from './lib/parse-args';
 
 describe('parseArgs', () => {
   it('parses the supported flags', () => {

@@ -5,7 +5,7 @@ import type {
   PiPackageMode,
   TestRunner,
   ToolingPreset,
-} from './types.js';
+} from './types';
 
 const validTooling = new Set(['eslint-prettier', 'biome']);
 const validTestRunners = new Set(['vitest', 'jest']);

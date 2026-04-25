@@ -1,2 +1,2 @@
-export { createPiPackage } from './lib/create-pi-package.js';
-export { runCli } from './lib/run-cli.js';
+export { createPiPackage } from './lib/create-pi-package';
+export { runCli } from './lib/run-cli';

@@ -1,7 +1,7 @@
 import readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 
-import type { SelectChoiceOptions } from './types.js';
+import type { SelectChoiceOptions } from './types';
 
 export function isInteractiveSession() {
   return process.stdin.isTTY === true && process.stdout.isTTY === true;

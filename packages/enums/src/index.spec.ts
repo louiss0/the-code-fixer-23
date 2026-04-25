@@ -5,7 +5,7 @@ import {
   createEnum,
   createLabeledEnum,
   isParseError,
-} from './index.js';
+} from './index';
 
 describe('createEnum', () => {
   it('creates string enums from names', () => {

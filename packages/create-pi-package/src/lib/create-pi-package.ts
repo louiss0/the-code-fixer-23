@@ -1,18 +1,18 @@
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 
-import { defaultChoices, defaultScope, managedFilePaths } from './constants.js';
-import { readOptionalFile, writeManagedFile } from './io.js';
-import { getScopedPackageName, isKebabCaseName } from './name.js';
-import { selectChoice } from './prompt.js';
-import { getManagedFileContentByPath } from './templates.js';
+import { defaultChoices, defaultScope, managedFilePaths } from './constants';
+import { readOptionalFile, writeManagedFile } from './io';
+import { getScopedPackageName, isKebabCaseName } from './name';
+import { selectChoice } from './prompt';
+import { getManagedFileContentByPath } from './templates';
 import type {
   CreatePiPackageOptions,
   CreatePiPackageResult,
   PiPackageMode,
   TestRunner,
   ToolingPreset,
-} from './types.js';
+} from './types';
 
 export async function createPiPackage(
   options: CreatePiPackageOptions
