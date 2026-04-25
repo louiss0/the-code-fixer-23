@@ -23,9 +23,9 @@
 - Inspect the workspace ESLint setup and compare it with what generated packages should look like.
   - Start with `eslint.config.mjs` at the repo root.
   - Compare with package-level configs that already work.
-- Decide the correct fix for both generators:
-  - either invoke the Nx ESLint project initialization flow after project creation,
-  - or generate a proper package-level flat config that extends the workspace base config and supports TypeScript.
+- Decide the correct fix for both generators.
+  - Prefer using the Nx CLI/project initialization flow for ESLint after project creation instead of hand-writing another minimal config.
+  - Only fall back to generating a package-level flat config if the CLI path cannot produce the required result.
 - Update both generators consistently:
   - `packages/nx-tsup/src/generators/library/library.ts`
   - `packages/nx-jsr/src/generators/library/library.ts`
