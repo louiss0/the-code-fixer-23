@@ -1,3 +1,14 @@
+## 1.1.4 (2026-04-25)
+
+### 🩹 Fixes
+
+- **nx-jsr:** skip false-positive plugin manifest lint ([9034cbb](https://github.com/louiss0/the-code-fixer-23/commit/9034cbb))
+- **packages:** add .js extensions to plugin entry manifests ([d9daa80](https://github.com/louiss0/the-code-fixer-23/commit/d9daa80))
+
+### ❤️ Thank You
+
+- louiss0 @louiss0
+
 ## 1.1.3 (2026-04-14)
 
 ### 🩹 Fixes

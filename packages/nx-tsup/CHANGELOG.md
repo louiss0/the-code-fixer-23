@@ -1,3 +1,18 @@
+## 1.1.2 (2026-04-25)
+
+### 🩹 Fixes
+
+- **packages:** add .js extensions to plugin entry manifests ([d9daa80](https://github.com/louiss0/the-code-fixer-23/commit/d9daa80))
+- **workspace:** resolve release lint blockers ([027a691](https://github.com/louiss0/the-code-fixer-23/commit/027a691))
+- **packages:** make installed nx-tsup builds work ([a895788](https://github.com/louiss0/the-code-fixer-23/commit/a895788))
+- **packages:** resolve esm generator file paths ([470a672](https://github.com/louiss0/the-code-fixer-23/commit/470a672))
+- **packages:** publish verified verdaccio builds ([09793e8](https://github.com/louiss0/the-code-fixer-23/commit/09793e8))
+- **packages:** correct package test and pack setup ([9215fcb](https://github.com/louiss0/the-code-fixer-23/commit/9215fcb))
+
+### ❤️ Thank You
+
+- louiss0 @louiss0
+
 ## 1.1.1 (2026-04-09)
 
 This was a version bump only for @code-fixer-23/nx-tsup to align it with other projects, there were no code changes.
