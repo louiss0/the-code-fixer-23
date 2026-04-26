@@ -11,24 +11,57 @@ export type EnumShape<
   TName extends string = string
 > = Readonly<Record<TName, EnumValue<TKind>>>;
 
+type EnumLiteralValue<
+  TKind extends EnumKind,
+  TName extends string,
+  TIndex extends number
+> = TKind extends 'string'
+  ? TName
+  : TKind extends 'number'
+  ? TIndex
+  : symbol;
+
+type EnumLiteralValues<
+  TKind extends EnumKind,
+  TNames extends readonly string[],
+  TIndex extends unknown[] = []
+> = TNames extends readonly [infer TName extends string, ...infer TRest extends string[]]
+  ? {
+      readonly [K in TName]: EnumLiteralValue<
+        TKind,
+        K,
+        TIndex['length']
+      >;
+    } & EnumLiteralValues<TKind, TRest, [...TIndex, unknown]>
+  : {};
+
+type EnumLiteralValueUnion<
+  TKind extends EnumKind,
+  TNames extends readonly string[],
+  TIndex extends unknown[] = []
+> = TNames extends readonly [infer TName extends string, ...infer TRest extends string[]]
+  ? EnumLiteralValue<TKind, TName, TIndex['length']> |
+      EnumLiteralValueUnion<TKind, TRest, [...TIndex, unknown]>
+  : never;
+
 export type EnumHelpers<
   TKind extends EnumKind,
-  TName extends string = string
+  TNames extends readonly string[] = readonly string[]
 > = {
-  entries: readonly [TName, EnumValue<TKind>][];
+  entries: readonly [TNames[number], EnumLiteralValueUnion<TKind, TNames>][];
   hasLabel(label: string): boolean;
-  labelOf(value: EnumValue<TKind>): string | undefined;
-  labels: Readonly<Record<TName, TName>>;
-  names: readonly TName[];
-  parse(label: string): EnumValue<TKind> | ParseError;
-  validate(value: unknown): value is EnumValue<TKind>;
-  values: EnumShape<TKind, TName>;
+  labelOf(value: EnumLiteralValueUnion<TKind, TNames>): string | undefined;
+  labels: Readonly<Record<TNames[number], TNames[number]>>;
+  names: readonly [...TNames];
+  parse(label: string): EnumLiteralValueUnion<TKind, TNames> | ParseError;
+  validate(value: unknown): value is EnumLiteralValueUnion<TKind, TNames>;
+  values: EnumLiteralValues<TKind, TNames>;
 };
 
 export type EnumDefinition<
   TKind extends EnumKind,
-  TName extends string = string
-> = EnumShape<TKind, TName> & EnumHelpers<TKind, TName>;
+  TNames extends readonly string[] = readonly string[]
+> = EnumLiteralValues<TKind, TNames> & EnumHelpers<TKind, TNames>;
 
 export type EnumLabels<TValue extends string = string> = Record<TValue, string>;
 
@@ -59,55 +92,74 @@ export function isParseError(value: unknown): value is ParseError {
   return value instanceof ParseError;
 }
 
-export function createEnum<TKind extends EnumKind, const TName extends string>(
-  kind: TKind,
-  ...names: TName[]
-): EnumDefinition<TKind, TName> {
+export function createEnum<
+  TKind extends EnumKind,
+  const TNames extends readonly string[]
+>(kind: TKind, ...names: TNames): EnumDefinition<TKind, TNames> {
   assertUniqueValues(names, 'Enum names must be unique.');
 
-  const values = Object.freeze(
-    Object.fromEntries(
-      names.map((name, index) => [name, createEnumValue(kind, name, index)])
-    )
-  ) as EnumShape<TKind, TName>;
+  const mutableValues = {} as EnumLiteralValues<TKind, TNames>;
+  const mutableValuesRecord = mutableValues as unknown as Record<
+    TNames[number],
+    EnumLiteralValueUnion<TKind, TNames>
+  >;
+  const mutableLabels = {} as Record<TNames[number], TNames[number]>;
+  const entries: [TNames[number], EnumLiteralValueUnion<TKind, TNames>][] = [];
+  const parsedValues = new Map<string, EnumLiteralValueUnion<TKind, TNames>>();
+  const valueLabels = new Map<
+    EnumLiteralValueUnion<TKind, TNames>,
+    TNames[number]
+  >();
 
-  const labels = Object.freeze(
-    Object.fromEntries(names.map((name) => [name, name]))
-  ) as Readonly<Record<TName, TName>>;
-  const entries = Object.freeze(
-    names.map((name) => [name, values[name]])
-  ) as readonly [TName, EnumValue<TKind>][];
-  const parsedValues = new Map(
-    names.map((name) => [name, values[name]])
-  ) as ReadonlyMap<string, EnumValue<TKind>>;
-  const valueLabels = new Map(
-    names.map((name) => [values[name], name])
-  ) as ReadonlyMap<EnumValue<TKind>, TName>;
+  for (const [index, name] of names.entries()) {
+    const key = name as TNames[number];
+    const value = createEnumValue(kind, name, index) as EnumLiteralValueUnion<
+      TKind,
+      TNames
+    >;
+
+    mutableValuesRecord[key] = value;
+    mutableLabels[key] = key;
+    entries.push([key, value]);
+    parsedValues.set(name, value);
+    valueLabels.set(value, key);
+  }
+
+  const values = Object.freeze(mutableValues);
+  const labels = Object.freeze(mutableLabels) as Readonly<
+    Record<TNames[number], TNames[number]>
+  >;
   const valuesSet = new Set(Object.values(values)) as ReadonlySet<
-    EnumValue<TKind>
+    EnumLiteralValueUnion<TKind, TNames>
   >;
 
   const api = Object.freeze({
     ...values,
     values,
     labels,
-    names: Object.freeze([...names]) as readonly TName[],
-    entries,
+    names: Object.freeze([...names]) as readonly [...TNames],
+    entries: Object.freeze(entries) as readonly [
+      TNames[number],
+      EnumLiteralValueUnion<TKind, TNames>
+    ][],
     parse(label: string) {
       return parsedValues.get(label) ?? new ParseError(label);
     },
     hasLabel(label: string) {
       return parsedValues.has(label);
     },
-    labelOf(value: EnumValue<TKind>) {
+    labelOf(value: EnumLiteralValueUnion<TKind, TNames>) {
       return valueLabels.get(value);
     },
-    validate(value: unknown): value is EnumValue<TKind> {
-      return valuesSet.has(value as EnumValue<TKind>);
+    validate(value: unknown): value is EnumLiteralValueUnion<
+      TKind,
+      TNames
+    > {
+      return valuesSet.has(value as EnumLiteralValueUnion<TKind, TNames>);
     },
   });
 
-  return createImmutableEnumProxy(api, values) as EnumDefinition<TKind, TName>;
+  return createImmutableEnumProxy(api, values) as EnumDefinition<TKind, TNames>;
 }
 
 export function createLabeledEnum<const TValue extends string>(
