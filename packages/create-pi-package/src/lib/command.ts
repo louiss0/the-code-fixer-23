@@ -38,7 +38,6 @@ export function createCommand(action: CreatePiPackageAction, version: string) {
     .option('--prompts', 'Generate prompt templates')
     .option('--themes', 'Generate theme templates')
     .option('--skills', 'Generate skill templates')
-    .option('--install', 'Install dependencies after scaffolding')
     .option('--no-install', 'Skip dependency installation')
     .option('--force', 'Overwrite managed scaffold files')
     .action(async (directory, options) => {

@@ -191,16 +191,7 @@ async function resolveFeatures(input: CreatePiPackageInput) {
 }
 
 async function resolveInstall(install: boolean | undefined) {
-  if (typeof install === 'boolean') {
-    return install;
-  }
-
-  const answer = await prompts.confirm({
-    message: 'Install dependencies?',
-    initialValue: true,
-  });
-
-  return getPromptValue(answer);
+  return install ?? true;
 }
 
 function getFormatterChoices(linter: Linter): Formatter[] {

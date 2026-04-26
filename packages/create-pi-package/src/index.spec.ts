@@ -62,6 +62,19 @@ describe('createCommand', () => {
     });
   });
 
+  it('does not expose a positive install flag because installation is default', async () => {
+    const command = createCommand(async () => {
+      throw new Error('action should not run');
+    }, '1.2.3');
+
+    command.exitOverride();
+    command.configureOutput({ writeErr: () => undefined });
+
+    await expect(
+      command.parseAsync(['weather-kit', '--install'], { from: 'user' })
+    ).rejects.toThrow("error: unknown option '--install'");
+  });
+
   it('rejects unsupported bundlers before scaffolding starts', async () => {
     const command = createCommand(async () => {
       throw new Error('action should not run');

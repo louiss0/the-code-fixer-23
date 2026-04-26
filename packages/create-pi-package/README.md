@@ -102,8 +102,7 @@ create-pi-package [directory] [options]
 | `--test-runner <runner>` | Extension test runner: `vitest` or `jest`. |
 | `--linter <linter>` | Linter to use: `eslint` or `biome`. Defaults to `eslint`. |
 | `--formatter <formatter>` | Formatter to use: `prettier`, `stylistic`, or `biome`, depending on the selected linter. Defaults to the first valid formatter. |
-| `--install` | Install development dependencies after scaffolding. |
-| `--no-install` | Skip dependency installation. |
+| `--no-install` | Skip dependency installation. Installation is enabled by default. |
 | `--force` | Overwrite managed scaffold files when they already exist. |
 | `--help` | Show help. |
 | `--version` | Show version. |
@@ -147,7 +146,7 @@ Extension packages get:
 ### Prompt package
 
 ```bash
-pnpm create pi-package my-prompts --prompts --no-install
+pnpm create pi-package my-prompts --prompts
 ```
 
 Creates:
@@ -163,7 +162,7 @@ Prompt-only packages skip bundler and test-runner setup.
 ### Skill package
 
 ```bash
-pnpm create pi-package my-skills --skills --no-install
+pnpm create pi-package my-skills --skills
 ```
 
 Creates:
@@ -179,7 +178,7 @@ The starter skill follows the PI Agent Skills convention with `name` and
 ### Theme package
 
 ```bash
-pnpm create pi-package my-theme --themes --no-install
+pnpm create pi-package my-theme --themes
 ```
 
 Creates:
@@ -296,16 +295,17 @@ Generated `package.json` files do not write `dependencies` or
 needed for your choices and either installs them or prints the command to run
 later.
 
-When dependency installation is enabled, the CLI detects the package manager
-from `npm_config_user_agent` or `npm_execpath` and runs the matching add command:
+Dependency installation is enabled by default. The CLI detects the package
+manager from `npm_config_user_agent` or `npm_execpath` and runs the matching add
+command:
 
 - `npm install --save-dev <packages...>`
 - `pnpm add --save-dev <packages...>`
 - `yarn add --dev <packages...>`
 - `bun add --dev <packages...>`
 
-When dependency installation is skipped, the summary prints the npm command as a
-portable fallback.
+Use `--no-install` to skip installation. When dependency installation is
+skipped, the summary prints the npm command as a portable fallback.
 ## Publishing generated packages
 
 Generated packages are normal npm packages. They include:
