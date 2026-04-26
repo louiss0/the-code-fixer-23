@@ -1,12 +1,12 @@
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
+import { getHelpText, parseCommand } from './command.js';
 import { createPiPackage } from './create-pi-package.js';
 import { isInteractiveSession } from './prompt.js';
-import { parseArgs } from './parse-args.js';
 
 export async function runCli(args: string[]) {
   try {
-    const { options, showHelp } = parseArgs(args);
+    const { options, showHelp } = parseCommand(args);
 
     if (showHelp) {
       console.log(getHelpText());
@@ -50,7 +50,7 @@ export async function runCli(args: string[]) {
 
     return 0;
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = getErrorMessage(error);
     console.error(message);
     return 1;
   }
@@ -64,20 +64,24 @@ async function readDirectoryEntries(targetDirectory: string) {
   }
 }
 
-function getHelpText() {
-  return `create-pi-package
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error && 'code' in error) {
+    if (error.code === 'commander.unknownOption') {
+      return error.message;
+    }
 
-Usage:
-  create-pi-package [directory] [flags]
+    if (error.code === 'commander.missingArgument') {
+      return error.message;
+    }
 
-Flags:
-  --directory <path>      Target directory. Defaults to the current working directory.
-  --name <name>           Explicit kebab-case package leaf name.
-  --tooling <preset>      Tooling preset: eslint-prettier | biome
-  --test-runner <runner>  Test runner: vitest | jest
-  --mode <mode>           Package mode: source | bundle
-  --yes                   Accept recommended defaults for omitted choices.
-  --force                 Overwrite managed scaffold files.
-  --help, -h              Show help.
-`;
+    if (error.code === 'commander.optionMissingArgument') {
+      return error.message;
+    }
+
+    if (error.code === 'commander.invalidArgument') {
+      return error.message;
+    }
+  }
+
+  return error instanceof Error ? error.message : String(error);
 }
