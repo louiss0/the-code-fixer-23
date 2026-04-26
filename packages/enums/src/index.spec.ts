@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import {
   ParseError,
@@ -13,6 +13,8 @@ describe('createEnum', () => {
 
     expect(values.Draft).toBe('Draft');
     expect(values.Published).toBe('Published');
+    expectTypeOf(values.Draft).toEqualTypeOf<'Draft'>();
+    expectTypeOf(values.Published).toEqualTypeOf<'Published'>();
   });
 
   it('exposes labeled enum helpers for string enums', () => {
@@ -37,6 +39,8 @@ describe('createEnum', () => {
 
     expect(values.Low).toBe(0);
     expect(values.High).toBe(1);
+    expectTypeOf(values.Low).toEqualTypeOf<0>();
+    expectTypeOf(values.High).toEqualTypeOf<1>();
   });
 
   it('exposes labeled enum helpers for number enums', () => {
@@ -46,6 +50,7 @@ describe('createEnum', () => {
     expect(values.labelOf(1)).toBe('High');
     expect(values.validate(0)).toBe(true);
     expect(values.hasLabel('High')).toBe(true);
+    expectTypeOf(values.parse('Low')).toEqualTypeOf<0 | ParseError>();
   });
 
   it('creates symbol enums by declaration order', () => {
@@ -85,6 +90,8 @@ describe('createLabeledEnum', () => {
     expect(status.labelOf('published')).toBe('Published');
     expect(status.validate('draft')).toBe(true);
     expect(status.hasLabel('Published')).toBe(true);
+    expectTypeOf(status.draft).toEqualTypeOf<'draft'>();
+    expectTypeOf(status.published).toEqualTypeOf<'published'>();
   });
 
   it('returns a parse error for unknown labels', () => {
