@@ -1,80 +1,46 @@
-import { readdir } from 'node:fs/promises';
-import path from 'node:path';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
+import { createCommand } from './command';
 import { createPiPackage } from './create-pi-package';
-import { parseArgs } from './parse-args';
-import { isInteractiveSession } from './prompt';
+
+const moduleDirectory = dirname(fileURLToPath(import.meta.url));
 
 export async function runCli(args: string[]) {
-  try {
-    const { options, showHelp } = parseArgs(args);
-
-    if (showHelp) {
-      console.log(getHelpText());
-      return 0;
-    }
-
-    const targetDirectory = path.resolve(options.directory ?? process.cwd());
-    const existingEntries = await readDirectoryEntries(targetDirectory);
-    const needsConfirmation = existingEntries.length > 0;
-
-    if (
-      !options.yes &&
-      !options.force &&
-      needsConfirmation &&
-      isInteractiveSession()
-    ) {
-      console.error(
-        'Target directory is not empty. Re-run with --force to overwrite managed files or --yes once the directory is ready.'
-      );
-      return 1;
-    }
-
-    if (!options.yes && !isInteractiveSession()) {
-      if (!options.tooling || !options.testRunner || !options.mode) {
-        console.error(
-          'Missing required options in non-interactive mode. Provide --tooling, --test-runner, and --mode, or use --yes.'
-        );
-        return 1;
-      }
-    }
-
-    const result = await createPiPackage(options);
+  const program = createCommand(async (input) => {
+    const result = await createPiPackage(input);
 
     for (const line of result.summaryLines) {
       console.log(line);
     }
+  }, readPackageVersion());
 
-    return result.skippedFiles.length > 0 ? 1 : 0;
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error(message);
-    return 1;
-  }
-}
+  program.exitOverride();
 
-async function readDirectoryEntries(targetDirectory: string) {
   try {
-    return await readdir(targetDirectory);
-  } catch {
-    return [];
+    await program.parseAsync(args, { from: 'user' });
+    return 0;
+  } catch (error) {
+    const commanderError = error as { code?: string; exitCode?: number };
+
+    if (commanderError.code === 'commander.helpDisplayed') {
+      return 0;
+    }
+
+    return commanderError.exitCode ?? 1;
   }
 }
 
-function getHelpText() {
-  return `create-pi-package
+function readPackageVersion() {
+  try {
+    const packageJsonPath = join(moduleDirectory, '../package.json');
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as {
+      version?: string;
+    };
 
-Usage:
-  create-pi-package [directory] [flags]
-
-Flags:
-  --directory <path>      Target directory. Defaults to the current working directory.
-  --name <name>           Explicit kebab-case package leaf name.
-  --tooling <preset>      Tooling preset: eslint-prettier | biome
-  --test-runner <runner>  Test runner: vitest | jest
-  --mode <mode>           Package mode: source | bundle
-  --yes                   Accept recommended defaults for omitted choices.
-  --force                 Overwrite managed scaffold files.
-  --help, -h              Show help.
-`;
+    return packageJson.version ?? '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
 }

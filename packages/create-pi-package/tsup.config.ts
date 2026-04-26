@@ -6,7 +6,7 @@ export default defineConfig({
   entry: ['src/index.ts', 'src/cli.ts'],
   format: ['esm'],
   minify: false,
-  outDir: '../../dist/packages/create-pi-package',
+  outDir: 'dist',
   sourcemap: false,
   splitting: true,
   target: 'node20',

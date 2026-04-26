@@ -1,3 +1,3 @@
 import eslint from '@eslint/js';
 
-export default [eslint.configs.recommended];
+export default [{ ignores: ['dist/**'] }, eslint.configs.recommended];
