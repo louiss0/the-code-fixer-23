@@ -34,6 +34,9 @@
   },
   "devDependencies": {
     "typescript": "~5.9.2",
+    "vite": "^7.0.0",
+    "vite-plugin-dts": "^4.3.0",
+    "vite-plugin-static-copy": "^1.0.5",
     "vitest": "^3.0.0"
   },
   "generators": "./generators.json",
