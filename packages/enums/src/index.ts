@@ -49,8 +49,6 @@ export type EnumHelpers<
   TNames extends readonly string[] = readonly string[]
 > = {
   entries: readonly [TNames[number], EnumLiteralValueUnion<TKind, TNames>][];
-  hasLabel(label: string): boolean;
-  labelOf(value: EnumLiteralValueUnion<TKind, TNames>): string | undefined;
   labels: Readonly<Record<TNames[number], TNames[number]>>;
   names: readonly [...TNames];
   parse(label: string): EnumLiteralValueUnion<TKind, TNames> | ParseError;
@@ -69,8 +67,6 @@ export type LabeledEnum<TValue extends string = string> = Readonly<
   Record<TValue, TValue>
 > & {
   entries: readonly [TValue, TValue][];
-  hasLabel(label: string): boolean;
-  labelOf(value: string): string | undefined;
   labels: EnumLabels<TValue>;
   names: readonly TValue[];
   parse(label: string): TValue | ParseError;
@@ -106,10 +102,6 @@ export function createEnum<
   const mutableLabels = {} as Record<TNames[number], TNames[number]>;
   const entries: [TNames[number], EnumLiteralValueUnion<TKind, TNames>][] = [];
   const parsedValues = new Map<string, EnumLiteralValueUnion<TKind, TNames>>();
-  const valueLabels = new Map<
-    EnumLiteralValueUnion<TKind, TNames>,
-    TNames[number]
-  >();
 
   for (const [index, name] of names.entries()) {
     const key = name as TNames[number];
@@ -122,7 +114,6 @@ export function createEnum<
     mutableLabels[key] = key;
     entries.push([key, value]);
     parsedValues.set(name, value);
-    valueLabels.set(value, key);
   }
 
   const values = Object.freeze(mutableValues);
@@ -144,12 +135,6 @@ export function createEnum<
     ][],
     parse(label: string) {
       return parsedValues.get(label) ?? new ParseError(label);
-    },
-    hasLabel(label: string) {
-      return parsedValues.has(label);
-    },
-    labelOf(value: EnumLiteralValueUnion<TKind, TNames>) {
-      return valueLabels.get(value);
     },
     validate(value: unknown): value is EnumLiteralValueUnion<
       TKind,
@@ -183,9 +168,6 @@ export function createLabeledEnum<const TValue extends string>(
   const parsedValues = new Map(
     names.map((name) => [labels[name], values[name]])
   );
-  const valueLabels = new Map(
-    names.map((name) => [values[name], labels[name]])
-  );
 
   const api = Object.freeze({
     ...values,
@@ -195,12 +177,6 @@ export function createLabeledEnum<const TValue extends string>(
     entries,
     parse(label: string) {
       return parsedValues.get(label) ?? new ParseError(label);
-    },
-    hasLabel(label: string) {
-      return parsedValues.has(label);
-    },
-    labelOf(value: string) {
-      return valueLabels.get(value as TValue);
     },
     validate(value: unknown): value is TValue {
       return valuesSet.has(value as TValue);
@@ -252,8 +228,6 @@ function createEnumValue<TKind extends EnumKind>(
 
 const reservedLabeledEnumKeys = new Set([
   'entries',
-  'hasLabel',
-  'labelOf',
   'labels',
   'names',
   'parse',

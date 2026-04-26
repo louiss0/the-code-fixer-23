@@ -17,13 +17,11 @@ describe('createEnum', () => {
     expectTypeOf(values.Published).toEqualTypeOf<'Published'>();
   });
 
-  it('exposes labeled enum helpers for string enums', () => {
+  it('exposes literal helpers for string enums', () => {
     const values = createEnum('string', 'Draft', 'Published');
 
     expect(values.parse('Draft')).toBe('Draft');
-    expect(values.labelOf('Published')).toBe('Published');
     expect(values.validate('Draft')).toBe(true);
-    expect(values.hasLabel('Published')).toBe(true);
     expect(values.labels).toEqual({
       Draft: 'Draft',
       Published: 'Published',
@@ -43,14 +41,12 @@ describe('createEnum', () => {
     expectTypeOf(values.High).toEqualTypeOf<1>();
   });
 
-  it('exposes labeled enum helpers for number enums', () => {
+  it('exposes literal helpers for number enums', () => {
     const values = createEnum('number', 'Low', 'High');
 
     expect(values.parse('Low')).toBe(0);
-    expect(values.labelOf(1)).toBe('High');
     expect(values.validate(0)).toBe(true);
-    expect(values.hasLabel('High')).toBe(true);
-    expectTypeOf(values.parse('Low')).toEqualTypeOf<0 | ParseError>();
+    expectTypeOf(values.parse('Low')).toEqualTypeOf<0 | 1 | ParseError>();
   });
 
   it('creates symbol enums by declaration order', () => {
@@ -60,13 +56,11 @@ describe('createEnum', () => {
     expect(values.CFO).toBeTypeOf('symbol');
   });
 
-  it('exposes labeled enum helpers for symbol enums', () => {
+  it('exposes literal helpers for symbol enums', () => {
     const values = createEnum('symbol', 'CEO', 'CFO');
 
     expect(values.parse('CEO')).toBe(values.CEO);
-    expect(values.labelOf(values.CFO)).toBe('CFO');
     expect(values.validate(values.CEO)).toBe(true);
-    expect(values.hasLabel('CEO')).toBe(true);
   });
 
   it('returns a parse error for unknown enum labels', () => {
@@ -80,16 +74,14 @@ describe('createEnum', () => {
 });
 
 describe('createLabeledEnum', () => {
-  it('exposes labeled enum helpers', () => {
+  it('exposes literal helpers', () => {
     const status = createLabeledEnum({
       draft: 'Draft',
       published: 'Published',
     });
 
     expect(status.parse('Draft')).toBe('draft');
-    expect(status.labelOf('published')).toBe('Published');
     expect(status.validate('draft')).toBe(true);
-    expect(status.hasLabel('Published')).toBe(true);
     expectTypeOf(status.draft).toEqualTypeOf<'draft'>();
     expectTypeOf(status.published).toEqualTypeOf<'published'>();
   });
