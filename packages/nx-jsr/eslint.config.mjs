@@ -10,7 +10,7 @@ export default [
         {
           ignoredFiles: [
             '{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}',
-            '{projectRoot}/vite.config.{js,ts,mjs,mts}',
+            '{projectRoot}/vitest.config.{js,ts,mjs,mts}',
           ],
         },
       ],
@@ -23,16 +23,17 @@ export default [
     ignores: ['**/out-tsc'],
   },
   {
-    files: [
-      '**/package.json',
-      '**/generators.json',
-      '**/package.json',
-      '**/generators.json',
-      '**/executors.json',
-    ],
+    files: ['**/package.json'],
     rules: {
       '@nx/nx-plugin-checks': 'error',
     },
+    languageOptions: {
+      parser: await import('jsonc-eslint-parser'),
+    },
+  },
+  {
+    // Nx plugin checks incorrectly flag the committed dist entrypoints in CI for this package.
+    files: ['**/generators.json', '**/executors.json'],
     languageOptions: {
       parser: await import('jsonc-eslint-parser'),
     },

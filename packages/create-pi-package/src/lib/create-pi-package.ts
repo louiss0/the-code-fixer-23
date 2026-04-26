@@ -1,80 +1,151 @@
-import fs from 'fs-extra';
+import { existsSync } from 'node:fs';
+import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
-
-import * as prompts from '@clack/prompts';
-import color from 'picocolors';
-
-import { getDependencyInstallCommand, installDependencies } from './install-deps';
-import { resolveCreateOptions } from './prompts';
-import { getDevelopmentPackages } from './templates';
-import { writeProjectFiles } from './write-files';
-import type { CreatePiPackageInput, CreatePiPackageResult } from './types';
+import { defaultChoices, defaultScope, managedFilePaths } from './constants.js';
+import { readOptionalFile, writeManagedFile } from './io.js';
+import { isKebabCaseName } from './name.js';
+import { selectChoice } from './prompt.js';
+import { getManagedFileContentByPath } from './templates.js';
+import type {
+  CreatePiPackageOptions,
+  CreatePiPackageResult,
+  PackageMode,
+  TestRunner,
+  ToolingPreset,
+} from './types.js';
 
 export async function createPiPackage(
-  input: CreatePiPackageInput
+  options: CreatePiPackageOptions
 ): Promise<CreatePiPackageResult> {
-  const options = await resolveCreateOptions(input);
-  const { targetDir, projectName } = options;
+  const targetDirectory = path.resolve(options.directory ?? process.cwd());
+  const packageName = resolvePackageName(targetDirectory, options.name);
+  const tooling = await resolveOption(
+    'tooling',
+    options.tooling,
+    options.yes,
+    ['eslint-prettier', 'biome'],
+    defaultChoices.tooling
+  );
+  const testRunner = await resolveOption(
+    'test runner',
+    options.testRunner,
+    options.yes,
+    ['vitest', 'jest'],
+    defaultChoices.testRunner
+  );
+  const mode = await resolveOption(
+    'mode',
+    options.mode,
+    options.yes,
+    ['source', 'bundle'],
+    defaultChoices.mode
+  );
 
-  if (await fs.pathExists(targetDir)) {
-    const files = await fs.readdir(targetDir);
+  await mkdir(targetDirectory, { recursive: true });
 
-    if (files.length > 0 && !options.force) {
-      const shouldContinue = await prompts.confirm({
-        message: `Directory "${targetDir}" is not empty. Continue?`,
-        initialValue: false,
-      });
+  const managedFiles = getManagedFileContentByPath({
+    mode: mode as PackageMode,
+    packageName,
+    testRunner: testRunner as TestRunner,
+    tooling: tooling as ToolingPreset,
+  });
 
-      if (!shouldContinue || prompts.isCancel(shouldContinue)) {
-        prompts.cancel('Operation cancelled.');
-        process.exit(0);
-      }
+  const createdFiles: string[] = [];
+  const overwrittenFiles: string[] = [];
+  const skippedFiles: string[] = [];
+
+  for (const relativeFilePath of managedFilePaths) {
+    const content = managedFiles.get(relativeFilePath);
+    if (content === undefined) {
+      continue;
     }
+
+    const absoluteFilePath = path.join(targetDirectory, relativeFilePath);
+    const existingContent = await readOptionalFile(absoluteFilePath);
+
+    if (existingContent === null) {
+      await writeManagedFile(absoluteFilePath, content);
+      createdFiles.push(relativeFilePath);
+      continue;
+    }
+
+    if (existingContent === content) {
+      continue;
+    }
+
+    if (!options.force) {
+      skippedFiles.push(relativeFilePath);
+      continue;
+    }
+
+    await writeManagedFile(absoluteFilePath, content);
+    overwrittenFiles.push(relativeFilePath);
   }
 
-  await fs.ensureDir(targetDir);
-
-  const spinner = prompts.spinner();
-  spinner.start('Creating package files...');
-
-  const result = await writeProjectFiles(options);
-
-  spinner.stop('Package files created.');
-
-  const developmentPackages = getDevelopmentPackages(options);
-
-  if (options.install) {
-    const installSpinner = prompts.spinner();
-    installSpinner.start('Installing development dependencies...');
-
-    try {
-      await installDependencies(targetDir, developmentPackages);
-      installSpinner.stop('Development dependencies installed.');
-    } catch (error) {
-      installSpinner.stop('Dependency installation failed.');
-      console.error(error);
-    }
-  }
-
-  const nextDirectory = path.relative(process.cwd(), targetDir) || '.';
-  const defaultInstallCommand = getDependencyInstallCommand(
-    'npm',
-    developmentPackages
-  ).join(' ');
   const summaryLines = [
-    color.green(`Created ${projectName}!`),
-    '',
+    `Package: ${defaultScope}/${packageName}`,
+    `Directory: ${targetDirectory}`,
+    `Mode: ${mode}`,
+    `Tooling: ${tooling}`,
+    `Test runner: ${testRunner}`,
+    createdFiles.length > 0
+      ? `Created: ${createdFiles.join(', ')}`
+      : 'Created: none',
+    overwrittenFiles.length > 0
+      ? `Overwritten: ${overwrittenFiles.join(', ')}`
+      : 'Overwritten: none',
+    skippedFiles.length > 0
+      ? `Skipped: ${skippedFiles.join(', ')}`
+      : 'Skipped: none',
     'Next steps:',
-    `  cd ${nextDirectory}`,
-    options.install ? '' : `  ${defaultInstallCommand}`,
-    options.install ? '' : `Install dev dependencies: ${defaultInstallCommand}`,
-    '  npm run dev',
-  ].filter(Boolean);
-
-  prompts.outro(summaryLines.join('\n'));
+    '  npm install',
+    '  npm run check',
+  ];
 
   return {
-    ...result,
+    createdFiles,
+    overwrittenFiles,
+    skippedFiles,
     summaryLines,
   };
+}
+
+function resolvePackageName(targetDirectory: string, explicitName?: string) {
+  const packageName = explicitName ?? path.basename(targetDirectory);
+  if (!isKebabCaseName(packageName)) {
+    throw new Error(
+      `Package name must be kebab-case. Rename the directory or pass --name with a kebab-case value. Received: ${packageName}`
+    );
+  }
+  return packageName;
+}
+
+async function resolveOption<T extends string>(
+  label: string,
+  value: T | undefined,
+  yes: boolean | undefined,
+  choices: readonly T[],
+  defaultChoice: T
+): Promise<T> {
+  if (value !== undefined) {
+    return value;
+  }
+
+  if (yes) {
+    return defaultChoice;
+  }
+
+  return selectChoice({
+    choices,
+    defaultChoice,
+    label,
+  });
+}
+
+export function directoryContainsFiles(targetDirectory: string) {
+  if (!existsSync(targetDirectory)) {
+    return false;
+  }
+
+  return true;
 }

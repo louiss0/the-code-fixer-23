@@ -1,12 +1,15 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "outDir": "../../dist/out-tsc/packages/create-pi-package",
-    "declaration": true,
-    "types": ["node"]
+    "baseUrl": ".",
+    "rootDir": "src",
+    "outDir": "dist",
+    "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
+    "emitDeclarationOnly": false,
+    "types": ["node"],
+    "resolveJsonModule": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.spec.ts"]
+  "references": [],
+  "exclude": ["vitest.config.ts", "src/**/*.test.ts", "src/**/*.spec.ts"]
 }

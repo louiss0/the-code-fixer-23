@@ -1,821 +1,556 @@
-import type { CreatePiPackageOptions } from './types';
+import { defaultScope, packageKeywords } from './constants.js';
+import type { PackageMode, TestRunner, ToolingPreset } from './types.js';
+import { getScopedPackageName } from './name.js';
 
-function stringifyJson(value: unknown) {
-  return `${JSON.stringify(value, null, 2)}\n`;
+interface TemplateContext {
+  mode: PackageMode;
+  packageName: string;
+  testRunner: TestRunner;
+  tooling: ToolingPreset;
 }
 
-export function createPackageJson(options: CreatePiPackageOptions) {
-  const scripts: Record<string, string> = {
-    dev: 'tsx src/index.ts',
-    lint: getLintCommand(options),
-    format: getFormatCommand(options),
-    typecheck: 'tsc --noEmit',
+export function getManagedFileContentByPath(context: TemplateContext) {
+  const scopedPackageName = getScopedPackageName(
+    defaultScope,
+    context.packageName
+  );
+  const files = new Map<string, string>();
+
+  files.set('.gitignore', getGitIgnoreContent(context.mode));
+  files.set('LICENSE', getLicenseContent());
+  files.set('README.md', getReadmeContent({ ...context, scopedPackageName }));
+  files.set(
+    'package.json',
+    getPackageJsonContent({ ...context, scopedPackageName })
+  );
+  files.set(
+    'pi-package.json',
+    JSON.stringify({ mode: context.mode }, null, 2) + '\n'
+  );
+  files.set('tsconfig.json', getTsConfigContent());
+  files.set('lib/index.ts', getHelperContent());
+  files.set(
+    'extensions/weather-tools/package.json',
+    getExtensionPackageJsonContent()
+  );
+  files.set('extensions/weather-tools/README.md', getExtensionReadmeContent());
+  files.set('skills/weather-brief/SKILL.md', getSkillContent());
+  files.set('prompts/weather-report.md', getPromptContent());
+  files.set('test/load-pi-package.test.ts', getTestContent(context.testRunner));
+
+  if (context.testRunner === 'vitest') {
+    files.set('vitest.config.ts', getVitestConfigContent());
+  }
+
+  if (context.testRunner === 'jest') {
+    files.set('jest.config.ts', getJestConfigContent());
+  }
+
+  if (context.tooling === 'eslint-prettier') {
+    files.set('eslint.config.mjs', getEslintConfigContent());
+    files.set('.prettierrc.json', getPrettierConfigContent());
+    files.set('.prettierignore', getPrettierIgnoreContent());
+  }
+
+  if (context.tooling === 'biome') {
+    files.set('biome.json', getBiomeConfigContent());
+  }
+
+  if (context.mode === 'bundle') {
+    files.set('tsup.config.ts', getTsupConfigContent());
+    files.set('scripts/prepare-dist.mjs', getPrepareDistScriptContent());
+  }
+
+  return files;
+}
+
+function getPackageJsonContent(
+  context: TemplateContext & { scopedPackageName: string }
+) {
+  const packageJson = {
+    name: context.scopedPackageName,
+    version: '0.1.0',
+    private: false,
+    type: 'module',
+    description:
+      'A scaffolded PI package with prompts, skills, and extensions.',
+    keywords: [...packageKeywords],
+    license: 'MIT',
+    engines: {
+      node: '>=20',
+    },
+    files: getPublishedFiles(context.mode),
+    scripts: getScripts(context.mode, context.testRunner, context.tooling),
+    exports: getExports(context.mode),
+    ...(context.mode === 'bundle'
+      ? {
+          main: './dist/lib/index.js',
+          types: './dist/lib/index.d.ts',
+        }
+      : {}),
+    devDependencies: getDevDependencies(
+      context.mode,
+      context.testRunner,
+      context.tooling
+    ),
   };
 
-  if (options.features.extensions) {
-    addExtensionScripts(options, scripts);
-  } else {
-    scripts.build = 'tsc';
-  }
-
-  if (options.features.prompts) {
-    scripts['create:prompt'] = 'node scripts/create-prompt.mjs';
-  }
-
-  if (options.features.skills) {
-    scripts['create:skill'] = 'node scripts/create-skill.mjs';
-  }
-
-  if (options.features.themes) {
-    scripts['create:theme'] = 'node scripts/create-theme.mjs';
-  }
-
-  const manifest = createPiManifest(options);
-
-  return stringifyJson({
-    name: options.projectName,
-    version: '0.1.0',
-    type: 'module',
-    description: 'A PI package.',
-    main: options.bundle ? 'dist/index.cjs' : 'dist/index.js',
-    module: options.bundle ? 'dist/index.js' : undefined,
-    types: 'dist/index.d.ts',
-    files: [
-      'dist',
-      'extensions',
-      'prompts',
-      'skills',
-      'themes',
-      'README.md',
-      'AGENTS.md',
-      'CLAUDE.md',
-    ],
-    scripts,
-    keywords: ['pi-package'],
-    pi: manifest,
-  });
+  return JSON.stringify(packageJson, null, 2) + '\n';
 }
 
-function addExtensionScripts(
-  options: CreatePiPackageOptions,
-  scripts: Record<string, string>
-) {
-  scripts['create:extension'] = 'node scripts/create-extension.mjs';
-
-  if (options.bundle && options.bundler === 'tsup') {
-    scripts.build = 'tsup extensions/*.ts --format esm,cjs --dts --minify --clean';
+function getPublishedFiles(mode: PackageMode) {
+  if (mode === 'bundle') {
+    return ['dist', 'pi-package.json', 'README.md', 'LICENSE'];
   }
 
-  if (options.bundle && options.bundler === 'vite') {
-    scripts.build = 'vite build --minify';
-  }
-
-  if (!options.bundle) {
-    scripts.build = 'tsc';
-  }
-
-  if (options.testRunner === 'vitest') {
-    scripts.test = 'vitest';
-  }
-
-  if (options.testRunner === 'jest') {
-    scripts.test = 'jest';
-  }
-}
-
-export function getDevelopmentPackages(options: CreatePiPackageOptions) {
   return [
-    'typescript',
-    'tsx',
-    ...getBundlerPackages(options),
-    ...getTestPackages(options),
-    ...getLintPackages(options),
-    ...getFormatterPackages(options),
+    'extensions',
+    'skills',
+    'prompts',
+    'lib',
+    'pi-package.json',
+    'README.md',
+    'LICENSE',
   ];
 }
 
-function getBundlerPackages(options: CreatePiPackageOptions) {
-  if (!options.features.extensions || !options.bundle) {
-    return [];
-  }
+function getScripts(
+  mode: PackageMode,
+  testRunner: TestRunner,
+  tooling: ToolingPreset
+) {
+  const test = testRunner === 'vitest' ? 'vitest run' : 'jest --runInBand';
+  const testWatch = testRunner === 'vitest' ? 'vitest' : 'jest --watch';
+  const lint = tooling === 'biome' ? 'biome check .' : 'eslint .';
+  const format =
+    tooling === 'biome' ? 'biome format --write .' : 'prettier --write .';
+  const typecheck = 'tsc -p tsconfig.json --noEmit';
+  const build =
+    mode === 'bundle'
+      ? 'tsup --config tsup.config.ts && node ./scripts/prepare-dist.mjs'
+      : "node -e \"import('./lib/index.ts').then(({ loadPiPackage }) => { const result = loadPiPackage(process.cwd()); if (!result.isValid) { console.error(result.messages.join('\\n')); process.exit(1); } })\"";
 
-  if (options.bundler === 'vite') {
-    return ['vite', 'vite-plugin-dts'];
-  }
-
-  if (options.bundler === 'tsup') {
-    return ['tsup'];
-  }
-
-  return [];
+  return {
+    build,
+    test,
+    'test:watch': testWatch,
+    lint,
+    format,
+    typecheck,
+    check: 'npm run typecheck && npm run lint && npm run test && npm run build',
+  };
 }
 
-function getTestPackages(options: CreatePiPackageOptions) {
-  if (!options.features.extensions) {
-    return [];
+function getExports(mode: PackageMode) {
+  if (mode === 'bundle') {
+    return {
+      '.': {
+        import: './dist/lib/index.js',
+        types: './dist/lib/index.d.ts',
+        default: './dist/lib/index.js',
+      },
+    };
   }
 
-  if (options.testRunner === 'vitest') {
-    return ['vitest'];
-  }
-
-  if (options.testRunner === 'jest') {
-    return ['jest', 'ts-jest', '@types/jest'];
-  }
-
-  return [];
+  return {
+    '.': {
+      import: './lib/index.ts',
+      default: './lib/index.ts',
+    },
+  };
 }
 
-function getLintPackages(options: CreatePiPackageOptions) {
-  if (options.linter === 'biome') {
-    return ['@biomejs/biome'];
+function getDevDependencies(
+  mode: PackageMode,
+  testRunner: TestRunner,
+  tooling: ToolingPreset
+) {
+  const devDependencies: Record<string, string> = {
+    typescript: '^5.9.2',
+    '@types/node': '^24.6.2',
+    tslib: '^2.8.1',
+  };
+
+  if (testRunner === 'vitest') {
+    devDependencies.vitest = '^3.2.4';
+  } else {
+    devDependencies.jest = '^29.7.0';
+    devDependencies['@types/jest'] = '^29.5.14';
+    devDependencies['ts-jest'] = '^29.4.9';
   }
 
-  return ['eslint', '@eslint/js'];
+  if (tooling === 'biome') {
+    devDependencies['@biomejs/biome'] = '^1.9.4';
+  } else {
+    devDependencies.eslint = '^9.37.0';
+    devDependencies['@eslint/js'] = '^9.37.0';
+    devDependencies.prettier = '^2.8.8';
+  }
+
+  if (mode === 'bundle') {
+    devDependencies.tsup = '^8.0.1';
+  }
+
+  return devDependencies;
 }
 
-function getFormatterPackages(options: CreatePiPackageOptions) {
-  if (options.formatter === 'prettier') {
-    return ['prettier'];
-  }
+function getReadmeContent(
+  context: TemplateContext & { scopedPackageName: string }
+) {
+  const modeNotes =
+    context.mode === 'bundle'
+      ? [
+          '- `build` bundles `lib/` into `dist/` with Tsup.',
+          '- `dist/` also contains `extensions/`, `skills/`, `prompts/`, and `pi-package.json`.',
+        ]
+      : [
+          '- `build` validates the package contract in place.',
+          '- PI handles source-mode execution directly from `lib/index.ts`.',
+        ];
 
-  if (options.formatter === 'stylistic') {
-    return ['@stylistic/eslint-plugin'];
-  }
-
-  if (options.formatter === 'biome' && options.linter !== 'biome') {
-    return ['@biomejs/biome'];
-  }
-
-  return [];
+  return [
+    `# ${context.scopedPackageName}`,
+    '',
+    'A scaffolded PI package with one coherent weather-focused example across prompts, skills, and extensions.',
+    '',
+    '## Why this package looks like this',
+    '',
+    'This package follows a fixed PI package convention:',
+    '',
+    '- `extensions/` contains extension packages.',
+    '- `skills/` contains reusable skill documentation.',
+    '- `prompts/` contains prompt files.',
+    '- `lib/index.ts` exports the tiny `loadPiPackage` helper API used by tests and validation.',
+    '',
+    `**Mode**: ${context.mode}`,
+    '',
+    '## Development',
+    '',
+    `- Tooling preset: \`${context.tooling}\``,
+    `- Test runner: \`${context.testRunner}\``,
+    ...modeNotes,
+    '',
+    '## Commands',
+    '',
+    '- `npm run build`',
+    '- `npm run test`',
+    '- `npm run test:watch`',
+    '- `npm run lint`',
+    '- `npm run format`',
+    '- `npm run typecheck`',
+    '- `npm run check`',
+    '',
+  ].join('\n');
 }
 
-function getLintCommand(options: CreatePiPackageOptions) {
-  if (options.linter === 'biome') {
-    return 'biome check .';
-  }
-
-  return 'eslint .';
+function getTsConfigContent() {
+  return (
+    JSON.stringify(
+      {
+        compilerOptions: {
+          module: 'nodenext',
+          moduleResolution: 'nodenext',
+          target: 'es2022',
+          strict: true,
+          noEmit: true,
+          resolveJsonModule: true,
+          esModuleInterop: true,
+          types: ['node'],
+        },
+        include: ['lib/**/*.ts', 'test/**/*.ts'],
+      },
+      null,
+      2
+    ) + '\n'
+  );
 }
 
-function getFormatCommand(options: CreatePiPackageOptions) {
-  if (options.formatter === 'biome') {
-    return 'biome format --write .';
-  }
+function getHelperContent() {
+  return `import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
 
-  if (options.formatter === 'stylistic') {
-    return 'eslint . --fix';
-  }
-
-  return 'prettier --write .';
+export interface LoadPiPackageResult {
+  isValid: boolean;
+  messages: string[];
+  mode?: 'source' | 'bundle';
+  paths?: {
+    extensions: string;
+    skills: string;
+    prompts: string;
+  };
 }
 
-function createPiManifest(options: CreatePiPackageOptions) {
-  const manifest: Record<string, string[]> = {};
+export function loadPiPackage(packageRoot: string): LoadPiPackageResult {
+  const messages: string[] = [];
+  const manifestPath = path.join(packageRoot, 'pi-package.json');
+  const packageJsonPath = path.join(packageRoot, 'package.json');
+  const paths = {
+    extensions: path.join(packageRoot, 'extensions'),
+    skills: path.join(packageRoot, 'skills'),
+    prompts: path.join(packageRoot, 'prompts'),
+  };
 
-  if (options.features.extensions) {
-    manifest.extensions = ['./extensions'];
+  if (!existsSync(packageJsonPath)) {
+    messages.push('Missing package.json.');
   }
 
-  if (options.features.prompts) {
-    manifest.prompts = ['./prompts'];
+  if (!existsSync(manifestPath)) {
+    messages.push('Missing pi-package.json.');
   }
 
-  if (options.features.skills) {
-    manifest.skills = ['./skills'];
+  let mode: 'source' | 'bundle' | undefined;
+
+  if (existsSync(manifestPath)) {
+    try {
+      const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
+        mode?: string;
+      };
+
+      if (manifest.mode === 'source' || manifest.mode === 'bundle') {
+        mode = manifest.mode;
+      } else {
+        messages.push('pi-package.json must declare mode as source or bundle.');
+      }
+    } catch {
+      messages.push('pi-package.json must contain valid JSON.');
+    }
   }
 
-  if (options.features.themes) {
-    manifest.themes = ['./themes'];
+  for (const [label, folderPath] of Object.entries(paths)) {
+    if (!existsSync(folderPath)) {
+      messages.push(label + '/ directory is missing.');
+    }
   }
 
-  return manifest;
-}
-
-export function createReadme(options: CreatePiPackageOptions) {
-  return `# ${options.projectName}
-
-This is a PI package.
-
-## Features
-
-${options.features.extensions ? '- Extensions\n' : ''}${options.features.prompts ? '- Prompts\n' : ''}${
-    options.features.themes ? '- Themes\n' : ''
-  }${options.features.skills ? '- Skills\n' : ''}
-## Development
-
-\`\`\`bash
-npm run dev
-\`\`\`
-
-## Build
-
-\`\`\`bash
-npm run build
-\`\`\`
-`;
-}
-
-export function createAgentsMd() {
-  return `# AGENTS.md
-
-## Project Overview
-
-This package contains PI package assets such as prompts, themes, skills, and extensions.
-
-## Rules for Agents
-
-- Keep generated code small and readable.
-- Prefer TypeScript.
-- Keep public exports stable.
-- Update README.md when behavior changes.
-- Do not add dependencies unless they are needed.
-
-## Common Commands
-
-\`\`\`bash
-npm run typecheck
-npm run build
-\`\`\`
-`;
-}
-
-export function createClaudeMd() {
-  return `# CLAUDE.md
-
-## Project Context
-
-This is a PI package project.
-
-## Preferred Style
-
-- Use TypeScript.
-- Prefer named exports.
-- Keep examples practical.
-- Keep package docs in README.md.
-
-## Before Changing Code
-
-Run:
-
-\`\`\`bash
-npm run typecheck
-npm run build
-\`\`\`
-`;
-}
-
-export function createGitignore() {
-  return `# Dependencies
-node_modules
-.pnp
-.pnp.js
-
-# Build output
-dist
-build
-coverage
-.turbo
-
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-# Environment
-.env
-.env.*
-!.env.example
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Editors
-.vscode/*
-!.vscode/extensions.json
-.idea
-
-# TypeScript
-*.tsbuildinfo
-
-# Test
-.jest
-.vitest
-
-# Package manager
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
-bun.lockb
-`;
-}
-
-export function createBiomeConfig() {
-  return `{
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-  "formatter": {
-    "enabled": true
-  },
-  "linter": {
-    "enabled": true
-  }
+  return {
+    isValid: messages.length === 0,
+    messages,
+    mode,
+    paths,
+  };
 }
 `;
 }
 
-export function createEslintConfig(options: CreatePiPackageOptions) {
-  if (options.formatter === 'stylistic') {
-    return `import eslint from "@eslint/js";
-import stylistic from "@stylistic/eslint-plugin";
+function getExtensionPackageJsonContent() {
+  return (
+    JSON.stringify(
+      {
+        name: 'weather-tools',
+        version: '0.1.0',
+        private: true,
+        description:
+          'Starter PI extension example for weather-oriented package flows.',
+      },
+      null,
+      2
+    ) + '\n'
+  );
+}
 
-export default [
-  eslint.configs.recommended,
-  stylistic.configs["recommended-flat"]
-];
+function getExtensionReadmeContent() {
+  return `# weather-tools
+
+A starter extension example for the weather package theme.
+
+Use this folder to add extension-specific runtime behavior for your PI package.
+`;
+}
+
+function getSkillContent() {
+  return `# Weather Brief
+
+Use this skill when the user wants a short, decision-ready weather summary.
+
+## Approach
+
+- Focus on what changes the user's plan.
+- Surface uncertainty clearly.
+- Keep the recommendation actionable.
+`;
+}
+
+function getPromptContent() {
+  return `---
+title: Weather report
+---
+
+Summarize the current weather situation, highlight the most important change from the baseline, and end with one practical recommendation.
+`;
+}
+
+function getTestContent(testRunner: TestRunner) {
+  if (testRunner === 'jest') {
+    return `import { loadPiPackage } from '../lib/index';
+
+describe('loadPiPackage', () => {
+  it('returns a valid package contract for the scaffolded package', () => {
+    const result = loadPiPackage(process.cwd());
+
+    expect(result.isValid).toBe(true);
+    expect(result.mode).toBeDefined();
+    expect(result.paths).toBeDefined();
+    expect(result.messages).toEqual([]);
+  });
+});
 `;
   }
 
-  return `import eslint from "@eslint/js";
+  return `import { describe, expect, it } from 'vitest';
+import { loadPiPackage } from '../lib/index';
+
+describe('loadPiPackage', () => {
+  it('returns a valid package contract for the scaffolded package', () => {
+    const result = loadPiPackage(process.cwd());
+
+    expect(result.isValid).toBe(true);
+    expect(result.mode).toBeDefined();
+    expect(result.paths).toBeDefined();
+    expect(result.messages).toEqual([]);
+  });
+});
+`;
+}
+
+function getVitestConfigContent() {
+  return `import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    environment: 'node'
+  }
+});
+`;
+}
+
+function getJestConfigContent() {
+  return `export default {
+  testEnvironment: 'node',
+  transform: {
+    '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json' }]
+  }
+};
+`;
+}
+
+function getEslintConfigContent() {
+  return `import eslint from '@eslint/js';
 
 export default [eslint.configs.recommended];
 `;
 }
 
-export function createPrettierConfig() {
+function getPrettierConfigContent() {
   return `{
   "semi": true,
   "singleQuote": true,
   "tabWidth": 2,
   "trailingComma": "es5",
-  "printWidth": 80
+  "printWidth": 80,
+  "arrowParens": "always"
 }
 `;
 }
 
-export function createTsConfig() {
+function getPrettierIgnoreContent() {
+  return `dist
+coverage
+node_modules
+`;
+}
+
+function getBiomeConfigContent() {
   return `{
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "strict": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "dist",
-    "rootDir": ".",
-    "skipLibCheck": true
-  },
-  "include": ["src/**/*.ts", "extensions/**/*.ts", "test/**/*.ts"]
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "formatter": { "enabled": true },
+  "linter": { "enabled": true }
 }
 `;
 }
 
-export function createIndexFile(options: CreatePiPackageOptions) {
-  const exports: string[] = [];
-
-  if (options.features.prompts) {
-    exports.push('export { prompts } from "./prompts/index.js";');
-  }
-
-  if (options.features.themes) {
-    exports.push('export { themes } from "./themes/index.js";');
-  }
-
-  return `${exports.join('\n')}${exports.length > 0 ? '\n\n' : ''}export function definePiPackage() {
-  return {
-    name: "${options.projectName}",
-    features: {
-      extensions: ${options.features.extensions},
-      prompts: ${options.features.prompts},
-      themes: ${options.features.themes},
-      skills: ${options.features.skills}
-    }
-  };
-}
-`;
-}
-
-export function createExtensionFile(name = 'example-extension') {
-  return `import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
-
-export default function ${toIdentifier(name)}(pi: ExtensionAPI) {
-  pi.registerCommand("${name}", {
-    description: "Run the ${name} extension command.",
-    handler: async (_args, ctx) => {
-      ctx.ui.notify("${name} is working.", "info");
-    }
-  });
-}
-`;
-}
-
-export function createTsupConfig() {
-  return `import { defineConfig } from "tsup";
+function getTsupConfigContent() {
+  return `import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ["extensions/*.ts"],
-  format: ["esm", "cjs"],
-  dts: true,
-  sourcemap: true,
   clean: true,
+  dts: true,
+  entry: ['lib/index.ts'],
+  format: ['esm'],
   minify: true,
-  target: "node20"
+  outDir: 'dist/lib',
+  target: 'node20'
 });
 `;
 }
 
-export function createViteConfig() {
-  return `import { defineConfig } from "vite";
-import dts from "vite-plugin-dts";
+function getPrepareDistScriptContent() {
+  return `import { cpSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
 
-export default defineConfig({
-  plugins: [dts()],
-  build: {
-    minify: true,
-    lib: {
-      entry: "extensions/example-extension.ts",
-      name: "PiPackage",
-      formats: ["es", "cjs"],
-      fileName: (format) => format === "es" ? "index.js" : "index.cjs"
-    },
-    rollupOptions: {
-      external: ["@mariozechner/pi-coding-agent"]
-    }
+const packageRoot = process.cwd();
+const distRoot = path.join(packageRoot, 'dist');
+
+mkdirSync(distRoot, { recursive: true });
+cpSync(path.join(packageRoot, 'extensions'), path.join(distRoot, 'extensions'), { recursive: true });
+cpSync(path.join(packageRoot, 'skills'), path.join(distRoot, 'skills'), { recursive: true });
+cpSync(path.join(packageRoot, 'prompts'), path.join(distRoot, 'prompts'), { recursive: true });
+cpSync(path.join(packageRoot, 'pi-package.json'), path.join(distRoot, 'pi-package.json'));
+
+const packageJson = JSON.parse(readFileSync(path.join(packageRoot, 'package.json'), 'utf8'));
+packageJson.files = ['dist', 'pi-package.json', 'README.md', 'LICENSE'];
+writeFileSync(path.join(distRoot, 'package.json'), JSON.stringify(packageJson, null, 2) + '\\n');
+`;
+}
+
+function getGitIgnoreContent(mode: PackageMode) {
+  const lines = [
+    '# Node',
+    'node_modules/',
+    'npm-debug.log*',
+    'yarn-debug.log*',
+    'yarn-error.log*',
+    'pnpm-debug.log*',
+    '',
+    '# Test output',
+    'coverage/',
+    '',
+    '# Editor folders',
+    '.idea/',
+    '.vscode/',
+    '',
+    '# System files',
+    '.DS_Store',
+    'Thumbs.db',
+  ];
+
+  if (mode === 'bundle') {
+    lines.splice(8, 0, 'dist/', '');
   }
-});
+
+  return `${lines.join('\n')}\n`;
+}
+
+function getLicenseContent() {
+  return `MIT License
+
+Copyright (c) ${new Date().getFullYear()}
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 `;
-}
-
-export function createVitestConfig() {
-  return `import { defineConfig } from "vitest/config";
-
-export default defineConfig({
-  test: {
-    globals: true,
-    environment: "node",
-    include: ["test/**/*.test.ts"]
-  }
-});
-`;
-}
-
-export function createJestConfig() {
-  return `export default {
-  testEnvironment: "node",
-  testMatch: ["**/*.test.ts"],
-  transform: {
-    "^.+\\\\.ts$": ["ts-jest", {
-      useESM: true
-    }]
-  },
-  extensionsToTreatAsEsm: [".ts"]
-};
-`;
-}
-
-export function createTestFile(options: CreatePiPackageOptions) {
-  const importPath = options.testRunner === 'vitest'
-    ? '../extensions/example-extension.js'
-    : '../extensions/example-extension';
-  const vitestImport = options.testRunner === 'vitest'
-    ? 'import { describe, expect, it } from "vitest";\n'
-    : '';
-
-  return `${vitestImport}import extension from "${importPath}";
-
-describe("example extension", () => {
-  it("exports an extension factory", () => {
-    expect(typeof extension).toBe("function");
-  });
-});
-`;
-}
-
-export function createPromptsIndexFile() {
-  return `export const prompts = {
-  example: {
-    name: "example-prompt",
-    description: "A starter prompt template.",
-    content: "Review the following code and suggest improvements."
-  }
-};
-`;
-}
-
-export function createPromptFile() {
-  return `---
-description: A starter PI prompt template
----
-
-Review the following code and suggest improvements.
-`;
-}
-
-export function createThemesIndexFile() {
-  return `import theme from "../../themes/default.json" assert { type: "json" };
-
-export const themes = {
-  default: theme
-};
-`;
-}
-
-export function createThemeFile(name = 'default') {
-  return stringifyJson({
-    $schema:
-      'https://raw.githubusercontent.com/badlogic/pi-mono/main/packages/coding-agent/src/modes/interactive/theme/theme-schema.json',
-    name,
-    vars: {
-      primary: '#7c3aed',
-      secondary: 242,
-    },
-    colors: createThemeColors(),
-  });
-}
-
-function createThemeColors() {
-  return {
-    accent: 'primary',
-    border: 'primary',
-    borderAccent: '#00ffff',
-    borderMuted: 'secondary',
-    success: '#00ff00',
-    error: '#ff0000',
-    warning: '#ffff00',
-    muted: 'secondary',
-    dim: 240,
-    text: '',
-    thinkingText: 'secondary',
-    selectedBg: '#2d2d30',
-    userMessageBg: '#2d2d30',
-    userMessageText: '',
-    customMessageBg: '#2d2d30',
-    customMessageText: '',
-    customMessageLabel: 'primary',
-    toolPendingBg: '#1e1e2e',
-    toolSuccessBg: '#1e2e1e',
-    toolErrorBg: '#2e1e1e',
-    toolTitle: 'primary',
-    toolOutput: '',
-    mdHeading: '#ffaa00',
-    mdLink: 'primary',
-    mdLinkUrl: 'secondary',
-    mdCode: '#00ffff',
-    mdCodeBlock: '',
-    mdCodeBlockBorder: 'secondary',
-    mdQuote: 'secondary',
-    mdQuoteBorder: 'secondary',
-    mdHr: 'secondary',
-    mdListBullet: '#00ffff',
-    toolDiffAdded: '#00ff00',
-    toolDiffRemoved: '#ff0000',
-    toolDiffContext: 'secondary',
-    syntaxComment: 'secondary',
-    syntaxKeyword: 'primary',
-    syntaxFunction: '#00aaff',
-    syntaxVariable: '#ffaa00',
-    syntaxString: '#00ff00',
-    syntaxNumber: '#ff00ff',
-    syntaxType: '#00aaff',
-    syntaxOperator: 'primary',
-    syntaxPunctuation: 'secondary',
-    thinkingOff: 'secondary',
-    thinkingMinimal: 'primary',
-    thinkingLow: '#00aaff',
-    thinkingMedium: '#00ffff',
-    thinkingHigh: '#ff00ff',
-    thinkingXhigh: '#ff0000',
-    bashMode: '#ffaa00',
-  };
-}
-
-export function createSkillFile(name = 'example-skill') {
-  return `---
-name: ${name}
-description: An example PI skill.
----
-
-# Example Skill
-
-Use this skill when the user wants help with a specific repeatable workflow.
-
-## Instructions
-
-- Understand the user's goal.
-- Ask for missing critical context only when needed.
-- Produce a useful result.
-`;
-}
-
-export function createExtensionScript(options: CreatePiPackageOptions) {
-  return `#!/usr/bin/env node
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
-import readline from "node:readline/promises";
-
-const bundler = "${options.bundler ?? 'none'}";
-const testRunner = "${options.testRunner ?? 'none'}";
-const args = parseArgs(process.argv.slice(2));
-const name = await resolveValue(args.name, "Extension name");
-const fileName = toKebabCase(name);
-
-await mkdir("extensions", { recursive: true });
-await mkdir("test", { recursive: true });
-await writeFile(path.join("extensions", fileName + ".ts"), createExtension(fileName));
-await writeFile(path.join("test", fileName + ".test.ts"), createTest(fileName));
-console.log("Created extension " + fileName + " using " + bundler + " and " + testRunner + ".");
-
-function parseArgs(values) {
-  const result = {};
-  for (let index = 0; index < values.length; index += 1) {
-    if (values[index] === "--name") {
-      result.name = values[index + 1];
-      index += 1;
-    }
-  }
-  return result;
-}
-
-async function resolveValue(value, label) {
-  if (value) return value;
-  const reader = readline.createInterface({ input: process.stdin, output: process.stdout });
-  try {
-    return (await reader.question(label + ": ")).trim();
-  } finally {
-    reader.close();
-  }
-}
-
-function createExtension(fileName) {
-  return 'import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";\\n\\nexport default function extension(pi: ExtensionAPI) {\\n  pi.registerCommand("' + fileName + '", {\\n    description: "Run ' + fileName + '.",\\n    handler: async (_args, ctx) => {\\n      ctx.ui.notify("' + fileName + ' is working.", "info");\\n    }\\n  });\\n}\\n';
-}
-
-function createTest(fileName) {
-  const importPath = testRunner === "vitest" ? "../extensions/" + fileName + ".js" : "../extensions/" + fileName;
-  const vitestImport = testRunner === "vitest" ? 'import { describe, expect, it } from "vitest";\\n' : "";
-  return vitestImport + 'import extension from "' + importPath + '";\\n\\ndescribe("' + fileName + '", () => {\\n  it("exports an extension factory", () => {\\n    expect(typeof extension).toBe("function");\\n  });\\n});\\n';
-}
-
-function toKebabCase(value) {
-  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-}
-`;
-}
-
-export function createPromptScript() {
-  return `#!/usr/bin/env node
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
-import readline from "node:readline/promises";
-
-const args = parseArgs(process.argv.slice(2));
-const name = toKebabCase(await resolveValue(args.name, "Prompt name"));
-const body = await resolveBody(args, "Prompt body");
-
-await mkdir("prompts", { recursive: true });
-await writeFile(path.join("prompts", name + ".md"), body + "\\n");
-console.log("Created prompt " + name + ".");
-
-function parseArgs(values) {
-  const result = {};
-  for (let index = 0; index < values.length; index += 1) {
-    if (values[index] === "--name" || values[index] === "--body" || values[index] === "--body-file") {
-      result[values[index].slice(2).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())] = values[index + 1];
-      index += 1;
-    }
-  }
-  return result;
-}
-
-async function resolveBody(args, label) {
-  if (args.bodyFile) return readFile(args.bodyFile, "utf8");
-  return resolveValue(args.body, label);
-}
-
-async function resolveValue(value, label) {
-  if (value) return value;
-  const reader = readline.createInterface({ input: process.stdin, output: process.stdout });
-  try {
-    return (await reader.question(label + ": ")).trim();
-  } finally {
-    reader.close();
-  }
-}
-
-function toKebabCase(value) {
-  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-}
-`;
-}
-
-export function createSkillScript() {
-  return `#!/usr/bin/env node
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
-import readline from "node:readline/promises";
-
-const args = parseArgs(process.argv.slice(2));
-const name = toKebabCase(await resolveValue(args.name, "Skill name"));
-const description = await resolveValue(args.description, "Skill description");
-const body = await resolveBody(args, "Skill body");
-
-await mkdir(path.join("skills", name), { recursive: true });
-await writeFile(path.join("skills", name, "SKILL.md"), createSkill(name, description, body));
-console.log("Created skill " + name + ".");
-
-function parseArgs(values) {
-  const result = {};
-  for (let index = 0; index < values.length; index += 1) {
-    if (["--name", "--description", "--body", "--body-file"].includes(values[index])) {
-      result[values[index].slice(2).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())] = values[index + 1];
-      index += 1;
-    }
-  }
-  return result;
-}
-
-async function resolveBody(args, label) {
-  if (args.bodyFile) return readFile(args.bodyFile, "utf8");
-  return resolveValue(args.body, label);
-}
-
-async function resolveValue(value, label) {
-  if (value) return value;
-  const reader = readline.createInterface({ input: process.stdin, output: process.stdout });
-  try {
-    return (await reader.question(label + ": ")).trim();
-  } finally {
-    reader.close();
-  }
-}
-
-function createSkill(name, description, body) {
-  return "---\\nname: " + name + "\\ndescription: " + description + "\\n---\\n\\n" + body + "\\n";
-}
-
-function toKebabCase(value) {
-  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-}
-`;
-}
-
-export function createThemeScript() {
-  return `#!/usr/bin/env node
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
-import readline from "node:readline/promises";
-
-const args = parseArgs(process.argv.slice(2));
-const name = toKebabCase(await resolveValue(args.name, "Theme name"));
-
-await mkdir("themes", { recursive: true });
-await writeFile(path.join("themes", name + ".json"), JSON.stringify(createTheme(name), null, 2) + "\\n");
-console.log("Created theme " + name + ".");
-
-function parseArgs(values) {
-  const result = {};
-  for (let index = 0; index < values.length; index += 1) {
-    if (values[index] === "--name") {
-      result.name = values[index + 1];
-      index += 1;
-    }
-  }
-  return result;
-}
-
-async function resolveValue(value, label) {
-  if (value) return value;
-  const reader = readline.createInterface({ input: process.stdin, output: process.stdout });
-  try {
-    return (await reader.question(label + ": ")).trim();
-  } finally {
-    reader.close();
-  }
-}
-
-function createTheme(name) {
-  return ${JSON.stringify({
-    $schema:
-      'https://raw.githubusercontent.com/badlogic/pi-mono/main/packages/coding-agent/src/modes/interactive/theme/theme-schema.json',
-    name: '__NAME__',
-    vars: { primary: '#7c3aed', secondary: 242 },
-    colors: createThemeColors(),
-  }, null, 2).replace('"__NAME__"', 'name')};
-}
-
-function toKebabCase(value) {
-  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-}
-`;
-}
-
-function toIdentifier(name: string) {
-  const identifier = name.replace(/[^a-zA-Z0-9_$]/g, '');
-
-  return identifier.length > 0 ? identifier : 'extension';
 }

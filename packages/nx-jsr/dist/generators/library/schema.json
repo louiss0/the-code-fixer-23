@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "Library",
+  "title": "Generate a JSR TypeScript Library",
+  "description": "Create a new TypeScript library configured for JSR (JavaScript Registry) publishing",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Library name",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What name would you like to use?",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "directory": {
+      "type": "string",
+      "description": "Directory where the library will be created. If not specified, files are generated in the current directory (standalone mode). If specified, a subfolder with the project name will be created."
+    },
+    "importPath": {
+      "type": "string",
+      "description": "The JSR import path (e.g., @scope/package-name)",
+      "x-prompt": "What is the JSR import path? (e.g., @scope/package-name)",
+      "pattern": "^@[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$"
+    },
+    "description": {
+      "type": "string",
+      "description": "Package description",
+      "default": ""
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting files",
+      "default": false
+    },
+    "testRunner": {
+      "type": "string",
+      "description": "Test runner to use for the library",
+      "enum": ["vitest", "jest", "none"],
+      "default": "vitest",
+      "x-prompt": {
+        "message": "Which test runner would you like to use?",
+        "type": "list",
+        "items": [
+          {
+            "value": "vitest",
+            "label": "Vitest (Modern, Vite-powered testing - recommended)"
+          },
+          {
+            "value": "jest",
+            "label": "Jest (Stable, mature testing framework)"
+          },
+          {
+            "value": "none",
+            "label": "None (Skip test setup)"
+          }
+        ]
+      }
+    },
+    "linter": {
+      "type": "string",
+      "description": "Linter to use for the library",
+      "enum": ["eslint", "biome", "none"],
+      "description": "When omitted, this will be auto-detected from the root package.json. If ambiguous or not found, eslint is used by default."
+    },
+    "formatter": {
+      "type": "string",
+      "description": "Code formatter to use for the library",
+      "enum": ["prettier", "biome", "eslint-stylistic", "none"],
+      "description": "Code formatter. When omitted, this will be auto-detected. Biome formats and lints. ESLint Stylistic requires eslint as linter. If biome is selected as linter, formatter defaults to biome."
+    }
+  },
+  "required": ["name", "importPath"]
+}

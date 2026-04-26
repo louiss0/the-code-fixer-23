@@ -13,6 +13,16 @@ export type EnumShape<
 
 export type EnumLabels<TValue extends string = string> = Record<TValue, string>;
 
+export class ParseError extends Error {
+  readonly input: string;
+
+  constructor(input: string, message = 'Could not parse enum label.') {
+    super(message);
+    this.input = input;
+    this.name = 'ParseError';
+  }
+}
+
 export type LabeledEnum<TValue extends string = string> = Readonly<
   Record<TValue, TValue>
 > & {
@@ -26,16 +36,6 @@ export type LabeledEnum<TValue extends string = string> = Readonly<
   values: Readonly<Record<TValue, TValue>>;
 };
 
-export class ParseError extends Error {
-  readonly input: string;
-
-  constructor(input: string, message = 'Could not parse enum label.') {
-    super(message);
-    this.input = input;
-    this.name = 'ParseError';
-  }
-}
-
 export function isParseError(value: unknown): value is ParseError {
   return value instanceof ParseError;
 }
@@ -48,11 +48,13 @@ export function createEnum<TKind extends EnumKind, const TName extends string>(
 
   const values = Object.freeze(
     Object.fromEntries(
-      names.map((name, index) => [name, createEnumValue(kind, name, index)])
+      names.map(
+        (name, index) => [name, createEnumValue(kind, name, index)] as const
+      )
     )
-  ) as EnumShape<TKind, TName>;
+  ) as Readonly<Record<TName, EnumValue<TKind>>>;
 
-  return createImmutableEnumProxy(values);
+  return createImmutableEnumProxy(values) as EnumShape<TKind, TName>;
 }
 
 export function createLabeledEnum<const TValue extends string>(
@@ -65,26 +67,24 @@ export function createLabeledEnum<const TValue extends string>(
   assertUniqueValues(labelValues, 'Enum labels must be unique.');
 
   const values = Object.freeze(
-    Object.fromEntries(names.map((name) => [name, name]))
+    Object.fromEntries(names.map((name) => [name, name] as const))
   ) as Readonly<Record<TValue, TValue>>;
-
-  const valuesSet = new Set(names);
+  const valuesSet = new Set<TValue>(names);
   const labelsMap = Object.freeze({ ...labels });
   const entries = Object.freeze(
-    names.map((name) => [name, values[name]])
-  ) as readonly [TValue, TValue][];
-  const parsedValues = new Map(
-    names.map((name) => [labels[name], values[name]])
+    names.map((name) => [name, values[name]] as [TValue, TValue])
   );
-  const valueLabels = new Map(
-    names.map((name) => [values[name], labels[name]])
+  const parsedValues = new Map<string, TValue>(
+    names.map((name) => [labels[name], values[name]] as const)
   );
-
+  const valueLabels = new Map<TValue, string>(
+    names.map((name) => [values[name], labels[name]] as const)
+  );
   const api = Object.freeze({
     ...values,
     values,
     labels: labelsMap,
-    names: Object.freeze([...names]) as readonly TValue[],
+    names: Object.freeze([...names]),
     entries,
     parse(label: string) {
       return parsedValues.get(label) ?? new ParseError(label);
@@ -107,12 +107,16 @@ export function createLabeledEnum<const TValue extends string>(
   ) as LabeledEnum<TValue>;
 }
 
-function createImmutableEnumProxy<T extends object>(
-  target: T,
-  values?: object,
+function createImmutableEnumProxy<
+  TValue extends string | number | symbol,
+  TObject extends object
+>(
+  target: TObject,
+  values?: Readonly<Record<string, TValue>>,
   otherPropertyMessage = 'Cannot assign to immutable enum property "{property}".'
-): T {
-  const immutableValues = values ?? target;
+) {
+  const immutableValues =
+    values ?? (target as Readonly<Record<string, TValue>>);
 
   return new Proxy(target, {
     set(_target, property) {
@@ -127,20 +131,16 @@ function createImmutableEnumProxy<T extends object>(
   });
 }
 
-function createEnumValue<TKind extends EnumKind>(
-  kind: TKind,
-  name: string,
-  index: number
-): EnumValue<TKind> {
+function createEnumValue(kind: EnumKind, name: string, index: number) {
   if (kind === 'string') {
-    return name as EnumValue<TKind>;
+    return name;
   }
 
   if (kind === 'number') {
-    return index as EnumValue<TKind>;
+    return index;
   }
 
-  return Symbol.for(`@code-fixer-23/enums/${name}`) as EnumValue<TKind>;
+  return Symbol.for(`@code-fixer-23/enums/${name}`);
 }
 
 const reservedLabeledEnumKeys = new Set([

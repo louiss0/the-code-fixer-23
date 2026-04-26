@@ -1,19 +1,13 @@
 # @code-fixer-23/nx-tsup
 
-An **NX plugin** for building TypeScript libraries using **[Tsup](https://tsup.egoist.sh/)** - the fastest way to bundle your TypeScript libraries with zero config.
+An **Nx plugin** for generating and building TypeScript libraries with **[Tsup](https://tsup.egoist.sh/)**.
 
-## ⚠️ Breaking Changes in v0.1.0
-
-**Important**: The `outputPath` option has been renamed to `outDir` to align with tsup's native naming conventions.
-
-If you're upgrading from v0.0.x, run the automatic migration:
+If you are upgrading from an older release that still used `outputPath`, run the included migration to rename it to `outDir`:
 
 ```bash
 nx migrate @code-fixer-23/nx-tsup@latest
 nx migrate --run-migrations
 ```
-
-This will automatically update all your project.json files.
 
 ## Features
 
@@ -212,7 +206,7 @@ export default defineConfig({
 
 ### Configuration Merging Strategy
 
-🆕 **New in v0.1.0**: The plugin now intelligently merges options from `tsup.config.ts` and `project.json`, giving you the best of both worlds.
+The plugin intelligently merges options from `tsup.config.ts` and `project.json`, giving you the best of both worlds.
 
 #### How It Works
 
