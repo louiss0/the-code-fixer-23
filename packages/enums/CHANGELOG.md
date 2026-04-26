@@ -1,3 +1,13 @@
+## 0.2.1 (2026-04-26)
+
+### 🩹 Fixes
+
+- **enums:** publish package publicly ([80056cd](https://github.com/louiss0/the-code-fixer-23/commit/80056cd))
+
+### ❤️ Thank You
+
+- louiss0 @louiss0
+
 ## 0.2.0 (2026-04-26)
 
 ### 🚀 Features
