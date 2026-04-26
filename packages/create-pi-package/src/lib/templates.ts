@@ -1,18 +1,15 @@
-import { defaultScope, packageKeywords } from './constants';
-import { getScopedPackageName } from './name';
-import type {
-  PiPackageMode,
-  TemplateContext,
-  TestRunner,
-  ToolingPreset,
-} from './types';
+import { defaultScope, packageKeywords } from './constants.js';
+import type { PackageMode, TestRunner, ToolingPreset } from './types.js';
+import { getScopedPackageName } from './name.js';
 
-export function getManagedFileContentByPath(context: {
-  mode: PiPackageMode;
+interface TemplateContext {
+  mode: PackageMode;
   packageName: string;
   testRunner: TestRunner;
   tooling: ToolingPreset;
-}) {
+}
+
+export function getManagedFileContentByPath(context: TemplateContext) {
   const scopedPackageName = getScopedPackageName(
     defaultScope,
     context.packageName
@@ -67,7 +64,9 @@ export function getManagedFileContentByPath(context: {
   return files;
 }
 
-function getPackageJsonContent(context: TemplateContext) {
+function getPackageJsonContent(
+  context: TemplateContext & { scopedPackageName: string }
+) {
   const packageJson = {
     name: context.scopedPackageName,
     version: '0.1.0',
@@ -99,7 +98,7 @@ function getPackageJsonContent(context: TemplateContext) {
   return JSON.stringify(packageJson, null, 2) + '\n';
 }
 
-function getPublishedFiles(mode: PiPackageMode) {
+function getPublishedFiles(mode: PackageMode) {
   if (mode === 'bundle') {
     return ['dist', 'pi-package.json', 'README.md', 'LICENSE'];
   }
@@ -116,7 +115,7 @@ function getPublishedFiles(mode: PiPackageMode) {
 }
 
 function getScripts(
-  mode: PiPackageMode,
+  mode: PackageMode,
   testRunner: TestRunner,
   tooling: ToolingPreset
 ) {
@@ -129,7 +128,7 @@ function getScripts(
   const build =
     mode === 'bundle'
       ? 'tsup --config tsup.config.ts && node ./scripts/prepare-dist.mjs'
-      : `node -e "import('./lib/index.ts').then(({ loadPiPackage }) => { const result = loadPiPackage(process.cwd()); if (!result.isValid) { console.error(result.messages.join('\\n')); process.exit(1); } })"`;
+      : "node -e \"import('./lib/index.ts').then(({ loadPiPackage }) => { const result = loadPiPackage(process.cwd()); if (!result.isValid) { console.error(result.messages.join('\\n')); process.exit(1); } })\"";
 
   return {
     build,
@@ -142,7 +141,7 @@ function getScripts(
   };
 }
 
-function getExports(mode: PiPackageMode) {
+function getExports(mode: PackageMode) {
   if (mode === 'bundle') {
     return {
       '.': {
@@ -162,7 +161,7 @@ function getExports(mode: PiPackageMode) {
 }
 
 function getDevDependencies(
-  mode: PiPackageMode,
+  mode: PackageMode,
   testRunner: TestRunner,
   tooling: ToolingPreset
 ) {
@@ -195,7 +194,9 @@ function getDevDependencies(
   return devDependencies;
 }
 
-function getReadmeContent(context: TemplateContext) {
+function getReadmeContent(
+  context: TemplateContext & { scopedPackageName: string }
+) {
   const modeNotes =
     context.mode === 'bundle'
       ? [
@@ -426,7 +427,7 @@ function getJestConfigContent() {
   return `export default {
   testEnvironment: 'node',
   transform: {
-    '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json' }]
+    '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json' }]
   }
 };
 `;
@@ -501,7 +502,7 @@ writeFileSync(path.join(distRoot, 'package.json'), JSON.stringify(packageJson, n
 `;
 }
 
-function getGitIgnoreContent(mode: PiPackageMode) {
+function getGitIgnoreContent(mode: PackageMode) {
   const lines = [
     '# Node',
     'node_modules/',

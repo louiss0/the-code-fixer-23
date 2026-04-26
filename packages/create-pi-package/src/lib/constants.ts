@@ -1,5 +1,3 @@
-import type { PiPackageMode, TestRunner, ToolingPreset } from './types';
-
 export const defaultScope = '@pi-packages';
 
 export const managedFilePaths = [
@@ -25,15 +23,11 @@ export const managedFilePaths = [
   'scripts/prepare-dist.mjs',
 ] as const;
 
-export const defaultChoices: {
-  mode: PiPackageMode;
-  testRunner: TestRunner;
-  tooling: ToolingPreset;
-} = {
+export const defaultChoices = {
   mode: 'source',
   testRunner: 'vitest',
   tooling: 'eslint-prettier',
-};
+} as const;
 
 export const packageKeywords = [
   'pi',

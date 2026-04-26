@@ -1,18 +1,18 @@
+import { existsSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
-
-import { defaultChoices, defaultScope, managedFilePaths } from './constants';
-import { readOptionalFile, writeManagedFile } from './io';
-import { getScopedPackageName, isKebabCaseName } from './name';
-import { selectChoice } from './prompt';
-import { getManagedFileContentByPath } from './templates';
+import { defaultChoices, defaultScope, managedFilePaths } from './constants.js';
+import { readOptionalFile, writeManagedFile } from './io.js';
+import { isKebabCaseName } from './name.js';
+import { selectChoice } from './prompt.js';
+import { getManagedFileContentByPath } from './templates.js';
 import type {
   CreatePiPackageOptions,
   CreatePiPackageResult,
-  PiPackageMode,
+  PackageMode,
   TestRunner,
   ToolingPreset,
-} from './types';
+} from './types.js';
 
 export async function createPiPackage(
   options: CreatePiPackageOptions
@@ -44,18 +44,18 @@ export async function createPiPackage(
   await mkdir(targetDirectory, { recursive: true });
 
   const managedFiles = getManagedFileContentByPath({
-    mode,
+    mode: mode as PackageMode,
     packageName,
-    testRunner,
-    tooling,
+    testRunner: testRunner as TestRunner,
+    tooling: tooling as ToolingPreset,
   });
+
   const createdFiles: string[] = [];
   const overwrittenFiles: string[] = [];
   const skippedFiles: string[] = [];
 
   for (const relativeFilePath of managedFilePaths) {
     const content = managedFiles.get(relativeFilePath);
-
     if (content === undefined) {
       continue;
     }
@@ -82,53 +82,51 @@ export async function createPiPackage(
     overwrittenFiles.push(relativeFilePath);
   }
 
+  const summaryLines = [
+    `Package: ${defaultScope}/${packageName}`,
+    `Directory: ${targetDirectory}`,
+    `Mode: ${mode}`,
+    `Tooling: ${tooling}`,
+    `Test runner: ${testRunner}`,
+    createdFiles.length > 0
+      ? `Created: ${createdFiles.join(', ')}`
+      : 'Created: none',
+    overwrittenFiles.length > 0
+      ? `Overwritten: ${overwrittenFiles.join(', ')}`
+      : 'Overwritten: none',
+    skippedFiles.length > 0
+      ? `Skipped: ${skippedFiles.join(', ')}`
+      : 'Skipped: none',
+    'Next steps:',
+    '  npm install',
+    '  npm run check',
+  ];
+
   return {
     createdFiles,
     overwrittenFiles,
     skippedFiles,
-    summaryLines: [
-      `Package: ${getScopedPackageName(defaultScope, packageName)}`,
-      `Directory: ${targetDirectory}`,
-      `Mode: ${mode}`,
-      `Tooling: ${tooling}`,
-      `Test runner: ${testRunner}`,
-      createdFiles.length > 0
-        ? `Created: ${createdFiles.join(', ')}`
-        : 'Created: none',
-      overwrittenFiles.length > 0
-        ? `Overwritten: ${overwrittenFiles.join(', ')}`
-        : 'Overwritten: none',
-      skippedFiles.length > 0
-        ? `Skipped: ${skippedFiles.join(', ')}`
-        : 'Skipped: none',
-      'Next steps:',
-      '  npm install',
-      '  npm run check',
-    ],
+    summaryLines,
   };
 }
 
 function resolvePackageName(targetDirectory: string, explicitName?: string) {
   const packageName = explicitName ?? path.basename(targetDirectory);
-
   if (!isKebabCaseName(packageName)) {
     throw new Error(
       `Package name must be kebab-case. Rename the directory or pass --name with a kebab-case value. Received: ${packageName}`
     );
   }
-
   return packageName;
 }
 
-async function resolveOption<
-  TChoice extends PiPackageMode | TestRunner | ToolingPreset
->(
+async function resolveOption<T extends string>(
   label: string,
-  value: TChoice | undefined,
+  value: T | undefined,
   yes: boolean | undefined,
-  choices: readonly TChoice[],
-  defaultChoice: TChoice
-) {
+  choices: readonly T[],
+  defaultChoice: T
+): Promise<T> {
   if (value !== undefined) {
     return value;
   }
@@ -142,4 +140,12 @@ async function resolveOption<
     defaultChoice,
     label,
   });
+}
+
+export function directoryContainsFiles(targetDirectory: string) {
+  if (!existsSync(targetDirectory)) {
+    return false;
+  }
+
+  return true;
 }

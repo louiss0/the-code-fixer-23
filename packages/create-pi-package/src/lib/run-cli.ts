@@ -1,9 +1,8 @@
 import { readdir } from 'node:fs/promises';
 import path from 'node:path';
-
-import { createPiPackage } from './create-pi-package';
-import { parseArgs } from './parse-args';
-import { isInteractiveSession } from './prompt';
+import { createPiPackage } from './create-pi-package.js';
+import { isInteractiveSession } from './prompt.js';
+import { parseArgs } from './parse-args.js';
 
 export async function runCli(args: string[]) {
   try {
@@ -45,7 +44,11 @@ export async function runCli(args: string[]) {
       console.log(line);
     }
 
-    return result.skippedFiles.length > 0 ? 1 : 0;
+    if (result.skippedFiles.length > 0) {
+      return 1;
+    }
+
+    return 0;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error(message);

@@ -1,12 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "outDir": "../../dist/out-tsc/packages/enums",
+    "outDir": "../../dist/out-tsc",
     "declaration": true,
-    "types": ["node"]
+    "types": []
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.spec.ts"]
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"]
 }

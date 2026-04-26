@@ -2,13 +2,11 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
   clean: true,
-  dts: true,
+  dts: false,
   entry: ['src/index.ts', 'src/cli.ts'],
   format: ['esm'],
   minify: false,
-  outDir: '../../dist/packages/create-pi-package',
   sourcemap: false,
-  splitting: true,
   target: 'node20',
-  tsconfig: 'tsconfig.build.json',
+  tsconfig: './tsconfig.tsup.json',
 });

@@ -1,15 +1,15 @@
 import readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 
-import type { SelectChoiceOptions } from './types';
-
 export function isInteractiveSession() {
   return process.stdin.isTTY === true && process.stdout.isTTY === true;
 }
 
-export async function selectChoice<TChoice extends string>(
-  options: SelectChoiceOptions<TChoice>
-) {
+export async function selectChoice<T extends string>(options: {
+  choices: readonly T[];
+  defaultChoice: T;
+  label: string;
+}) {
   const promptLabel = `${options.label} (${options.choices.join('/')}) [${
     options.defaultChoice
   }]: `;
@@ -22,8 +22,8 @@ export async function selectChoice<TChoice extends string>(
       return options.defaultChoice;
     }
 
-    if (options.choices.includes(answer as TChoice)) {
-      return answer as TChoice;
+    if (options.choices.includes(answer as T)) {
+      return answer as T;
     }
 
     throw new Error(`Invalid choice for ${options.label}: ${answer}`);

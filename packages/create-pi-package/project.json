@@ -1,41 +1,29 @@
 {
-  "name": "create-pi-package",
+  "name": "@code-fixer-23/create-pi-package",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "root": "packages/create-pi-package",
-  "sourceRoot": "packages/create-pi-package/src",
   "projectType": "library",
+  "sourceRoot": "packages/create-pi-package/src",
   "targets": {
     "build": {
       "executor": "nx:run-commands",
-      "outputs": ["{workspaceRoot}/dist/packages/create-pi-package"],
+      "outputs": ["{projectRoot}/dist"],
       "options": {
-        "cwd": "packages/create-pi-package",
-        "command": "pnpm exec tsup --config tsup.config.ts"
+        "command": "pnpm --dir packages/create-pi-package run build"
       }
     },
     "typecheck": {
-      "executor": "@nx/js:tsc",
+      "executor": "nx:run-commands",
       "options": {
-        "outputPath": "dist/out-tsc/packages/create-pi-package",
-        "main": "packages/create-pi-package/src/index.ts",
-        "tsConfig": "packages/create-pi-package/tsconfig.lib.json",
-        "noEmit": true
+        "command": "pnpm --dir packages/create-pi-package run typecheck"
       }
     },
     "test": {
-      "executor": "@nx/vite:test",
-      "outputs": ["{projectRoot}/coverage"],
-      "options": {
-        "config": "packages/create-pi-package/vitest.config.ts"
-      }
-    },
-    "lint": {
       "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/test-output/vitest"],
       "options": {
-        "cwd": "packages/create-pi-package",
-        "command": "pnpm exec eslint ."
+        "command": "pnpm --dir packages/create-pi-package run test"
       }
     }
   },
-  "tags": []
+  "tags": ["npm:public", "ongoing"]
 }

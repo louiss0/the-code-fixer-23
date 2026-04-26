@@ -1,11 +1,11 @@
-export type PiPackageMode = 'source' | 'bundle';
 export type ToolingPreset = 'eslint-prettier' | 'biome';
 export type TestRunner = 'vitest' | 'jest';
+export type PackageMode = 'source' | 'bundle';
 
 export interface CreatePiPackageOptions {
   directory?: string;
   force?: boolean;
-  mode?: PiPackageMode;
+  mode?: PackageMode;
   name?: string;
   testRunner?: TestRunner;
   tooling?: ToolingPreset;
@@ -17,18 +17,4 @@ export interface CreatePiPackageResult {
   overwrittenFiles: string[];
   skippedFiles: string[];
   summaryLines: string[];
-}
-
-export interface TemplateContext {
-  mode: PiPackageMode;
-  packageName: string;
-  scopedPackageName: string;
-  testRunner: TestRunner;
-  tooling: ToolingPreset;
-}
-
-export interface SelectChoiceOptions<TChoice extends string> {
-  choices: readonly TChoice[];
-  defaultChoice: TChoice;
-  label: string;
 }

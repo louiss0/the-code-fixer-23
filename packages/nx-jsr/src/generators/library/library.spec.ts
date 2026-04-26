@@ -33,6 +33,42 @@ describe('library generator', () => {
     expect(tree.exists('packages/test/src/index.ts')).toBe(true);
   });
 
+  it('should use nx:run-commands for biome lint targets', async () => {
+    await libraryGenerator(tree, {
+      ...options,
+      directory: 'packages',
+      linter: 'biome',
+      formatter: 'none',
+    });
+
+    const config = readProjectConfiguration(tree, 'test');
+
+    expect(config.targets?.lint).toMatchObject({
+      executor: 'nx:run-commands',
+      options: {
+        commands: ['biome lint packages/test'],
+      },
+    });
+  });
+
+  it('should use nx:run-commands for formatter targets', async () => {
+    await libraryGenerator(tree, {
+      ...options,
+      directory: 'packages',
+      linter: 'eslint',
+      formatter: 'prettier',
+    });
+
+    const config = readProjectConfiguration(tree, 'test');
+
+    expect(config.targets?.format).toMatchObject({
+      executor: 'nx:run-commands',
+      options: {
+        commands: ['prettier --write packages/test'],
+      },
+    });
+  });
+
   it('should treat directory="." as standalone mode', async () => {
     await libraryGenerator(tree, { ...options, directory: '.' });
     // Standalone: no Nx project should be registered

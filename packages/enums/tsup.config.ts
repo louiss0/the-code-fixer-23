@@ -1,12 +1,11 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  clean: true,
-  dts: true,
   entry: ['src/index.ts'],
   format: ['esm'],
-  minify: false,
-  outDir: '../../dist/packages/enums',
+  dts: true,
+  clean: true,
   sourcemap: false,
+  minify: false,
   target: 'es2022',
 });
