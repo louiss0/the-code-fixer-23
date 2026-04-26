@@ -82,7 +82,9 @@ function parseFormatter(value: string): Formatter {
 
 function parseLinter(value: string): Linter {
   if (value !== 'eslint' && value !== 'biome') {
-    throw new InvalidArgumentError("Linter must be either 'eslint' or 'biome'.");
+    throw new InvalidArgumentError(
+      "Linter must be either 'eslint' or 'biome'."
+    );
   }
 
   return value;

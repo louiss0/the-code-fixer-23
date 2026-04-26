@@ -22,9 +22,10 @@ export async function resolveCreateOptions(input: CreatePiPackageInput) {
   const linter = await resolveLinter(input.linter);
   const formatter = await resolveFormatter(linter, input.formatter);
   const bundle = includesExtension ? await resolveBundle(input.bundle) : false;
-  const bundler = includesExtension && bundle
-    ? await resolveBundler(input.bundler)
-    : undefined;
+  const bundler =
+    includesExtension && bundle
+      ? await resolveBundler(input.bundler)
+      : undefined;
   const testRunner = includesExtension
     ? await resolveTestRunner(input.testRunner)
     : undefined;
@@ -102,7 +103,10 @@ async function resolveBundler(bundler: Bundler | undefined) {
   return getPromptValue(answer) as Bundler;
 }
 
-async function resolveFormatter(linter: Linter, formatter: Formatter | undefined) {
+async function resolveFormatter(
+  linter: Linter,
+  formatter: Formatter | undefined
+) {
   const choices = getFormatterChoices(linter);
 
   if (formatter === undefined) {
@@ -111,7 +115,9 @@ async function resolveFormatter(linter: Linter, formatter: Formatter | undefined
 
   if (formatter !== undefined) {
     if (!choices.includes(formatter)) {
-      throw new Error(`Formatter '${formatter}' cannot be used with linter '${linter}'.`);
+      throw new Error(
+        `Formatter '${formatter}' cannot be used with linter '${linter}'.`
+      );
     }
 
     return formatter;
@@ -119,7 +125,10 @@ async function resolveFormatter(linter: Linter, formatter: Formatter | undefined
 
   const answer = await prompts.select({
     message: 'Which formatter do you want?',
-    options: choices.map((choice) => ({ value: choice, label: getFormatterLabel(choice) })),
+    options: choices.map((choice) => ({
+      value: choice,
+      label: getFormatterLabel(choice),
+    })),
     initialValue: choices[0],
   });
 

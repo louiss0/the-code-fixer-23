@@ -1,6 +1,8 @@
 import type { PackageManager } from './types';
 
-export function detectPackageManager(environment = process.env): PackageManager {
+export function detectPackageManager(
+  environment = process.env
+): PackageManager {
   const userAgent = environment.npm_config_user_agent ?? '';
 
   if (userAgent.startsWith('pnpm')) return 'pnpm';

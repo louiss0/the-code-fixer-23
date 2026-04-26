@@ -31,15 +31,15 @@ pnpm run build
 
 Important source files:
 
-| Path | Purpose |
-| --- | --- |
-| `src/cli.ts` | Node executable entry point. |
-| `src/lib/command.ts` | Commander command definition and flag validation. |
-| `src/lib/prompts.ts` | Interactive questionnaire and option resolution. |
-| `src/lib/create-pi-package.ts` | Main package creation flow. |
-| `src/lib/write-files.ts` | File selection and write/overwrite behavior. |
-| `src/lib/templates.ts` | Generated file templates and generated scaffold scripts. |
-| `src/index.spec.ts` | Behavior tests for CLI parsing, generated files, and scripts. |
+| Path                           | Purpose                                                       |
+| ------------------------------ | ------------------------------------------------------------- |
+| `src/cli.ts`                   | Node executable entry point.                                  |
+| `src/lib/command.ts`           | Commander command definition and flag validation.             |
+| `src/lib/prompts.ts`           | Interactive questionnaire and option resolution.              |
+| `src/lib/create-pi-package.ts` | Main package creation flow.                                   |
+| `src/lib/write-files.ts`       | File selection and write/overwrite behavior.                  |
+| `src/lib/templates.ts`         | Generated file templates and generated scaffold scripts.      |
+| `src/index.spec.ts`            | Behavior tests for CLI parsing, generated files, and scripts. |
 
 ## Testing expectations
 

@@ -86,11 +86,19 @@ function getProjectFiles(options: CreatePiPackageOptions) {
     files.set('scripts/create-extension.mjs', createExtensionScript(options));
   }
 
-  if (options.features.extensions && options.bundle && options.bundler === 'tsup') {
+  if (
+    options.features.extensions &&
+    options.bundle &&
+    options.bundler === 'tsup'
+  ) {
     files.set('tsup.config.ts', createTsupConfig());
   }
 
-  if (options.features.extensions && options.bundle && options.bundler === 'vite') {
+  if (
+    options.features.extensions &&
+    options.bundle &&
+    options.bundler === 'vite'
+  ) {
     files.set('vite.config.ts', createViteConfig());
   }
 

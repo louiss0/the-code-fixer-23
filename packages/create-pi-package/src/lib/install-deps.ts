@@ -1,13 +1,20 @@
 import { execa } from 'execa';
 
-import { detectPackageManager, getInstallCommand } from './detect-package-manager';
+import {
+  detectPackageManager,
+  getInstallCommand,
+} from './detect-package-manager';
 import type { PackageManager } from './types';
 
-export async function installDependencies(cwd: string, packages: string[] = []) {
+export async function installDependencies(
+  cwd: string,
+  packages: string[] = []
+) {
   const packageManager = detectPackageManager();
-  const [command, ...args] = packages.length > 0
-    ? getDependencyInstallCommand(packageManager, packages)
-    : getInstallCommand(packageManager);
+  const [command, ...args] =
+    packages.length > 0
+      ? getDependencyInstallCommand(packageManager, packages)
+      : getInstallCommand(packageManager);
 
   await execa(command, args, {
     cwd,
