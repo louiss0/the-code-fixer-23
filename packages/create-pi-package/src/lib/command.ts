@@ -1,4 +1,4 @@
-import { Command, InvalidArgumentError } from 'commander';
+import { Command, InvalidArgumentError } from '@commander-js/extra-typings';
 
 import type { Bundler, CreatePiPackageInput, TestRunner } from './types';
 
@@ -28,7 +28,7 @@ export function createCommand(action: CreatePiPackageAction, version: string) {
     .option('--install', 'Install dependencies after scaffolding')
     .option('--no-install', 'Skip dependency installation')
     .option('--force', 'Overwrite managed scaffold files')
-    .action(async (directory: string | undefined, options) => {
+    .action(async (directory, options) => {
       await action({
         directory,
         bundle: options.bundle,
