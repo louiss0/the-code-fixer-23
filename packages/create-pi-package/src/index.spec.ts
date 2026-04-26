@@ -102,8 +102,7 @@ describe('detectPackageManager', () => {
 
 describe('createPiPackage', () => {
   it('writes a bundled PI package with selected feature templates', async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), 'create-pi-package-'));
-    const directory = path.join(root, 'weather-kit');
+    const directory = await createTemporaryPackageDirectory('weather-kit');
 
     const result = await createPiPackage({
       directory,
@@ -116,9 +115,7 @@ describe('createPiPackage', () => {
       install: false,
     });
 
-    const packageJson = JSON.parse(
-      await readFile(path.join(directory, 'package.json'), 'utf8')
-    );
+    const packageJson = await readPackageJson(directory);
     const indexFile = await readFile(path.join(directory, 'src/index.ts'), 'utf8');
 
     expect(result.createdFiles).toContain('package.json');
@@ -132,8 +129,92 @@ describe('createPiPackage', () => {
     expect(packageJson.devDependencies).toHaveProperty('vite');
     expect(indexFile).toContain('export { prompts }');
     expect(indexFile).toContain('export { themes }');
-    await expect(stat(path.join(directory, 'skills/example-skill/SKILL.md'))).resolves.toBeTruthy();
+    await expect(
+      stat(path.join(directory, 'skills/example-skill/SKILL.md'))
+    ).resolves.toBeTruthy();
     await expect(stat(path.join(directory, 'vite.config.ts'))).resolves.toBeTruthy();
-    await expect(stat(path.join(directory, 'vitest.config.ts'))).resolves.toBeTruthy();
+    await expect(
+      stat(path.join(directory, 'vitest.config.ts'))
+    ).resolves.toBeTruthy();
+  });
+
+  it('writes an unbundled package without bundler config or bundler dependencies', async () => {
+    const directory = await createTemporaryPackageDirectory('source-kit');
+
+    await createPiPackage({
+      directory,
+      bundle: false,
+      testRunner: 'vitest',
+      prompts: true,
+      install: false,
+    });
+
+    const packageJson = await readPackageJson(directory);
+
+    expect(packageJson.scripts.build).toBe('tsc');
+    expect(packageJson.devDependencies).not.toHaveProperty('tsup');
+    expect(packageJson.devDependencies).not.toHaveProperty('vite');
+    await expectFileMissing(path.join(directory, 'tsup.config.ts'));
+    await expectFileMissing(path.join(directory, 'vite.config.ts'));
+  });
+
+  it('writes a tsup bundled package with tsup scripts and config', async () => {
+    const directory = await createTemporaryPackageDirectory('tsup-kit');
+
+    await createPiPackage({
+      directory,
+      bundle: true,
+      bundler: 'tsup',
+      testRunner: 'vitest',
+      prompts: true,
+      install: false,
+    });
+
+    const packageJson = await readPackageJson(directory);
+    const tsupConfig = await readFile(path.join(directory, 'tsup.config.ts'), 'utf8');
+
+    expect(packageJson.scripts.build).toBe(
+      'tsup src/index.ts --format esm,cjs --dts --minify --clean'
+    );
+    expect(packageJson.devDependencies).toHaveProperty('tsup');
+    expect(tsupConfig).toContain('minify: true');
+    await expectFileMissing(path.join(directory, 'vite.config.ts'));
+  });
+
+  it('writes a Jest package with Jest config and test dependencies', async () => {
+    const directory = await createTemporaryPackageDirectory('jest-kit');
+
+    await createPiPackage({
+      directory,
+      bundle: false,
+      testRunner: 'jest',
+      prompts: true,
+      install: false,
+    });
+
+    const packageJson = await readPackageJson(directory);
+    const testFile = await readFile(path.join(directory, 'src/index.test.ts'), 'utf8');
+
+    expect(packageJson.scripts.test).toBe('jest');
+    expect(packageJson.devDependencies).toHaveProperty('jest');
+    expect(packageJson.devDependencies).toHaveProperty('ts-jest');
+    expect(packageJson.devDependencies).toHaveProperty('@types/jest');
+    expect(testFile).not.toContain('from "vitest"');
+    await expect(stat(path.join(directory, 'jest.config.js'))).resolves.toBeTruthy();
+    await expectFileMissing(path.join(directory, 'vitest.config.ts'));
   });
 });
+
+async function createTemporaryPackageDirectory(packageName: string) {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'create-pi-package-'));
+
+  return path.join(root, packageName);
+}
+
+async function readPackageJson(directory: string) {
+  return JSON.parse(await readFile(path.join(directory, 'package.json'), 'utf8'));
+}
+
+async function expectFileMissing(filePath: string) {
+  await expect(stat(filePath)).rejects.toMatchObject({ code: 'ENOENT' });
+}
