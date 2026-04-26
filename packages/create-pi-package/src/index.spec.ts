@@ -1,6 +1,9 @@
-import { mkdtemp, readFile, stat } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { mkdtemp, readFile, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+
+import { promisify } from 'node:util';
 
 import { describe, expect, it } from 'vitest';
 
@@ -10,6 +13,8 @@ import {
   getInstallCommand,
 } from './lib/detect-package-manager';
 import type { CreatePiPackageInput } from './lib/types';
+
+const execFileAsync = promisify(execFile);
 
 describe('createCommand', () => {
   it('parses create package flags with Commander typings', async () => {
@@ -21,8 +26,10 @@ describe('createCommand', () => {
     await command.parseAsync(
       [
         'weather-kit',
+        '--extensions',
         '--skills',
         '--prompts',
+        '--themes',
         '--bundle',
         '--bundler',
         'tsup',
@@ -39,8 +46,9 @@ describe('createCommand', () => {
       bundle: true,
       bundler: 'tsup',
       testRunner: 'vitest',
+      extensions: true,
       prompts: true,
-      themes: undefined,
+      themes: true,
       skills: true,
       install: false,
       force: true,
@@ -101,17 +109,18 @@ describe('detectPackageManager', () => {
 });
 
 describe('createPiPackage', () => {
-  it('writes a bundled PI package with selected feature templates', async () => {
-    const directory = await createTemporaryPackageDirectory('weather-kit');
+  it('writes all selected PI resource types together', async () => {
+    const directory = await createTemporaryPackageDirectory('complete-kit');
 
     const result = await createPiPackage({
       directory,
-      bundle: true,
-      bundler: 'vite',
-      testRunner: 'vitest',
+      extensions: true,
       prompts: true,
       themes: true,
       skills: true,
+      bundle: true,
+      bundler: 'vite',
+      testRunner: 'vitest',
       install: false,
     });
 
@@ -120,88 +129,253 @@ describe('createPiPackage', () => {
 
     expect(result.createdFiles).toContain('package.json');
     expect(packageJson).toMatchObject({
-      name: 'weather-kit',
+      name: 'complete-kit',
       type: 'module',
       types: 'dist/index.d.ts',
+      pi: {
+        extensions: ['./extensions'],
+        prompts: ['./prompts'],
+        skills: ['./skills'],
+        themes: ['./themes'],
+      },
     });
     expect(packageJson).not.toHaveProperty('typings');
+    expect(packageJson.scripts).toMatchObject({
+      'create:extension': 'node scripts/create-extension.mjs',
+      'create:prompt': 'node scripts/create-prompt.mjs',
+      'create:skill': 'node scripts/create-skill.mjs',
+      'create:theme': 'node scripts/create-theme.mjs',
+    });
     expect(packageJson.scripts.build).toBe('vite build --minify');
     expect(packageJson.devDependencies).toHaveProperty('vite');
     expect(indexFile).toContain('export { prompts }');
     expect(indexFile).toContain('export { themes }');
-    await expect(
-      stat(path.join(directory, 'skills/example-skill/SKILL.md'))
-    ).resolves.toBeTruthy();
-    await expect(stat(path.join(directory, 'vite.config.ts'))).resolves.toBeTruthy();
-    await expect(
-      stat(path.join(directory, 'vitest.config.ts'))
-    ).resolves.toBeTruthy();
+    await expectFileExists(path.join(directory, 'extensions/example-extension.ts'));
+    await expectFileExists(path.join(directory, 'prompts/example-prompt.md'));
+    await expectFileExists(path.join(directory, 'skills/example-skill/SKILL.md'));
+    await expectFileExists(path.join(directory, 'themes/default.json'));
+    await expectFileExists(path.join(directory, 'scripts/create-extension.mjs'));
+    await expectFileExists(path.join(directory, 'scripts/create-prompt.mjs'));
+    await expectFileExists(path.join(directory, 'scripts/create-skill.mjs'));
+    await expectFileExists(path.join(directory, 'scripts/create-theme.mjs'));
+    await expectFileExists(path.join(directory, 'vite.config.ts'));
+    await expectFileExists(path.join(directory, 'vitest.config.ts'));
   });
 
-  it('writes an unbundled package without bundler config or bundler dependencies', async () => {
-    const directory = await createTemporaryPackageDirectory('source-kit');
+  it('writes prompt-only packages without bundler or test runner artifacts', async () => {
+    const directory = await createTemporaryPackageDirectory('prompt-kit');
 
     await createPiPackage({
       directory,
-      bundle: false,
-      testRunner: 'vitest',
       prompts: true,
       install: false,
     });
 
     const packageJson = await readPackageJson(directory);
 
-    expect(packageJson.scripts.build).toBe('tsc');
+    expect(packageJson.pi).toEqual({ prompts: ['./prompts'] });
+    expect(packageJson.scripts).toHaveProperty('create:prompt');
+    expect(packageJson.scripts).not.toHaveProperty('test');
+    expect(packageJson.devDependencies).not.toHaveProperty('vitest');
+    expect(packageJson.devDependencies).not.toHaveProperty('jest');
     expect(packageJson.devDependencies).not.toHaveProperty('tsup');
     expect(packageJson.devDependencies).not.toHaveProperty('vite');
+    await expectFileExists(path.join(directory, 'prompts/example-prompt.md'));
+    await expectFileExists(path.join(directory, 'scripts/create-prompt.mjs'));
+    await expectFileMissing(path.join(directory, 'vitest.config.ts'));
+    await expectFileMissing(path.join(directory, 'jest.config.js'));
     await expectFileMissing(path.join(directory, 'tsup.config.ts'));
     await expectFileMissing(path.join(directory, 'vite.config.ts'));
   });
 
-  it('writes a tsup bundled package with tsup scripts and config', async () => {
-    const directory = await createTemporaryPackageDirectory('tsup-kit');
+  it('writes skill-only packages without bundler or test runner artifacts', async () => {
+    const directory = await createTemporaryPackageDirectory('skill-kit');
 
     await createPiPackage({
       directory,
-      bundle: true,
-      bundler: 'tsup',
-      testRunner: 'vitest',
-      prompts: true,
+      skills: true,
       install: false,
     });
 
     const packageJson = await readPackageJson(directory);
-    const tsupConfig = await readFile(path.join(directory, 'tsup.config.ts'), 'utf8');
-
-    expect(packageJson.scripts.build).toBe(
-      'tsup src/index.ts --format esm,cjs --dts --minify --clean'
+    const skill = await readFile(
+      path.join(directory, 'skills/example-skill/SKILL.md'),
+      'utf8'
     );
-    expect(packageJson.devDependencies).toHaveProperty('tsup');
-    expect(tsupConfig).toContain('minify: true');
+
+    expect(packageJson.pi).toEqual({ skills: ['./skills'] });
+    expect(packageJson.scripts).toHaveProperty('create:skill');
+    expect(packageJson.scripts).not.toHaveProperty('test');
+    expect(skill).toContain('name: example-skill');
+    expect(skill).toContain('description: An example PI skill.');
+    await expectFileExists(path.join(directory, 'scripts/create-skill.mjs'));
+    await expectFileMissing(path.join(directory, 'vitest.config.ts'));
+    await expectFileMissing(path.join(directory, 'jest.config.js'));
+  });
+
+  it('writes theme-only packages without bundler or test runner questions reflected in artifacts', async () => {
+    const directory = await createTemporaryPackageDirectory('theme-kit');
+
+    await createPiPackage({
+      directory,
+      themes: true,
+      install: false,
+    });
+
+    const packageJson = await readPackageJson(directory);
+    const theme = JSON.parse(
+      await readFile(path.join(directory, 'themes/default.json'), 'utf8')
+    );
+
+    expect(packageJson.pi).toEqual({ themes: ['./themes'] });
+    expect(packageJson.scripts).toHaveProperty('create:theme');
+    expect(packageJson.scripts).not.toHaveProperty('test');
+    expect(theme.name).toBe('default');
+    expect(Object.keys(theme.colors)).toHaveLength(51);
+    await expectFileExists(path.join(directory, 'scripts/create-theme.mjs'));
+    await expectFileMissing(path.join(directory, 'vitest.config.ts'));
+    await expectFileMissing(path.join(directory, 'jest.config.js'));
+    await expectFileMissing(path.join(directory, 'tsup.config.ts'));
     await expectFileMissing(path.join(directory, 'vite.config.ts'));
   });
 
-  it('writes a Jest package with Jest config and test dependencies', async () => {
-    const directory = await createTemporaryPackageDirectory('jest-kit');
+  it('writes extension packages with tsup scripts and a matching test suite', async () => {
+    const directory = await createTemporaryPackageDirectory('extension-kit');
 
     await createPiPackage({
       directory,
-      bundle: false,
+      extensions: true,
+      bundle: true,
+      bundler: 'tsup',
       testRunner: 'jest',
-      prompts: true,
       install: false,
     });
 
     const packageJson = await readPackageJson(directory);
-    const testFile = await readFile(path.join(directory, 'src/index.test.ts'), 'utf8');
+    const extensionScript = await readFile(
+      path.join(directory, 'scripts/create-extension.mjs'),
+      'utf8'
+    );
+    const testFile = await readFile(
+      path.join(directory, 'test/example-extension.test.ts'),
+      'utf8'
+    );
 
+    expect(packageJson.pi).toEqual({ extensions: ['./extensions'] });
+    expect(packageJson.scripts).toHaveProperty('create:extension');
     expect(packageJson.scripts.test).toBe('jest');
+    expect(packageJson.scripts.build).toBe(
+      'tsup extensions/*.ts --format esm,cjs --dts --minify --clean'
+    );
+    expect(packageJson.devDependencies).toHaveProperty('tsup');
     expect(packageJson.devDependencies).toHaveProperty('jest');
-    expect(packageJson.devDependencies).toHaveProperty('ts-jest');
-    expect(packageJson.devDependencies).toHaveProperty('@types/jest');
+    expect(extensionScript).toContain('--name');
+    expect(extensionScript).toContain('testRunner = "jest"');
+    expect(extensionScript).toContain('bundler = "tsup"');
     expect(testFile).not.toContain('from "vitest"');
-    await expect(stat(path.join(directory, 'jest.config.js'))).resolves.toBeTruthy();
+    await expectFileExists(path.join(directory, 'extensions/example-extension.ts'));
+    await expectFileExists(path.join(directory, 'test/example-extension.test.ts'));
+    await expectFileExists(path.join(directory, 'tsup.config.ts'));
+    await expectFileExists(path.join(directory, 'jest.config.js'));
+    await expectFileMissing(path.join(directory, 'vite.config.ts'));
     await expectFileMissing(path.join(directory, 'vitest.config.ts'));
+  });
+
+  it('writes prompt, skill, and theme scripts with flags and body-file support', async () => {
+    const directory = await createTemporaryPackageDirectory('assets-kit');
+
+    await createPiPackage({
+      directory,
+      prompts: true,
+      skills: true,
+      themes: true,
+      install: false,
+    });
+
+    const promptScript = await readFile(
+      path.join(directory, 'scripts/create-prompt.mjs'),
+      'utf8'
+    );
+    const skillScript = await readFile(
+      path.join(directory, 'scripts/create-skill.mjs'),
+      'utf8'
+    );
+    const themeScript = await readFile(
+      path.join(directory, 'scripts/create-theme.mjs'),
+      'utf8'
+    );
+
+    expect(promptScript).toContain('--name');
+    expect(promptScript).toContain('--body');
+    expect(promptScript).toContain('--body-file');
+    expect(skillScript).toContain('--name');
+    expect(skillScript).toContain('--description');
+    expect(skillScript).toContain('--body');
+    expect(skillScript).toContain('--body-file');
+    expect(themeScript).toContain('--name');
+  });
+
+  it('runs generated scaffold scripts with flags', async () => {
+    const directory = await createTemporaryPackageDirectory('script-kit');
+    const promptBodyPath = path.join(directory, 'prompt-body.md');
+    const skillBodyPath = path.join(directory, 'skill-body.md');
+
+    await createPiPackage({
+      directory,
+      extensions: true,
+      prompts: true,
+      skills: true,
+      themes: true,
+      bundle: true,
+      bundler: 'vite',
+      testRunner: 'vitest',
+      install: false,
+    });
+    await writeFile(promptBodyPath, 'Prompt body from a file.');
+    await writeFile(skillBodyPath, '# Skill Body\n\nDo the work.');
+
+    await execFileAsync('node', ['scripts/create-extension.mjs', '--name', 'audit-helper'], {
+      cwd: directory,
+    });
+    await execFileAsync(
+      'node',
+      ['scripts/create-prompt.mjs', '--name', 'daily-review', '--body-file', promptBodyPath],
+      { cwd: directory }
+    );
+    await execFileAsync(
+      'node',
+      [
+        'scripts/create-skill.mjs',
+        '--name',
+        'release-check',
+        '--description',
+        'Checks release readiness.',
+        '--body-file',
+        skillBodyPath,
+      ],
+      { cwd: directory }
+    );
+    await execFileAsync('node', ['scripts/create-theme.mjs', '--name', 'violet-night'], {
+      cwd: directory,
+    });
+
+    const prompt = await readFile(path.join(directory, 'prompts/daily-review.md'), 'utf8');
+    const skill = await readFile(
+      path.join(directory, 'skills/release-check/SKILL.md'),
+      'utf8'
+    );
+    const theme = JSON.parse(
+      await readFile(path.join(directory, 'themes/violet-night.json'), 'utf8')
+    );
+
+    expect(prompt).toContain('Prompt body from a file.');
+    expect(skill).toContain('name: release-check');
+    expect(skill).toContain('description: Checks release readiness.');
+    expect(skill).toContain('# Skill Body');
+    expect(theme.name).toBe('violet-night');
+    expect(Object.keys(theme.colors)).toHaveLength(51);
+    await expectFileExists(path.join(directory, 'extensions/audit-helper.ts'));
+    await expectFileExists(path.join(directory, 'test/audit-helper.test.ts'));
   });
 });
 
@@ -213,6 +387,10 @@ async function createTemporaryPackageDirectory(packageName: string) {
 
 async function readPackageJson(directory: string) {
   return JSON.parse(await readFile(path.join(directory, 'package.json'), 'utf8'));
+}
+
+async function expectFileExists(filePath: string) {
+  await expect(stat(filePath)).resolves.toBeTruthy();
 }
 
 async function expectFileMissing(filePath: string) {

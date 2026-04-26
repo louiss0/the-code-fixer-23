@@ -7,6 +7,7 @@ import type {
   Bundler,
   CreatePiPackageInput,
   CreatePiPackageOptions,
+  ProjectFeature,
   TestRunner,
 } from './types';
 
@@ -14,10 +15,13 @@ export async function resolveCreateOptions(input: CreatePiPackageInput) {
   prompts.intro(color.bgMagenta(color.white(' create-pi-package ')));
 
   const directory = await resolveDirectory(input.directory);
-  const bundle = await resolveBundle(input.bundle);
-  const bundler = bundle ? await resolveBundler(input.bundler) : undefined;
-  const testRunner = await resolveTestRunner(input.testRunner);
   const selectedFeatures = await resolveFeatures(input);
+  const includesExtension = selectedFeatures.includes('extensions');
+  const bundle = includesExtension ? await resolveBundle(input.bundle) : false;
+  const bundler = includesExtension && bundle ? await resolveBundler(input.bundler) : undefined;
+  const testRunner = includesExtension
+    ? await resolveTestRunner(input.testRunner)
+    : undefined;
   const install = await resolveInstall(input.install);
   const targetDir = path.resolve(process.cwd(), directory);
 
@@ -28,6 +32,7 @@ export async function resolveCreateOptions(input: CreatePiPackageInput) {
     bundler,
     testRunner,
     features: {
+      extensions: selectedFeatures.includes('extensions'),
       prompts: selectedFeatures.includes('prompts'),
       themes: selectedFeatures.includes('themes'),
       skills: selectedFeatures.includes('skills'),
@@ -65,7 +70,7 @@ async function resolveBundle(bundle: boolean | undefined) {
   }
 
   const answer = await prompts.confirm({
-    message: 'Do you want to bundle this package?',
+    message: 'Do you want to bundle this extension package?',
     initialValue: true,
   });
 
@@ -78,9 +83,9 @@ async function resolveBundler(bundler: Bundler | undefined) {
   }
 
   const answer = await prompts.select({
-    message: 'Which bundler do you want to use?',
+    message: 'Which bundler do you want to use for extensions?',
     options: [
-      { value: 'tsup', label: 'tsup', hint: 'Simple library bundling' },
+      { value: 'tsup', label: 'tsup', hint: 'Simple extension bundling' },
       { value: 'vite', label: 'vite', hint: 'Flexible plugin ecosystem' },
     ],
     initialValue: 'tsup',
@@ -95,7 +100,7 @@ async function resolveTestRunner(testRunner: TestRunner | undefined) {
   }
 
   const answer = await prompts.select({
-    message: 'Which test runner do you want?',
+    message: 'Which test runner do you want for extensions?',
     options: [
       { value: 'vitest', label: 'Vitest', hint: 'Fast Vite-native tests' },
       { value: 'jest', label: 'Jest', hint: 'Classic test runner' },
@@ -108,10 +113,11 @@ async function resolveTestRunner(testRunner: TestRunner | undefined) {
 
 async function resolveFeatures(input: CreatePiPackageInput) {
   const selectedFeatures = [
+    input.extensions ? 'extensions' : undefined,
     input.prompts ? 'prompts' : undefined,
     input.themes ? 'themes' : undefined,
     input.skills ? 'skills' : undefined,
-  ].filter((feature): feature is string => feature !== undefined);
+  ].filter((feature): feature is ProjectFeature => feature !== undefined);
 
   if (selectedFeatures.length > 0) {
     return selectedFeatures;
@@ -121,6 +127,11 @@ async function resolveFeatures(input: CreatePiPackageInput) {
     message: 'What are you developing?',
     required: true,
     options: [
+      {
+        value: 'extensions',
+        label: 'Extensions',
+        hint: 'Custom tools, commands, and runtime behavior',
+      },
       {
         value: 'prompts',
         label: 'Prompts',
@@ -137,10 +148,10 @@ async function resolveFeatures(input: CreatePiPackageInput) {
         hint: 'Agent skill folders and docs',
       },
     ],
-    initialValues: ['prompts'],
+    initialValues: ['extensions'],
   });
 
-  return getPromptValue(answer);
+  return getPromptValue(answer) as ProjectFeature[];
 }
 
 async function resolveInstall(install: boolean | undefined) {

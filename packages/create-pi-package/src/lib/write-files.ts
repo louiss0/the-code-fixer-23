@@ -4,15 +4,22 @@ import path from 'node:path';
 import {
   createAgentsMd,
   createClaudeMd,
+  createExtensionFile,
+  createExtensionScript,
   createGitignore,
   createIndexFile,
   createJestConfig,
   createPackageJson,
-  createPromptsFile,
+  createPromptFile,
+  createPromptScript,
+  createPromptsIndexFile,
   createReadme,
   createSkillFile,
+  createSkillScript,
   createTestFile,
-  createThemesFile,
+  createThemeFile,
+  createThemeScript,
+  createThemesIndexFile,
   createTsConfig,
   createTsupConfig,
   createViteConfig,
@@ -56,35 +63,45 @@ function getProjectFiles(options: CreatePiPackageOptions) {
     ['.gitignore', createGitignore()],
     ['tsconfig.json', createTsConfig()],
     ['src/index.ts', createIndexFile(options)],
-    ['src/index.test.ts', createTestFile(options)],
   ]);
 
-  if (options.bundle && options.bundler === 'tsup') {
+  if (options.features.extensions) {
+    files.set('extensions/example-extension.ts', createExtensionFile());
+    files.set('test/example-extension.test.ts', createTestFile(options));
+    files.set('scripts/create-extension.mjs', createExtensionScript(options));
+  }
+
+  if (options.features.extensions && options.bundle && options.bundler === 'tsup') {
     files.set('tsup.config.ts', createTsupConfig());
   }
 
-  if (options.bundle && options.bundler === 'vite') {
+  if (options.features.extensions && options.bundle && options.bundler === 'vite') {
     files.set('vite.config.ts', createViteConfig());
   }
 
-  if (options.testRunner === 'vitest') {
+  if (options.features.extensions && options.testRunner === 'vitest') {
     files.set('vitest.config.ts', createVitestConfig());
   }
 
-  if (options.testRunner === 'jest') {
+  if (options.features.extensions && options.testRunner === 'jest') {
     files.set('jest.config.js', createJestConfig());
   }
 
   if (options.features.prompts) {
-    files.set('src/prompts/index.ts', createPromptsFile());
+    files.set('src/prompts/index.ts', createPromptsIndexFile());
+    files.set('prompts/example-prompt.md', createPromptFile());
+    files.set('scripts/create-prompt.mjs', createPromptScript());
   }
 
   if (options.features.themes) {
-    files.set('src/themes/index.ts', createThemesFile());
+    files.set('src/themes/index.ts', createThemesIndexFile());
+    files.set('themes/default.json', createThemeFile());
+    files.set('scripts/create-theme.mjs', createThemeScript());
   }
 
   if (options.features.skills) {
     files.set('skills/example-skill/SKILL.md', createSkillFile());
+    files.set('scripts/create-skill.mjs', createSkillScript());
   }
 
   return files;

@@ -22,6 +22,7 @@ export function createCommand(action: CreatePiPackageAction, version: string) {
       'Test runner to use: vitest or jest',
       parseTestRunner
     )
+    .option('--extensions', 'Generate extension templates')
     .option('--prompts', 'Generate prompt templates')
     .option('--themes', 'Generate theme templates')
     .option('--skills', 'Generate skill templates')
@@ -34,6 +35,7 @@ export function createCommand(action: CreatePiPackageAction, version: string) {
         bundle: options.bundle,
         bundler: options.bundler,
         testRunner: options.testRunner,
+        extensions: options.extensions,
         prompts: options.prompts,
         themes: options.themes,
         skills: options.skills,

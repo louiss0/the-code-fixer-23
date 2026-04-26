@@ -1,12 +1,14 @@
 export type Bundler = 'tsup' | 'vite';
 export type TestRunner = 'vitest' | 'jest';
 export type PackageManager = 'npm' | 'pnpm' | 'yarn' | 'bun';
+export type ProjectFeature = 'extensions' | 'prompts' | 'themes' | 'skills';
 
 export interface CreatePiPackageInput {
   directory?: string;
   bundle?: boolean;
   bundler?: Bundler;
   testRunner?: TestRunner;
+  extensions?: boolean;
   prompts?: boolean;
   themes?: boolean;
   skills?: boolean;
@@ -19,8 +21,9 @@ export interface CreatePiPackageOptions {
   targetDir: string;
   bundle: boolean;
   bundler?: Bundler;
-  testRunner: TestRunner;
+  testRunner?: TestRunner;
   features: {
+    extensions: boolean;
     prompts: boolean;
     themes: boolean;
     skills: boolean;
