@@ -50,7 +50,6 @@ export function createPackageJson(options: CreatePiPackageOptions) {
     main: options.bundle ? 'dist/index.cjs' : 'dist/index.js',
     module: options.bundle ? 'dist/index.js' : undefined,
     types: 'dist/index.d.ts',
-    typings: 'dist/index.d.ts',
     files: ['dist', 'skills', 'README.md', 'AGENTS.md', 'CLAUDE.md'],
     scripts,
     dependencies,

@@ -61,6 +61,21 @@ describe('createCommand', () => {
       })
     ).rejects.toThrow("Bundler must be either 'tsup' or 'vite'.");
   });
+
+  it('rejects unsupported test runners before scaffolding starts', async () => {
+    const command = createCommand(async () => {
+      throw new Error('action should not run');
+    }, '1.2.3');
+
+    command.exitOverride();
+    command.configureOutput({ writeErr: () => undefined });
+
+    await expect(
+      command.parseAsync(['weather-kit', '--test-runner', 'node:test'], {
+        from: 'user',
+      })
+    ).rejects.toThrow("Test runner must be either 'vitest' or 'jest'.");
+  });
 });
 
 describe('detectPackageManager', () => {
@@ -111,8 +126,8 @@ describe('createPiPackage', () => {
       name: 'weather-kit',
       type: 'module',
       types: 'dist/index.d.ts',
-      typings: 'dist/index.d.ts',
     });
+    expect(packageJson).not.toHaveProperty('typings');
     expect(packageJson.scripts.build).toBe('vite build --minify');
     expect(packageJson.devDependencies).toHaveProperty('vite');
     expect(indexFile).toContain('export { prompts }');
