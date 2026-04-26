@@ -1,3 +1,19 @@
+## 0.2.0 (2026-04-26)
+
+### 🚀 Features
+
+- **enums:** merge PR #9 - Refine enums and package scaffolding ([#9](https://github.com/louiss0/the-code-fixer-23/issues/9))
+
+### 🩹 Fixes
+
+- **package-imports:** allow extensionless ts imports ([6ac1a3b](https://github.com/louiss0/the-code-fixer-23/commit/6ac1a3b))
+- **enums:** restore source-only package layout ([4e25ae1](https://github.com/louiss0/the-code-fixer-23/commit/4e25ae1))
+
+### ❤️ Thank You
+
+- louiss0 @louiss0
+- shelton louis @louiss0
+
 ## 0.1.0 (2026-04-25)
 
 ### 🚀 Features

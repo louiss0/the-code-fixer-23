@@ -1,3 +1,18 @@
+## 1.2.0 (2026-04-26)
+
+### 🚀 Features
+
+- **enums:** merge PR #9 - Refine enums and package scaffolding ([#9](https://github.com/louiss0/the-code-fixer-23/issues/9))
+
+### 🩹 Fixes
+
+- **plugin-packaging:** declare Nx plugin build deps ([8fc7e05](https://github.com/louiss0/the-code-fixer-23/commit/8fc7e05))
+
+### ❤️ Thank You
+
+- louiss0 @louiss0
+- shelton louis @louiss0
+
 ## 1.1.2 (2026-04-25)
 
 ### 🩹 Fixes
