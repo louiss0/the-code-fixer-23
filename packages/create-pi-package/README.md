@@ -39,6 +39,10 @@ pnpm create pi-package my-pi-package --extensions --prompts --skills --bundle --
 bun create pi-package my-pi-package --extensions --prompts --skills --bundle --bundler tsup
 ```
 
+The `--` separator is only shown for npm argument forwarding. It is not needed
+when running `create-pi-package` directly, and it is usually not needed for pnpm
+or bun create commands.
+
 ## What it creates
 
 The generated package can contain any of these PI resources:
@@ -96,13 +100,24 @@ create-pi-package [directory] [options]
 | `--no-bundle` | Disable extension bundling. |
 | `--bundler <bundler>` | Extension bundler: `tsup` or `vite`. |
 | `--test-runner <runner>` | Extension test runner: `vitest` or `jest`. |
-| `--install` | Install dependencies after scaffolding. |
+| `--linter <linter>` | Linter to use: `eslint` or `biome`. Defaults to `eslint`. |
+| `--formatter <formatter>` | Formatter to use: `prettier`, `stylistic`, or `biome`, depending on the selected linter. Defaults to the first valid formatter. |
+| `--install` | Install development dependencies after scaffolding. |
 | `--no-install` | Skip dependency installation. |
 | `--force` | Overwrite managed scaffold files when they already exist. |
 | `--help` | Show help. |
 | `--version` | Show version. |
 
-Invalid bundler and test-runner values fail before scaffolding starts.
+Invalid bundler, linter, formatter, and test-runner values fail before scaffolding starts.
+
+Formatter choices depend on the selected linter:
+
+| Linter | Valid formatters |
+| --- | --- |
+| `eslint` | `prettier`, `stylistic`, `biome` |
+| `biome` | `prettier` |
+
+`stylistic` means ESLint Stylistic and is only valid with ESLint.
 
 ## Resource examples
 
@@ -274,17 +289,23 @@ Extension packages may also include:
 Prompt, skill, and theme packages include the matching `create:*` script for
 selected resource types.
 
-## Package manager detection
+## Package manager detection and dependency installation
+
+Generated `package.json` files do not write `dependencies` or
+`devDependencies`. Instead, `create-pi-package` calculates the development tools
+needed for your choices and either installs them or prints the command to run
+later.
 
 When dependency installation is enabled, the CLI detects the package manager
-from `npm_config_user_agent` or `npm_execpath` and runs the matching install
-command:
+from `npm_config_user_agent` or `npm_execpath` and runs the matching add command:
 
-- `npm install`
-- `pnpm install`
-- `yarn install`
-- `bun install`
+- `npm install --save-dev <packages...>`
+- `pnpm add --save-dev <packages...>`
+- `yarn add --dev <packages...>`
+- `bun add --dev <packages...>`
 
+When dependency installation is skipped, the summary prints the npm command as a
+portable fallback.
 ## Publishing generated packages
 
 Generated packages are normal npm packages. They include:
@@ -297,7 +318,7 @@ Generated packages are normal npm packages. They include:
 Before publishing, review generated code and run:
 
 ```bash
-npm install
+npm install --save-dev <printed packages>
 npm run typecheck
 npm run build
 npm test # extension packages only, when a test runner was selected

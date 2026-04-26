@@ -7,6 +7,8 @@ import type {
   Bundler,
   CreatePiPackageInput,
   CreatePiPackageOptions,
+  Formatter,
+  Linter,
   ProjectFeature,
   TestRunner,
 } from './types';
@@ -17,8 +19,12 @@ export async function resolveCreateOptions(input: CreatePiPackageInput) {
   const directory = await resolveDirectory(input.directory);
   const selectedFeatures = await resolveFeatures(input);
   const includesExtension = selectedFeatures.includes('extensions');
+  const linter = await resolveLinter(input.linter);
+  const formatter = await resolveFormatter(linter, input.formatter);
   const bundle = includesExtension ? await resolveBundle(input.bundle) : false;
-  const bundler = includesExtension && bundle ? await resolveBundler(input.bundler) : undefined;
+  const bundler = includesExtension && bundle
+    ? await resolveBundler(input.bundler)
+    : undefined;
   const testRunner = includesExtension
     ? await resolveTestRunner(input.testRunner)
     : undefined;
@@ -30,6 +36,8 @@ export async function resolveCreateOptions(input: CreatePiPackageInput) {
     targetDir,
     bundle,
     bundler,
+    formatter,
+    linter,
     testRunner,
     features: {
       extensions: selectedFeatures.includes('extensions'),
@@ -92,6 +100,34 @@ async function resolveBundler(bundler: Bundler | undefined) {
   });
 
   return getPromptValue(answer) as Bundler;
+}
+
+async function resolveFormatter(linter: Linter, formatter: Formatter | undefined) {
+  const choices = getFormatterChoices(linter);
+
+  if (formatter === undefined) {
+    return choices[0];
+  }
+
+  if (formatter !== undefined) {
+    if (!choices.includes(formatter)) {
+      throw new Error(`Formatter '${formatter}' cannot be used with linter '${linter}'.`);
+    }
+
+    return formatter;
+  }
+
+  const answer = await prompts.select({
+    message: 'Which formatter do you want?',
+    options: choices.map((choice) => ({ value: choice, label: getFormatterLabel(choice) })),
+    initialValue: choices[0],
+  });
+
+  return getPromptValue(answer) as Formatter;
+}
+
+async function resolveLinter(linter: Linter | undefined) {
+  return linter ?? 'eslint';
 }
 
 async function resolveTestRunner(testRunner: TestRunner | undefined) {
@@ -165,6 +201,26 @@ async function resolveInstall(install: boolean | undefined) {
   });
 
   return getPromptValue(answer);
+}
+
+function getFormatterChoices(linter: Linter): Formatter[] {
+  if (linter === 'biome') {
+    return ['prettier'];
+  }
+
+  return ['prettier', 'stylistic', 'biome'];
+}
+
+function getFormatterLabel(formatter: Formatter) {
+  if (formatter === 'stylistic') {
+    return 'ESLint Stylistic';
+  }
+
+  if (formatter === 'biome') {
+    return 'Biome';
+  }
+
+  return 'Prettier';
 }
 
 function getPromptValue<TValue>(value: TValue | symbol) {

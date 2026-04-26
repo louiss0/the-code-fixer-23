@@ -7,16 +7,13 @@ function stringifyJson(value: unknown) {
 export function createPackageJson(options: CreatePiPackageOptions) {
   const scripts: Record<string, string> = {
     dev: 'tsx src/index.ts',
+    lint: getLintCommand(options),
+    format: getFormatCommand(options),
     typecheck: 'tsc --noEmit',
-  };
-  const dependencies: Record<string, string> = {};
-  const devDependencies: Record<string, string> = {
-    typescript: '^5.9.0',
-    tsx: '^4.20.0',
   };
 
   if (options.features.extensions) {
-    addExtensionScripts(options, scripts, devDependencies);
+    addExtensionScripts(options, scripts);
   } else {
     scripts.build = 'tsc';
   }
@@ -43,31 +40,34 @@ export function createPackageJson(options: CreatePiPackageOptions) {
     main: options.bundle ? 'dist/index.cjs' : 'dist/index.js',
     module: options.bundle ? 'dist/index.js' : undefined,
     types: 'dist/index.d.ts',
-    files: ['dist', 'extensions', 'prompts', 'skills', 'themes', 'README.md', 'AGENTS.md', 'CLAUDE.md'],
+    files: [
+      'dist',
+      'extensions',
+      'prompts',
+      'skills',
+      'themes',
+      'README.md',
+      'AGENTS.md',
+      'CLAUDE.md',
+    ],
     scripts,
     keywords: ['pi-package'],
     pi: manifest,
-    dependencies,
-    devDependencies,
   });
 }
 
 function addExtensionScripts(
   options: CreatePiPackageOptions,
-  scripts: Record<string, string>,
-  devDependencies: Record<string, string>
+  scripts: Record<string, string>
 ) {
   scripts['create:extension'] = 'node scripts/create-extension.mjs';
 
   if (options.bundle && options.bundler === 'tsup') {
     scripts.build = 'tsup extensions/*.ts --format esm,cjs --dts --minify --clean';
-    devDependencies.tsup = '^8.5.0';
   }
 
   if (options.bundle && options.bundler === 'vite') {
     scripts.build = 'vite build --minify';
-    devDependencies.vite = '^7.0.0';
-    devDependencies['vite-plugin-dts'] = '^4.5.0';
   }
 
   if (!options.bundle) {
@@ -76,15 +76,98 @@ function addExtensionScripts(
 
   if (options.testRunner === 'vitest') {
     scripts.test = 'vitest';
-    devDependencies.vitest = '^3.2.0';
   }
 
   if (options.testRunner === 'jest') {
     scripts.test = 'jest';
-    devDependencies.jest = '^30.0.0';
-    devDependencies['ts-jest'] = '^29.2.0';
-    devDependencies['@types/jest'] = '^30.0.0';
   }
+}
+
+export function getDevelopmentPackages(options: CreatePiPackageOptions) {
+  return [
+    'typescript',
+    'tsx',
+    ...getBundlerPackages(options),
+    ...getTestPackages(options),
+    ...getLintPackages(options),
+    ...getFormatterPackages(options),
+  ];
+}
+
+function getBundlerPackages(options: CreatePiPackageOptions) {
+  if (!options.features.extensions || !options.bundle) {
+    return [];
+  }
+
+  if (options.bundler === 'vite') {
+    return ['vite', 'vite-plugin-dts'];
+  }
+
+  if (options.bundler === 'tsup') {
+    return ['tsup'];
+  }
+
+  return [];
+}
+
+function getTestPackages(options: CreatePiPackageOptions) {
+  if (!options.features.extensions) {
+    return [];
+  }
+
+  if (options.testRunner === 'vitest') {
+    return ['vitest'];
+  }
+
+  if (options.testRunner === 'jest') {
+    return ['jest', 'ts-jest', '@types/jest'];
+  }
+
+  return [];
+}
+
+function getLintPackages(options: CreatePiPackageOptions) {
+  if (options.linter === 'biome') {
+    return ['@biomejs/biome'];
+  }
+
+  return ['eslint', '@eslint/js'];
+}
+
+function getFormatterPackages(options: CreatePiPackageOptions) {
+  if (options.formatter === 'prettier') {
+    return ['prettier'];
+  }
+
+  if (options.formatter === 'stylistic') {
+    return ['@stylistic/eslint-plugin'];
+  }
+
+  if (options.formatter === 'biome' && options.linter !== 'biome') {
+    return ['@biomejs/biome'];
+  }
+
+  return [];
+}
+
+function getLintCommand(options: CreatePiPackageOptions) {
+  if (options.linter === 'biome') {
+    return 'biome check .';
+  }
+
+  return 'eslint .';
+}
+
+function getFormatCommand(options: CreatePiPackageOptions) {
+  if (options.formatter === 'biome') {
+    return 'biome format --write .';
+  }
+
+  if (options.formatter === 'stylistic') {
+    return 'eslint . --fix';
+  }
+
+  return 'prettier --write .';
 }
 
 function createPiManifest(options: CreatePiPackageOptions) {
@@ -228,6 +311,48 @@ package-lock.json
 yarn.lock
 pnpm-lock.yaml
 bun.lockb
+`;
+}
+
+export function createBiomeConfig() {
+  return `{
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "formatter": {
+    "enabled": true
+  },
+  "linter": {
+    "enabled": true
+  }
+}
+`;
+}
+
+export function createEslintConfig(options: CreatePiPackageOptions) {
+  if (options.formatter === 'stylistic') {
+    return `import eslint from "@eslint/js";
+import stylistic from "@stylistic/eslint-plugin";
+
+export default [
+  eslint.configs.recommended,
+  stylistic.configs["recommended-flat"]
+];
+`;
+  }
+
+  return `import eslint from "@eslint/js";
+
+export default [eslint.configs.recommended];
+`;
+}
+
+export function createPrettierConfig() {
+  return `{
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "trailingComma": "es5",
+  "printWidth": 80
+}
 `;
 }
 

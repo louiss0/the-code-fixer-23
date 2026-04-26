@@ -3,13 +3,16 @@ import path from 'node:path';
 
 import {
   createAgentsMd,
+  createBiomeConfig,
   createClaudeMd,
   createExtensionFile,
+  createEslintConfig,
   createExtensionScript,
   createGitignore,
   createIndexFile,
   createJestConfig,
   createPackageJson,
+  createPrettierConfig,
   createPromptFile,
   createPromptScript,
   createPromptsIndexFile,
@@ -64,6 +67,18 @@ function getProjectFiles(options: CreatePiPackageOptions) {
     ['tsconfig.json', createTsConfig()],
     ['src/index.ts', createIndexFile(options)],
   ]);
+
+  if (options.linter === 'eslint') {
+    files.set('eslint.config.mjs', createEslintConfig(options));
+  }
+
+  if (options.linter === 'biome' || options.formatter === 'biome') {
+    files.set('biome.json', createBiomeConfig());
+  }
+
+  if (options.formatter === 'prettier') {
+    files.set('.prettierrc.json', createPrettierConfig());
+  }
 
   if (options.features.extensions) {
     files.set('extensions/example-extension.ts', createExtensionFile());

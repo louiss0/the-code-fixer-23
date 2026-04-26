@@ -1,6 +1,12 @@
 import { Command, InvalidArgumentError } from '@commander-js/extra-typings';
 
-import type { Bundler, CreatePiPackageInput, TestRunner } from './types';
+import type {
+  Bundler,
+  CreatePiPackageInput,
+  Formatter,
+  Linter,
+  TestRunner,
+} from './types';
 
 type CreatePiPackageAction = (input: CreatePiPackageInput) => Promise<void>;
 
@@ -17,6 +23,12 @@ export function createCommand(action: CreatePiPackageAction, version: string) {
     .option('--bundle', 'Enable bundling')
     .option('--no-bundle', 'Disable bundling')
     .option('--bundler <bundler>', 'Bundler to use: tsup or vite', parseBundler)
+    .option('--linter <linter>', 'Linter to use: eslint or biome', parseLinter)
+    .option(
+      '--formatter <formatter>',
+      'Formatter to use: prettier, stylistic, or biome',
+      parseFormatter
+    )
     .option(
       '--test-runner <runner>',
       'Test runner to use: vitest or jest',
@@ -30,10 +42,14 @@ export function createCommand(action: CreatePiPackageAction, version: string) {
     .option('--no-install', 'Skip dependency installation')
     .option('--force', 'Overwrite managed scaffold files')
     .action(async (directory, options) => {
+      validateFormatterForLinter(options.linter, options.formatter);
+
       await action({
         directory,
         bundle: options.bundle,
         bundler: options.bundler,
+        formatter: options.formatter,
+        linter: options.linter,
         testRunner: options.testRunner,
         extensions: options.extensions,
         prompts: options.prompts,
@@ -55,6 +71,24 @@ function parseBundler(value: string): Bundler {
   return value;
 }
 
+function parseFormatter(value: string): Formatter {
+  if (value !== 'prettier' && value !== 'stylistic' && value !== 'biome') {
+    throw new InvalidArgumentError(
+      "Formatter must be 'prettier', 'stylistic', or 'biome'."
+    );
+  }
+
+  return value;
+}
+
+function parseLinter(value: string): Linter {
+  if (value !== 'eslint' && value !== 'biome') {
+    throw new InvalidArgumentError("Linter must be either 'eslint' or 'biome'.");
+  }
+
+  return value;
+}
+
 function parseTestRunner(value: string): TestRunner {
   if (value !== 'vitest' && value !== 'jest') {
     throw new InvalidArgumentError(
@@ -63,4 +97,15 @@ function parseTestRunner(value: string): TestRunner {
   }
 
   return value;
+}
+
+function validateFormatterForLinter(
+  linter: Linter | undefined,
+  formatter: Formatter | undefined
+) {
+  if (linter === 'biome' && formatter === 'stylistic') {
+    throw new InvalidArgumentError(
+      "Formatter 'stylistic' cannot be used with linter 'biome'."
+    );
+  }
 }

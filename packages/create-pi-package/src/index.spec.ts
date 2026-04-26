@@ -12,6 +12,7 @@ import {
   detectPackageManager,
   getInstallCommand,
 } from './lib/detect-package-manager';
+import { getDependencyInstallCommand } from './lib/install-deps';
 import type { CreatePiPackageInput } from './lib/types';
 
 const execFileAsync = promisify(execFile);
@@ -35,6 +36,10 @@ describe('createCommand', () => {
         'tsup',
         '--test-runner',
         'vitest',
+        '--linter',
+        'eslint',
+        '--formatter',
+        'prettier',
         '--no-install',
         '--force',
       ],
@@ -47,6 +52,8 @@ describe('createCommand', () => {
       bundler: 'tsup',
       testRunner: 'vitest',
       extensions: true,
+      linter: 'eslint',
+      formatter: 'prettier',
       prompts: true,
       themes: true,
       skills: true,
@@ -68,6 +75,22 @@ describe('createCommand', () => {
         from: 'user',
       })
     ).rejects.toThrow("Bundler must be either 'tsup' or 'vite'.");
+  });
+
+  it('rejects unsupported formatters for the selected linter before scaffolding starts', async () => {
+    const command = createCommand(async () => {
+      throw new Error('action should not run');
+    }, '1.2.3');
+
+    command.exitOverride();
+    command.configureOutput({ writeErr: () => undefined });
+
+    await expect(
+      command.parseAsync(
+        ['weather-kit', '--linter', 'biome', '--formatter', 'stylistic'],
+        { from: 'user' }
+      )
+    ).rejects.toThrow("Formatter 'stylistic' cannot be used with linter 'biome'.");
   });
 
   it('rejects unsupported test runners before scaffolding starts', async () => {
@@ -105,6 +128,34 @@ describe('detectPackageManager', () => {
     expect(getInstallCommand('pnpm')).toEqual(['pnpm', 'install']);
     expect(getInstallCommand('yarn')).toEqual(['yarn', 'install']);
     expect(getInstallCommand('bun')).toEqual(['bun', 'install']);
+  });
+
+  it('returns package-manager-specific development dependency commands', () => {
+    expect(getDependencyInstallCommand('npm', ['typescript', 'eslint'])).toEqual([
+      'npm',
+      'install',
+      '--save-dev',
+      'typescript',
+      'eslint',
+    ]);
+    expect(getDependencyInstallCommand('pnpm', ['typescript'])).toEqual([
+      'pnpm',
+      'add',
+      '--save-dev',
+      'typescript',
+    ]);
+    expect(getDependencyInstallCommand('yarn', ['typescript'])).toEqual([
+      'yarn',
+      'add',
+      '--dev',
+      'typescript',
+    ]);
+    expect(getDependencyInstallCommand('bun', ['typescript'])).toEqual([
+      'bun',
+      'add',
+      '--dev',
+      'typescript',
+    ]);
   });
 });
 
@@ -147,7 +198,13 @@ describe('createPiPackage', () => {
       'create:theme': 'node scripts/create-theme.mjs',
     });
     expect(packageJson.scripts.build).toBe('vite build --minify');
-    expect(packageJson.devDependencies).toHaveProperty('vite');
+    expect(packageJson.scripts.lint).toBe('eslint .');
+    expect(packageJson.scripts.format).toBe('prettier --write .');
+    expect(packageJson).not.toHaveProperty('dependencies');
+    expect(packageJson).not.toHaveProperty('devDependencies');
+    expect(result.summaryLines).toContain(
+      'Install dev dependencies: npm install --save-dev typescript tsx vite vite-plugin-dts vitest eslint @eslint/js prettier'
+    );
     expect(indexFile).toContain('export { prompts }');
     expect(indexFile).toContain('export { themes }');
     await expectFileExists(path.join(directory, 'extensions/example-extension.ts'));
@@ -176,10 +233,10 @@ describe('createPiPackage', () => {
     expect(packageJson.pi).toEqual({ prompts: ['./prompts'] });
     expect(packageJson.scripts).toHaveProperty('create:prompt');
     expect(packageJson.scripts).not.toHaveProperty('test');
-    expect(packageJson.devDependencies).not.toHaveProperty('vitest');
-    expect(packageJson.devDependencies).not.toHaveProperty('jest');
-    expect(packageJson.devDependencies).not.toHaveProperty('tsup');
-    expect(packageJson.devDependencies).not.toHaveProperty('vite');
+    expect(packageJson.scripts.lint).toBe('eslint .');
+    expect(packageJson.scripts.format).toBe('prettier --write .');
+    expect(packageJson).not.toHaveProperty('dependencies');
+    expect(packageJson).not.toHaveProperty('devDependencies');
     await expectFileExists(path.join(directory, 'prompts/example-prompt.md'));
     await expectFileExists(path.join(directory, 'scripts/create-prompt.mjs'));
     await expectFileMissing(path.join(directory, 'vitest.config.ts'));
@@ -206,6 +263,8 @@ describe('createPiPackage', () => {
     expect(packageJson.pi).toEqual({ skills: ['./skills'] });
     expect(packageJson.scripts).toHaveProperty('create:skill');
     expect(packageJson.scripts).not.toHaveProperty('test');
+    expect(packageJson).not.toHaveProperty('dependencies');
+    expect(packageJson).not.toHaveProperty('devDependencies');
     expect(skill).toContain('name: example-skill');
     expect(skill).toContain('description: An example PI skill.');
     await expectFileExists(path.join(directory, 'scripts/create-skill.mjs'));
@@ -230,6 +289,8 @@ describe('createPiPackage', () => {
     expect(packageJson.pi).toEqual({ themes: ['./themes'] });
     expect(packageJson.scripts).toHaveProperty('create:theme');
     expect(packageJson.scripts).not.toHaveProperty('test');
+    expect(packageJson).not.toHaveProperty('dependencies');
+    expect(packageJson).not.toHaveProperty('devDependencies');
     expect(theme.name).toBe('default');
     expect(Object.keys(theme.colors)).toHaveLength(51);
     await expectFileExists(path.join(directory, 'scripts/create-theme.mjs'));
@@ -267,8 +328,10 @@ describe('createPiPackage', () => {
     expect(packageJson.scripts.build).toBe(
       'tsup extensions/*.ts --format esm,cjs --dts --minify --clean'
     );
-    expect(packageJson.devDependencies).toHaveProperty('tsup');
-    expect(packageJson.devDependencies).toHaveProperty('jest');
+    expect(packageJson.scripts.lint).toBe('eslint .');
+    expect(packageJson.scripts.format).toBe('prettier --write .');
+    expect(packageJson).not.toHaveProperty('dependencies');
+    expect(packageJson).not.toHaveProperty('devDependencies');
     expect(extensionScript).toContain('--name');
     expect(extensionScript).toContain('testRunner = "jest"');
     expect(extensionScript).toContain('bundler = "tsup"');
@@ -279,6 +342,73 @@ describe('createPiPackage', () => {
     await expectFileExists(path.join(directory, 'jest.config.js'));
     await expectFileMissing(path.join(directory, 'vite.config.ts'));
     await expectFileMissing(path.join(directory, 'vitest.config.ts'));
+  });
+
+  it('writes ESLint Stylistic formatter commands and config', async () => {
+    const directory = await createTemporaryPackageDirectory('stylistic-kit');
+
+    const result = await createPiPackage({
+      directory,
+      prompts: true,
+      linter: 'eslint',
+      formatter: 'stylistic',
+      install: false,
+    });
+
+    const packageJson = await readPackageJson(directory);
+    const eslintConfig = await readFile(path.join(directory, 'eslint.config.mjs'), 'utf8');
+
+    expect(packageJson.scripts.lint).toBe('eslint .');
+    expect(packageJson.scripts.format).toBe('eslint . --fix');
+    expect(eslintConfig).toContain('@stylistic/eslint-plugin');
+    expect(result.summaryLines).toContain(
+      'Install dev dependencies: npm install --save-dev typescript tsx eslint @eslint/js @stylistic/eslint-plugin'
+    );
+  });
+
+  it('writes Biome formatter commands when ESLint is the linter', async () => {
+    const directory = await createTemporaryPackageDirectory('biome-format-kit');
+
+    const result = await createPiPackage({
+      directory,
+      prompts: true,
+      linter: 'eslint',
+      formatter: 'biome',
+      install: false,
+    });
+
+    const packageJson = await readPackageJson(directory);
+
+    expect(packageJson.scripts.lint).toBe('eslint .');
+    expect(packageJson.scripts.format).toBe('biome format --write .');
+    expect(result.summaryLines).toContain(
+      'Install dev dependencies: npm install --save-dev typescript tsx eslint @eslint/js @biomejs/biome'
+    );
+    await expectFileExists(path.join(directory, 'eslint.config.mjs'));
+    await expectFileExists(path.join(directory, 'biome.json'));
+  });
+
+  it('writes Biome linter with Prettier formatter commands', async () => {
+    const directory = await createTemporaryPackageDirectory('biome-lint-kit');
+
+    const result = await createPiPackage({
+      directory,
+      prompts: true,
+      linter: 'biome',
+      formatter: 'prettier',
+      install: false,
+    });
+
+    const packageJson = await readPackageJson(directory);
+
+    expect(packageJson.scripts.lint).toBe('biome check .');
+    expect(packageJson.scripts.format).toBe('prettier --write .');
+    expect(result.summaryLines).toContain(
+      'Install dev dependencies: npm install --save-dev typescript tsx @biomejs/biome prettier'
+    );
+    await expectFileExists(path.join(directory, 'biome.json'));
+    await expectFileExists(path.join(directory, '.prettierrc.json'));
+    await expectFileMissing(path.join(directory, 'eslint.config.mjs'));
   });
 
   it('writes prompt, skill, and theme scripts with flags and body-file support', async () => {
