@@ -9,9 +9,9 @@
     "utilities"
   ],
   "scripts": {
-    "build": "pnpm exec nx build enums",
-    "test": "pnpm exec nx test enums",
-    "typecheck": "pnpm exec nx typecheck enums",
-    "lint": "pnpm exec nx lint enums"
+    "build": "pnpm exec tsup --config tsup.config.ts",
+    "test": "pnpm exec vitest run --config vitest.config.ts",
+    "typecheck": "pnpm exec tsc --noEmit -p tsconfig.lib.json",
+    "lint": "pnpm exec eslint ."
   }
 }
