@@ -11,6 +11,25 @@ export type EnumShape<
   TName extends string = string
 > = Readonly<Record<TName, EnumValue<TKind>>>;
 
+export type EnumHelpers<
+  TKind extends EnumKind,
+  TName extends string = string
+> = {
+  entries: readonly [TName, EnumValue<TKind>][];
+  hasLabel(label: string): boolean;
+  labelOf(value: EnumValue<TKind>): string | undefined;
+  labels: Readonly<Record<TName, TName>>;
+  names: readonly TName[];
+  parse(label: string): EnumValue<TKind> | ParseError;
+  validate(value: unknown): value is EnumValue<TKind>;
+  values: EnumShape<TKind, TName>;
+};
+
+export type EnumDefinition<
+  TKind extends EnumKind,
+  TName extends string = string
+> = EnumShape<TKind, TName> & EnumHelpers<TKind, TName>;
+
 export type EnumLabels<TValue extends string = string> = Record<TValue, string>;
 
 export type LabeledEnum<TValue extends string = string> = Readonly<
@@ -43,7 +62,7 @@ export function isParseError(value: unknown): value is ParseError {
 export function createEnum<TKind extends EnumKind, const TName extends string>(
   kind: TKind,
   ...names: TName[]
-): EnumShape<TKind, TName> {
+): EnumDefinition<TKind, TName> {
   assertUniqueValues(names, 'Enum names must be unique.');
 
   const values = Object.freeze(
@@ -52,7 +71,43 @@ export function createEnum<TKind extends EnumKind, const TName extends string>(
     )
   ) as EnumShape<TKind, TName>;
 
-  return createImmutableEnumProxy(values);
+  const labels = Object.freeze(
+    Object.fromEntries(names.map((name) => [name, name]))
+  ) as Readonly<Record<TName, TName>>;
+  const entries = Object.freeze(
+    names.map((name) => [name, values[name]])
+  ) as readonly [TName, EnumValue<TKind>][];
+  const parsedValues = new Map(
+    names.map((name) => [name, values[name]])
+  ) as ReadonlyMap<string, EnumValue<TKind>>;
+  const valueLabels = new Map(
+    names.map((name) => [values[name], name])
+  ) as ReadonlyMap<EnumValue<TKind>, TName>;
+  const valuesSet = new Set(Object.values(values)) as ReadonlySet<
+    EnumValue<TKind>
+  >;
+
+  const api = Object.freeze({
+    ...values,
+    values,
+    labels,
+    names: Object.freeze([...names]) as readonly TName[],
+    entries,
+    parse(label: string) {
+      return parsedValues.get(label) ?? new ParseError(label);
+    },
+    hasLabel(label: string) {
+      return parsedValues.has(label);
+    },
+    labelOf(value: EnumValue<TKind>) {
+      return valueLabels.get(value);
+    },
+    validate(value: unknown): value is EnumValue<TKind> {
+      return valuesSet.has(value as EnumValue<TKind>);
+    },
+  });
+
+  return createImmutableEnumProxy(api, values) as EnumDefinition<TKind, TName>;
 }
 
 export function createLabeledEnum<const TValue extends string>(
