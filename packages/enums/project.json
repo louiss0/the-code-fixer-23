@@ -13,15 +13,6 @@
         "command": "pnpm exec tsup --config tsup.config.ts"
       }
     },
-    "typecheck": {
-      "executor": "@nx/js:tsc",
-      "options": {
-        "outputPath": "dist/out-tsc/packages/enums",
-        "main": "packages/enums/src/index.ts",
-        "tsConfig": "packages/enums/tsconfig.lib.json",
-        "noEmit": true
-      }
-    },
     "test": {
       "executor": "@nx/vite:test",
       "outputs": ["{projectRoot}/coverage"],
