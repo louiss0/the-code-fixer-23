@@ -33,6 +33,8 @@
     "check": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build"
   },
   "dependencies": {
+    "@commander-js/extra-typings": "^13.1.0",
+    "commander": "^13.1.0",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
