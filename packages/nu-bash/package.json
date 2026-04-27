@@ -1,10 +1,21 @@
 {
-  "name": "nu-bash",
+  "name": "@code-fixer-23/nu-bash",
   "version": "0.1.0",
   "description": "Pi extension that runs bash and user_bash through Nushell.",
   "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
-    "src/index.ts",
+    "dist",
     "README.md"
   ],
   "keywords": [

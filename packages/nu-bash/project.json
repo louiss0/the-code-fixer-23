@@ -1,32 +1,25 @@
 {
-  "name": "nu-bash",
+  "name": "@code-fixer-23/nu-bash",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "sourceRoot": "packages/nu-bash/src",
   "targets": {
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": ["{projectRoot}/dist"],
+      "options": {
+        "configFile": "packages/nu-bash/vite.config.ts",
+        "mode": "production",
+        "outputPath": "{projectRoot}/dist"
+      }
+    },
     "typecheck": {
-      "executor": "nx:run-commands",
+      "executor": "@nx/js:tsc",
       "options": {
-        "command": "tsc --noEmit --project packages/nu-bash/tsconfig.json"
-      }
-    },
-    "dev": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "pnpm --dir packages/nu-bash exec pi --extensions ."
-      }
-    },
-    "test": {
-      "executor": "nx:run-commands",
-      "outputs": ["{projectRoot}/test-output/vitest"],
-      "options": {
-        "command": "pnpm exec vitest run --config packages/nu-bash/vite.config.ts"
-      }
-    },
-    "pack:dry": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "pnpm --dir packages/nu-bash pack --dry-run"
+        "main": "{projectRoot}/src/index.ts",
+        "outputPath": "dist/{projectName}",
+        "tsConfig": "packages/nu-bash/tsconfig.lib.json",
+        "noEmit": true
       }
     },
     "lint": {
@@ -35,10 +28,12 @@
         "lintFilePatterns": ["packages/nu-bash/**/*.ts"]
       }
     },
-    "format": {
-      "executor": "nx:run-commands",
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{projectRoot}/test-output/vitest"],
       "options": {
-        "command": "prettier --write packages/nu-bash"
+        "config": "packages/nu-bash/vite.config.ts",
+        "passWithNoTests": true
       }
     }
   },
