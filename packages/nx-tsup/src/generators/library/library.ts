@@ -76,6 +76,7 @@ export async function libraryGenerator(
   });
 
   createTsConfig(tree, projectRoot);
+  createTsSpecConfig(tree, projectRoot, resolvedTestRunner);
   createPackageJson(
     tree,
     projectRoot,
@@ -331,6 +332,32 @@ function createTsConfig(tree: Tree, projectRoot: string) {
   );
 }
 
+function createTsSpecConfig(
+  tree: Tree,
+  projectRoot: string,
+  testRunner: TestRunner
+) {
+  if (testRunner === 'none') {
+    return;
+  }
+
+  const types =
+    testRunner === 'vitest' ? ['vitest/globals', 'node'] : ['jest', 'node'];
+  const tsconfigSpec = {
+    extends: './tsconfig.json',
+    compilerOptions: {
+      outDir: '../../dist/out-tsc',
+      types,
+    },
+    include: ['src/**/*.spec.ts', 'src/**/*.test.ts', 'src/**/*.d.ts'],
+  };
+
+  tree.write(
+    `${projectRoot}/tsconfig.spec.json`,
+    JSON.stringify(tsconfigSpec, null, 2)
+  );
+}
+
 function createPackageJson(
   tree: Tree,
   projectRoot: string,
@@ -439,8 +466,18 @@ function createJestConfig(tree: Tree, projectRoot: string) {
   displayName: '${projectRoot}',
   preset: '../../jest.preset.js',
   testEnvironment: 'node',
+  extensionsToTreatAsEsm: ['.ts'],
   transform: {
-    '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+    '^.+\\\\.ts$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+        useESM: true,
+      },
+    ],
+  },
+  moduleNameMapper: {
+    '^(\\\\.{1,2}/.*)\\\\.js$': '$1',
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/${projectRoot}',

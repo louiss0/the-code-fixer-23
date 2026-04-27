@@ -1,0 +1,42 @@
+{
+  "name": "@code-fixer-23/nu-bash",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/nu-bash/src",
+  "targets": {
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": ["{projectRoot}/dist"],
+      "options": {
+        "configFile": "packages/nu-bash/build.config.ts",
+        "mode": "production",
+        "outputPath": "{projectRoot}/dist"
+      }
+    },
+    "typecheck": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "main": "{projectRoot}/src/index.ts",
+        "outputPath": "dist/{projectName}",
+        "tsConfig": "packages/nu-bash/tsconfig.lib.json",
+        "noEmit": true,
+        "generatePackageJson": false
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["packages/nu-bash/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{projectRoot}/test-output/vitest"],
+      "options": {
+        "config": "packages/nu-bash/build.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

@@ -5,7 +5,6 @@
   "scripts": {},
   "private": true,
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
     "@code-fixer-23/nx-tsup": "workspace:*",
     "@eslint/js": "^9.37.0",
     "@nx/devkit": "21.6.3",
@@ -49,19 +48,5 @@
   },
   "dependencies": {
     "@nx/devkit": "21.6.3"
-  },
-  "nx": {
-    "includedScripts": [],
-    "targets": {
-      "local-registry": {
-        "executor": "@nx/js:verdaccio",
-        "options": {
-          "port": 4873,
-          "location": "project",
-          "config": ".verdaccio/config.yml",
-          "storage": "tmp/local-registry/storage"
-        }
-      }
-    }
   }
 }
