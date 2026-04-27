@@ -64,12 +64,20 @@ type EnumLabelKeyForValue<
   [TKey in EnumLabelKey<TLabels>]: TLabels[TKey] extends TLabel ? TKey : never;
 }[EnumLabelKey<TLabels>];
 
+type LabeledEnumMemberValue<
+  TLabels extends Record<string, string>,
+  TKey extends EnumLabelKey<TLabels>
+> = TKey;
+
 type LabeledEnumValues<TLabels extends Record<string, string>> = Readonly<{
-  [TKey in EnumLabelKey<TLabels>]: TKey;
+  [TKey in EnumLabelKey<TLabels>]: LabeledEnumMemberValue<TLabels, TKey>;
 }>;
 
 type LabeledEnumEntries<TLabels extends Record<string, string>> = readonly {
-  [TKey in EnumLabelKey<TLabels>]: readonly [TKey, TKey];
+  [TKey in EnumLabelKey<TLabels>]: readonly [
+    TKey,
+    LabeledEnumMemberValue<TLabels, TKey>
+  ];
 }[EnumLabelKey<TLabels>][];
 
 export class ParseError extends Error {
@@ -85,20 +93,27 @@ export class ParseError extends Error {
 export type LabeledEnum<TLabels extends Record<string, string>> =
   LabeledEnumValues<TLabels> & {
     entries: readonly {
-      [TKey in EnumLabelKey<TLabels>]: [TKey, TKey];
+      [TKey in EnumLabelKey<TLabels>]: [
+        TKey,
+        LabeledEnumMemberValue<TLabels, TKey>
+      ];
     }[EnumLabelKey<TLabels>][];
     hasLabel(label: string): label is EnumLabelValue<TLabels>;
     labelOf<TValue extends EnumLabelKey<TLabels>>(
-      value: TValue
+      value: LabeledEnumMemberValue<TLabels, TValue>
     ): TLabels[TValue];
     labelOf(value: string): EnumLabelValue<TLabels> | undefined;
     labels: Readonly<TLabels>;
     names: readonly EnumLabelKey<TLabels>[];
     parse<TLabel extends EnumLabelValue<TLabels>>(
       label: TLabel
-    ): EnumLabelKeyForValue<TLabels, TLabel>;
-    parse(label: string): EnumLabelKey<TLabels> | ParseError;
-    validate(value: unknown): value is EnumLabelKey<TLabels>;
+    ): LabeledEnumMemberValue<TLabels, EnumLabelKeyForValue<TLabels, TLabel>>;
+    parse(
+      label: string
+    ): LabeledEnumMemberValue<TLabels, EnumLabelKey<TLabels>> | ParseError;
+    validate(
+      value: unknown
+    ): value is LabeledEnumMemberValue<TLabels, EnumLabelKey<TLabels>>;
     values: LabeledEnumValues<TLabels>;
   };
 
@@ -135,20 +150,32 @@ export function createLabeledEnum<const TLabels extends Record<string, string>>(
   const values = Object.freeze(
     Object.fromEntries(names.map((name) => [name, name] as const))
   ) as LabeledEnumValues<TLabels>;
-  const valuesSet = new Set<EnumLabelKey<TLabels>>(names);
+  const valuesSet = new Set(Object.values(values));
   const labelsMap = Object.freeze({ ...labels }) as Readonly<TLabels>;
   const entries = Object.freeze(
     names.map((name) => [name, values[name]] as const)
   ) as LabeledEnumEntries<TLabels>;
-  const parsedValues = new Map<string, EnumLabelKey<TLabels>>(
+  const parsedValues = new Map<
+    string,
+    LabeledEnumMemberValue<TLabels, EnumLabelKey<TLabels>>
+  >(
     names.map(
       (name) => [labels[name], values[name]] as const
-    ) as readonly (readonly [string, EnumLabelKey<TLabels>])[]
+    ) as readonly (readonly [
+      string,
+      LabeledEnumMemberValue<TLabels, EnumLabelKey<TLabels>>
+    ])[]
   );
-  const valueLabels = new Map<EnumLabelKey<TLabels>, EnumLabelValue<TLabels>>(
+  const valueLabels = new Map<
+    LabeledEnumMemberValue<TLabels, EnumLabelKey<TLabels>>,
+    EnumLabelValue<TLabels>
+  >(
     names.map(
       (name) => [values[name], labels[name]] as const
-    ) as readonly (readonly [EnumLabelKey<TLabels>, EnumLabelValue<TLabels>])[]
+    ) as readonly (readonly [
+      LabeledEnumMemberValue<TLabels, EnumLabelKey<TLabels>>,
+      EnumLabelValue<TLabels>
+    ])[]
   );
   const api = Object.freeze({
     ...values,
@@ -165,8 +192,12 @@ export function createLabeledEnum<const TLabels extends Record<string, string>>(
     labelOf(value: string) {
       return valueLabels.get(value as EnumLabelKey<TLabels>);
     },
-    validate(value: unknown): value is EnumLabelKey<TLabels> {
-      return valuesSet.has(value as EnumLabelKey<TLabels>);
+    validate(
+      value: unknown
+    ): value is LabeledEnumMemberValue<TLabels, EnumLabelKey<TLabels>> {
+      return valuesSet.has(
+        value as LabeledEnumMemberValue<TLabels, EnumLabelKey<TLabels>>
+      );
     },
   });
 

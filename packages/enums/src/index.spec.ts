@@ -60,14 +60,14 @@ describe('createEnum', () => {
     const status = createEnum('symbol', 'pending', 'done');
 
     expectTypeOf(role.admin).toExtend<
-      EnumSymbol<['admin', 'editor'], 'admin'>
+      EnumSymbol<readonly ['admin', 'editor'], 'admin'>
     >();
     expectTypeOf(role.editor).toExtend<
-      EnumSymbol<['admin', 'editor'], 'editor'>
+      EnumSymbol<readonly ['admin', 'editor'], 'editor'>
     >();
     expectTypeOf(role.admin).toExtend<symbol>();
     expectTypeOf(status.pending).toExtend<
-      EnumSymbol<['pending', 'done'], 'pending'>
+      EnumSymbol<readonly ['pending', 'done'], 'pending'>
     >();
   });
 
@@ -95,7 +95,7 @@ describe('createEnum', () => {
 });
 
 describe('createLabeledEnum', () => {
-  it('infers literal keys and labels for labeled enums', () => {
+  it('infers literal string values and labels for labeled enums', () => {
     const articleStatus = createLabeledEnum({
       draft: 'Draft',
       published: 'Published',
@@ -107,9 +107,11 @@ describe('createLabeledEnum', () => {
     expectTypeOf(articleStatus.labels.published).toEqualTypeOf<'Published'>();
     expectTypeOf(articleStatus.parse('Draft')).toEqualTypeOf<'draft'>();
     expectTypeOf(articleStatus.parse('Published')).toEqualTypeOf<'published'>();
-    expectTypeOf(articleStatus.labelOf('draft')).toEqualTypeOf<'Draft'>();
     expectTypeOf(
-      articleStatus.labelOf('published')
+      articleStatus.labelOf(articleStatus.draft)
+    ).toEqualTypeOf<'Draft'>();
+    expectTypeOf(
+      articleStatus.labelOf(articleStatus.published)
     ).toEqualTypeOf<'Published'>();
   });
 
@@ -125,8 +127,8 @@ describe('createLabeledEnum', () => {
       draft: 'Draft',
       published: 'Published',
     });
-    expect(articleStatus.parse('Published')).toBe('published');
-    expect(articleStatus.validate('draft')).toBe(true);
+    expect(articleStatus.parse('Published')).toBe(articleStatus.published);
+    expect(articleStatus.validate(articleStatus.draft)).toBe(true);
     expect(articleStatus.validate('archived')).toBe(false);
   });
 
@@ -180,7 +182,7 @@ describe('createLabeledEnum', () => {
       published: 'Published',
     });
 
-    expect(articleStatus.labelOf('published')).toBe('Published');
+    expect(articleStatus.labelOf(articleStatus.published)).toBe('Published');
     expect(articleStatus.labelOf('archived')).toBeUndefined();
     expect(articleStatus.hasLabel('Draft')).toBe(true);
     expect(articleStatus.hasLabel('Archived')).toBe(false);
