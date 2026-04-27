@@ -1,3 +1,13 @@
+## 1.2.1 (2026-04-27)
+
+### 🩹 Fixes
+
+- **nx-plugins:** load local executors from source ([bbdd1e9](https://github.com/louiss0/the-code-fixer-23/commit/bbdd1e9))
+
+### ❤️ Thank You
+
+- louiss0 @louiss0
+
 ## 1.2.0 (2026-04-26)
 
 ### 🚀 Features

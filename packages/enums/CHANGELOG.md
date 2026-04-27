@@ -1,3 +1,18 @@
+## 0.2.2 (2026-04-27)
+
+### 🩹 Fixes
+
+- **enums:** restore package format target ([33202ee](https://github.com/louiss0/the-code-fixer-23/commit/33202ee))
+- **enums:** restore generic enum type fallbacks ([131aa2f](https://github.com/louiss0/the-code-fixer-23/commit/131aa2f))
+- **enums:** remove symbol values from labeled enums ([8938cda](https://github.com/louiss0/the-code-fixer-23/commit/8938cda))
+- **enums:** brand symbol enum members ([3a4fd0d](https://github.com/louiss0/the-code-fixer-23/commit/3a4fd0d))
+- **enums:** preserve labeled enum literal types ([80e66ed](https://github.com/louiss0/the-code-fixer-23/commit/80e66ed))
+- **enums:** infer literal enum member values ([d52c2dd](https://github.com/louiss0/the-code-fixer-23/commit/d52c2dd))
+
+### ❤️ Thank You
+
+- louiss0 @louiss0
+
 ## 0.2.1 (2026-04-26)
 
 ### 🩹 Fixes
