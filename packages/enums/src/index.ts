@@ -27,6 +27,10 @@ type TupleIndexNumber<TValue> = TValue extends `${infer TNumber extends number}`
   ? TNumber
   : never;
 
+type IsTuple<TValue extends readonly unknown[]> = number extends TValue['length']
+  ? false
+  : true;
+
 type EnumMemberValue<
   TKind extends EnumKind,
   TNames extends readonly string[],
@@ -40,12 +44,14 @@ type EnumMemberValue<
 export type EnumShapeFromNames<
   TKind extends EnumKind,
   TNames extends readonly string[]
-> = Readonly<{
-  [TIndex in TupleIndexKey<TNames> as Extract<
-    TNames[TIndex],
-    string
-  >]: EnumMemberValue<TKind, TNames, TIndex>;
-}>;
+> = IsTuple<TNames> extends true
+  ? Readonly<{
+      [TIndex in TupleIndexKey<TNames> as Extract<
+        TNames[TIndex],
+        string
+      >]: EnumMemberValue<TKind, TNames, TIndex>;
+    }>
+  : Readonly<Record<string, EnumValue<TKind>>>;
 
 export type EnumLabels<TValue extends string = string> = Record<TValue, string>;
 
@@ -80,6 +86,15 @@ type LabeledEnumEntries<TLabels extends Record<string, string>> = readonly {
   ];
 }[EnumLabelKey<TLabels>][];
 
+type ParseValueResult<
+  TLabels extends Record<string, string>,
+  TLabel extends string
+> = string extends EnumLabelValue<TLabels>
+  ? LabeledEnumMemberValue<TLabels, EnumLabelKey<TLabels>> | ParseError
+  : TLabel extends EnumLabelValue<TLabels>
+  ? LabeledEnumMemberValue<TLabels, EnumLabelKeyForValue<TLabels, TLabel>>
+  : LabeledEnumMemberValue<TLabels, EnumLabelKey<TLabels>> | ParseError;
+
 export class ParseError extends Error {
   readonly input: string;
 
@@ -105,12 +120,7 @@ export type LabeledEnum<TLabels extends Record<string, string>> =
     labelOf(value: string): EnumLabelValue<TLabels> | undefined;
     labels: Readonly<TLabels>;
     names: readonly EnumLabelKey<TLabels>[];
-    parse<TLabel extends EnumLabelValue<TLabels>>(
-      label: TLabel
-    ): LabeledEnumMemberValue<TLabels, EnumLabelKeyForValue<TLabels, TLabel>>;
-    parse(
-      label: string
-    ): LabeledEnumMemberValue<TLabels, EnumLabelKey<TLabels>> | ParseError;
+    parse<TLabel extends string>(label: TLabel): ParseValueResult<TLabels, TLabel>;
     validate(
       value: unknown
     ): value is LabeledEnumMemberValue<TLabels, EnumLabelKey<TLabels>>;

@@ -28,6 +28,15 @@ describe('createEnum', () => {
     expect(color.blue).toBe('blue');
   });
 
+  it('falls back to string-keyed records for dynamic member arrays', () => {
+    const names = ['red', 'blue'] as string[];
+    const color = createEnum('string', ...names);
+
+    expectTypeOf(color).toExtend<Readonly<Record<string, string>>>();
+    expect(color.red).toBe('red');
+    expect(color.blue).toBe('blue');
+  });
+
   it('creates number enums from member names', () => {
     const status = createEnum('number', 'pending', 'done');
 
@@ -161,6 +170,19 @@ describe('createLabeledEnum', () => {
       message: 'Could not parse enum label.',
       name: 'ParseError',
     });
+  });
+
+  it('falls back to string or ParseError for generic label maps', () => {
+    const labels = {
+      draft: 'Draft',
+      published: 'Published',
+    } as Record<string, string>;
+    const articleStatus = createLabeledEnum(labels);
+
+    expectTypeOf(articleStatus.parse('Draft')).toEqualTypeOf<
+      string | ParseError
+    >();
+    expect(articleStatus.parse('Draft')).toBe('draft');
   });
 
   it('exposes names and entries for iteration', () => {
