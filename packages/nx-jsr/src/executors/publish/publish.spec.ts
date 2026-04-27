@@ -1,10 +1,10 @@
-import { ExecutorContext } from '@nx/devkit';
-import { mkdirSync, writeFileSync, rmSync } from 'fs';
-import { join } from 'path';
+import { mkdirSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
+import { join } from 'path';
+import type { ExecutorContext } from '@nx/devkit';
 
-import { PublishExecutorSchema } from './schema';
 import executor from './publish';
+import type { PublishExecutorSchema } from './schema';
 
 describe('Publish Executor', () => {
   let tempDir: string;
@@ -27,7 +27,7 @@ describe('Publish Executor', () => {
     };
     writeFileSync(
       join(absolutePackageRoot, 'jsr.json'),
-      JSON.stringify(jsrJson, null, 2)
+      JSON.stringify(jsrJson, null, 2),
     );
   });
 

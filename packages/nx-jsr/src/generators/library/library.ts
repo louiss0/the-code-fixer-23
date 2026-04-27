@@ -1,35 +1,35 @@
+import { fileURLToPath } from 'node:url';
+import * as path from 'path';
 import {
+  type Tree,
   addProjectConfiguration,
   formatFiles,
   generateFiles,
-  Tree,
+  logger,
   names,
   offsetFromRoot,
-  logger,
 } from '@nx/devkit';
-import * as path from 'path';
-import type {
-  TestRunner,
-  LibraryGeneratorSchema,
-  Linter,
-  Formatter,
-} from './schema.d.ts';
 import {
+  detectFormatterFromRootPackageJson,
   detectLinterFromRootPackageJson,
   detectTestRunnerFromRootPackageJson,
-  detectFormatterFromRootPackageJson,
 } from './detect.js';
 import { isInteractive, selectOrDefault } from './prompt.js';
-import { fileURLToPath } from 'node:url';
+import type {
+  Formatter,
+  LibraryGeneratorSchema,
+  Linter,
+  TestRunner,
+} from './schema.d.ts';
 
 const generatorFilesPath = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
-  'files'
+  'files',
 );
 
 export async function libraryGenerator(
   tree: Tree,
-  options: LibraryGeneratorSchema
+  options: LibraryGeneratorSchema,
 ) {
   // Standalone mode: if no directory flag provided, generate files in current directory (files-only)
   // If directory flag is provided, create/use that directory with project name subfolder and register Nx project
@@ -41,13 +41,13 @@ export async function libraryGenerator(
 
   const resolvedTestRunner: TestRunner = await resolveTestRunner(
     tree,
-    options.testRunner
+    options.testRunner,
   );
   const resolvedLinter: Linter = await resolveLinter(tree, options.linter);
   const resolvedFormatter: Formatter = await resolveFormatter(
     tree,
     options.formatter,
-    resolvedLinter
+    resolvedLinter,
   );
 
   const templateOptions = {
@@ -67,7 +67,7 @@ export async function libraryGenerator(
     options,
     resolvedTestRunner,
     resolvedLinter,
-    resolvedFormatter
+    resolvedFormatter,
   );
   createReadme(tree, projectRoot, options, resolvedTestRunner);
 
@@ -96,7 +96,7 @@ export async function libraryGenerator(
       projectRoot,
       resolvedTestRunner,
       resolvedLinter,
-      resolvedFormatter
+      resolvedFormatter,
     );
     addProjectConfiguration(tree, options.name, {
       root: projectRoot,
@@ -115,7 +115,7 @@ function getProjectTargets(
   projectRoot: string,
   testRunner: TestRunner,
   linter: Linter,
-  formatter: Formatter
+  formatter: Formatter,
 ) {
   const targets: any = {
     build: {
@@ -262,7 +262,7 @@ function createJestConfig(tree: Tree, projectRoot: string) {
 function createExampleTest(
   tree: Tree,
   projectRoot: string,
-  testRunner: 'vitest' | 'jest'
+  testRunner: 'vitest' | 'jest',
 ) {
   const content =
     testRunner === 'vitest'
@@ -287,7 +287,7 @@ describe('example', () => {
 function createJsrJson(
   tree: Tree,
   projectRoot: string,
-  options: LibraryGeneratorSchema
+  options: LibraryGeneratorSchema,
 ) {
   const jsrJson = {
     name: options.importPath,
@@ -301,7 +301,7 @@ function createJsrJson(
 function createTsConfig(
   tree: Tree,
   projectRoot: string,
-  options: LibraryGeneratorSchema
+  options: LibraryGeneratorSchema,
 ) {
   // Determine if project is at root level
   const isRootLevel = !projectRoot.includes('/');
@@ -320,7 +320,7 @@ function createTsConfig(
 
   tree.write(
     `${projectRoot}/tsconfig.lib.json`,
-    JSON.stringify(tsConfigLib, null, 2)
+    JSON.stringify(tsConfigLib, null, 2),
   );
 
   const tsConfig = {
@@ -342,7 +342,7 @@ function createPackageJson(
   options: LibraryGeneratorSchema,
   testRunner: TestRunner,
   linter: Linter,
-  formatter: Formatter
+  formatter: Formatter,
 ) {
   const devDependencies: Record<string, string> = {};
   const scripts: Record<string, string> = {};
@@ -397,7 +397,7 @@ function createPackageJson(
 
   tree.write(
     `${projectRoot}/package.json`,
-    JSON.stringify(packageJson, null, 2)
+    JSON.stringify(packageJson, null, 2),
   );
 }
 
@@ -405,7 +405,7 @@ function createReadme(
   tree: Tree,
   projectRoot: string,
   options: LibraryGeneratorSchema,
-  testRunner: TestRunner
+  testRunner: TestRunner,
 ) {
   const testingInfo =
     testRunner !== 'none' ? `**Testing**: ${testRunner}\n\n` : '';
@@ -450,7 +450,7 @@ npx nx publish ${options.name}
 
 async function resolveTestRunner(
   tree: Tree,
-  option?: TestRunner
+  option?: TestRunner,
 ): Promise<TestRunner> {
   if (option !== undefined) return option;
   const { detected, candidates } = detectTestRunnerFromRootPackageJson(tree);
@@ -459,7 +459,7 @@ async function resolveTestRunner(
       const choice = (await selectOrDefault(
         'Both Jest and Vitest are detected in the workspace. Choose a test runner:',
         ['jest', 'vitest'],
-        'jest'
+        'jest',
       )) as TestRunner;
       return choice;
     }
@@ -477,7 +477,7 @@ async function resolveLinter(tree: Tree, option?: Linter): Promise<Linter> {
       const choice = (await selectOrDefault(
         'Both ESLint and Biome are detected in the workspace. Choose a linter:',
         ['eslint', 'biome'],
-        'eslint'
+        'eslint',
       )) as Linter;
       return choice;
     }
@@ -490,7 +490,7 @@ async function resolveLinter(tree: Tree, option?: Linter): Promise<Linter> {
 async function resolveFormatter(
   tree: Tree,
   option: Formatter | undefined,
-  linter: Linter
+  linter: Linter,
 ): Promise<Formatter> {
   // If biome is the linter, default to biome formatter unless explicitly overridden
   if (linter === 'biome' && option === undefined) {
@@ -501,7 +501,7 @@ async function resolveFormatter(
     // Validate: eslint-stylistic requires eslint as linter
     if (option === 'eslint-stylistic' && linter !== 'eslint') {
       logger.warn(
-        'ESLint Stylistic requires ESLint as the linter. Falling back to prettier.'
+        'ESLint Stylistic requires ESLint as the linter. Falling back to prettier.',
       );
       return 'prettier';
     }
@@ -512,7 +512,7 @@ async function resolveFormatter(
 
   // Filter out eslint-stylistic if eslint is not the linter
   const validCandidates = candidates.filter(
-    (c: Formatter) => c !== 'eslint-stylistic' || linter === 'eslint'
+    (c: Formatter) => c !== 'eslint-stylistic' || linter === 'eslint',
   );
 
   if (validCandidates.length >= 2) {
@@ -520,7 +520,7 @@ async function resolveFormatter(
       const choice = (await selectOrDefault(
         'Multiple formatters detected. Choose one:',
         validCandidates,
-        validCandidates[0]
+        validCandidates[0],
       )) as Formatter;
       return choice;
     }
@@ -538,7 +538,7 @@ async function resolveFormatter(
 function createEslintConfig(
   tree: Tree,
   projectRoot: string,
-  formatter: Formatter
+  formatter: Formatter,
 ) {
   let content: string;
 

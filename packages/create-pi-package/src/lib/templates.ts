@@ -1,6 +1,6 @@
 import { defaultScope, packageKeywords } from './constants.js';
-import type { PackageMode, TestRunner, ToolingPreset } from './types.js';
 import { getScopedPackageName } from './name.js';
+import type { PackageMode, TestRunner, ToolingPreset } from './types.js';
 
 interface TemplateContext {
   mode: PackageMode;
@@ -12,7 +12,7 @@ interface TemplateContext {
 export function getManagedFileContentByPath(context: TemplateContext) {
   const scopedPackageName = getScopedPackageName(
     defaultScope,
-    context.packageName
+    context.packageName,
   );
   const files = new Map<string, string>();
 
@@ -21,17 +21,17 @@ export function getManagedFileContentByPath(context: TemplateContext) {
   files.set('README.md', getReadmeContent({ ...context, scopedPackageName }));
   files.set(
     'package.json',
-    getPackageJsonContent({ ...context, scopedPackageName })
+    getPackageJsonContent({ ...context, scopedPackageName }),
   );
   files.set(
     'pi-package.json',
-    JSON.stringify({ mode: context.mode }, null, 2) + '\n'
+    JSON.stringify({ mode: context.mode }, null, 2) + '\n',
   );
   files.set('tsconfig.json', getTsConfigContent());
   files.set('lib/index.ts', getHelperContent());
   files.set(
     'extensions/weather-tools/package.json',
-    getExtensionPackageJsonContent()
+    getExtensionPackageJsonContent(),
   );
   files.set('extensions/weather-tools/README.md', getExtensionReadmeContent());
   files.set('skills/weather-brief/SKILL.md', getSkillContent());
@@ -65,7 +65,7 @@ export function getManagedFileContentByPath(context: TemplateContext) {
 }
 
 function getPackageJsonContent(
-  context: TemplateContext & { scopedPackageName: string }
+  context: TemplateContext & { scopedPackageName: string },
 ) {
   const packageJson = {
     name: context.scopedPackageName,
@@ -91,7 +91,7 @@ function getPackageJsonContent(
     devDependencies: getDevDependencies(
       context.mode,
       context.testRunner,
-      context.tooling
+      context.tooling,
     ),
   };
 
@@ -117,7 +117,7 @@ function getPublishedFiles(mode: PackageMode) {
 function getScripts(
   mode: PackageMode,
   testRunner: TestRunner,
-  tooling: ToolingPreset
+  tooling: ToolingPreset,
 ) {
   const test = testRunner === 'vitest' ? 'vitest run' : 'jest --runInBand';
   const testWatch = testRunner === 'vitest' ? 'vitest' : 'jest --watch';
@@ -163,7 +163,7 @@ function getExports(mode: PackageMode) {
 function getDevDependencies(
   mode: PackageMode,
   testRunner: TestRunner,
-  tooling: ToolingPreset
+  tooling: ToolingPreset,
 ) {
   const devDependencies: Record<string, string> = {
     typescript: '^5.9.2',
@@ -195,7 +195,7 @@ function getDevDependencies(
 }
 
 function getReadmeContent(
-  context: TemplateContext & { scopedPackageName: string }
+  context: TemplateContext & { scopedPackageName: string },
 ) {
   const modeNotes =
     context.mode === 'bundle'
@@ -260,7 +260,7 @@ function getTsConfigContent() {
         include: ['lib/**/*.ts', 'test/**/*.ts'],
       },
       null,
-      2
+      2,
     ) + '\n'
   );
 }
@@ -343,7 +343,7 @@ function getExtensionPackageJsonContent() {
           'Starter PI extension example for weather-oriented package flows.',
       },
       null,
-      2
+      2,
     ) + '\n'
   );
 }

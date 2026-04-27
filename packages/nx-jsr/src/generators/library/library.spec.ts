@@ -1,8 +1,8 @@
+import { type Tree, readProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Tree, readProjectConfiguration } from '@nx/devkit';
 
 import { libraryGenerator } from './library';
-import { LibraryGeneratorSchema } from './schema';
+import type { LibraryGeneratorSchema } from './schema';
 
 describe('library generator', () => {
   let tree: Tree;

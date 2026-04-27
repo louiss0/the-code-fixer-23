@@ -27,12 +27,6 @@
         ]
       }
     },
-    "nx-release-publish": {
-      "dependsOn": ["build"],
-      "options": {
-        "packageRoot": "{projectRoot}"
-      }
-    },
     "typecheck": {
       "executor": "@nx/js:tsc",
       "options": {
@@ -46,7 +40,19 @@
       "executor": "nx:run-commands",
       "outputs": ["{projectRoot}/coverage"],
       "options": {
-        "command": "pnpm exec vitest run --config packages/nx-jsr/vitest.config.ts"
+        "command": "pnpm --dir packages/nx-jsr run test"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --dir packages/nx-jsr run lint"
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --dir packages/nx-jsr run format"
       }
     }
   },

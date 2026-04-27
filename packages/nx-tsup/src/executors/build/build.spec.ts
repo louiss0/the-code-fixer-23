@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { ExecutorContext } from '@nx/devkit';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import executor from './build';
 import type { BuildExecutorSchema } from './schema';
 
@@ -156,7 +156,7 @@ describe('Build Executor', () => {
       expect(mockTsupBuild).toHaveBeenCalledWith(
         expect.objectContaining({
           outDir: 'dist',
-        })
+        }),
       );
     });
 
@@ -168,7 +168,7 @@ describe('Build Executor', () => {
           entry: expect.objectContaining({
             index: expect.stringContaining('index.ts'),
           }),
-        })
+        }),
       );
     });
 
@@ -178,7 +178,7 @@ describe('Build Executor', () => {
       expect(mockTsupBuild).toHaveBeenCalledWith(
         expect.objectContaining({
           tsconfig: expect.stringContaining('tsconfig.lib.json'),
-        })
+        }),
       );
     });
 
@@ -186,7 +186,7 @@ describe('Build Executor', () => {
       await executor({ ...options, dts: true }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ dts: true })
+        expect.objectContaining({ dts: true }),
       );
     });
 
@@ -194,7 +194,7 @@ describe('Build Executor', () => {
       await executor({ ...options, clean: false }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ clean: false })
+        expect.objectContaining({ clean: false }),
       );
     });
 
@@ -202,7 +202,7 @@ describe('Build Executor', () => {
       await executor({ ...options, minify: true }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ minify: true })
+        expect.objectContaining({ minify: true }),
       );
     });
 
@@ -210,7 +210,7 @@ describe('Build Executor', () => {
       await executor({ ...options, sourcemap: true }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ sourcemap: true })
+        expect.objectContaining({ sourcemap: true }),
       );
     });
 
@@ -218,7 +218,7 @@ describe('Build Executor', () => {
       await executor({ ...options, sourcemap: 'inline' }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ sourcemap: 'inline' })
+        expect.objectContaining({ sourcemap: 'inline' }),
       );
     });
   });
@@ -228,7 +228,7 @@ describe('Build Executor', () => {
       await executor({ ...options, splitting: true }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ splitting: true })
+        expect.objectContaining({ splitting: true }),
       );
     });
 
@@ -236,7 +236,7 @@ describe('Build Executor', () => {
       await executor({ ...options, treeshake: true }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ treeshake: true })
+        expect.objectContaining({ treeshake: true }),
       );
     });
 
@@ -244,7 +244,7 @@ describe('Build Executor', () => {
       await executor({ ...options, treeshake: 'smallest' }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ treeshake: 'smallest' })
+        expect.objectContaining({ treeshake: 'smallest' }),
       );
     });
 
@@ -252,7 +252,7 @@ describe('Build Executor', () => {
       await executor({ ...options, target: 'esnext' }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ target: 'esnext' })
+        expect.objectContaining({ target: 'esnext' }),
       );
     });
 
@@ -260,7 +260,7 @@ describe('Build Executor', () => {
       await executor({ ...options, platform: 'browser' }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ platform: 'browser' })
+        expect.objectContaining({ platform: 'browser' }),
       );
     });
   });
@@ -271,7 +271,7 @@ describe('Build Executor', () => {
       await executor({ ...options, external: externalDeps }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ external: externalDeps })
+        expect.objectContaining({ external: externalDeps }),
       );
     });
 
@@ -280,7 +280,7 @@ describe('Build Executor', () => {
       await executor({ ...options, noExternal: noExternalDeps }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ noExternal: noExternalDeps })
+        expect.objectContaining({ noExternal: noExternalDeps }),
       );
     });
 
@@ -289,7 +289,7 @@ describe('Build Executor', () => {
       await executor({ ...options, inject: injectFiles }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ inject: injectFiles })
+        expect.objectContaining({ inject: injectFiles }),
       );
     });
   });
@@ -300,7 +300,7 @@ describe('Build Executor', () => {
       await executor({ ...options, banner }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ banner })
+        expect.objectContaining({ banner }),
       );
     });
 
@@ -309,7 +309,7 @@ describe('Build Executor', () => {
       await executor({ ...options, footer }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ footer })
+        expect.objectContaining({ footer }),
       );
     });
 
@@ -321,7 +321,7 @@ describe('Build Executor', () => {
       await executor({ ...options, env }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ env })
+        expect.objectContaining({ env }),
       );
     });
 
@@ -330,7 +330,7 @@ describe('Build Executor', () => {
       await executor({ ...options, define }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ define })
+        expect.objectContaining({ define }),
       );
     });
 
@@ -349,7 +349,7 @@ describe('Build Executor', () => {
       await executor({ ...options, watch: true }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ watch: true })
+        expect.objectContaining({ watch: true }),
       );
     });
 
@@ -357,7 +357,7 @@ describe('Build Executor', () => {
       await executor({ ...options, format: ['esm', 'cjs'] }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ format: ['esm', 'cjs'] })
+        expect.objectContaining({ format: ['esm', 'cjs'] }),
       );
     });
 
@@ -423,7 +423,7 @@ describe('Build Executor', () => {
           outDir: expect.any(String),
           entry: expect.any(Object),
           tsconfig: expect.any(String),
-        })
+        }),
       );
     });
   });

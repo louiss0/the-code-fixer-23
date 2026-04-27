@@ -5,17 +5,10 @@
   "sourceRoot": "packages/enums/src",
   "targets": {
     "build": {
-      "executor": "@code-fixer-23/nx-tsup:build",
-      "outputs": ["{options.outDir}"],
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/dist"],
       "options": {
-        "outDir": "packages/enums/dist",
-        "main": "packages/enums/src/index.ts",
-        "tsConfig": "packages/enums/tsconfig.lib.json",
-        "format": ["esm"],
-        "dts": true,
-        "clean": true,
-        "sourcemap": false,
-        "minify": false
+        "command": "pnpm --dir packages/enums run build"
       }
     },
     "typecheck": {
@@ -32,19 +25,19 @@
       "executor": "nx:run-commands",
       "outputs": ["{projectRoot}/test-output/vitest/coverage"],
       "options": {
-        "command": "pnpm exec vitest run --config packages/enums/vitest.config.ts"
+        "command": "pnpm --dir packages/enums run test"
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
+      "executor": "nx:run-commands",
       "options": {
-        "lintFilePatterns": ["packages/enums/**/*.ts"]
+        "command": "pnpm --dir packages/enums run lint"
       }
     },
     "format": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm exec prettier --write packages/enums"
+        "command": "pnpm --dir packages/enums run format"
       }
     }
   },

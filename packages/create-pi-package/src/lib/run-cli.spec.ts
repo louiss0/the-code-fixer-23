@@ -16,7 +16,7 @@ afterEach(async () => {
   await Promise.all(
     tempDirectories
       .splice(0)
-      .map((directory) => rm(directory, { force: true, recursive: true }))
+      .map((directory) => rm(directory, { force: true, recursive: true })),
   );
 });
 
@@ -31,8 +31,8 @@ describe('runCli', () => {
     expect(statusCode).toBe(1);
     expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining(
-        'Missing required options in non-interactive mode'
-      )
+        'Missing required options in non-interactive mode',
+      ),
     );
   });
 
@@ -50,7 +50,7 @@ describe('runCli', () => {
 
     expect(statusCode).toBe(0);
     expect(logSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Mode: source')
+      expect.stringContaining('Mode: source'),
     );
   });
 });

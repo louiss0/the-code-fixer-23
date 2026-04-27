@@ -23,7 +23,7 @@ export default async function renameOutputPathToOutDir(tree: Tree) {
     }
 
     for (const [targetName, targetConfig] of Object.entries(
-      projectConfig.targets
+      projectConfig.targets,
     )) {
       // Check if this target uses the nx-tsup build executor
       if (
@@ -40,7 +40,7 @@ export default async function renameOutputPathToOutDir(tree: Tree) {
 
           modified = true;
           logger.info(
-            `  ✓ ${projectName}:${targetName} - renamed outputPath to outDir`
+            `  ✓ ${projectName}:${targetName} - renamed outputPath to outDir`,
           );
         }
       }
@@ -55,7 +55,7 @@ export default async function renameOutputPathToOutDir(tree: Tree) {
 
   if (modifiedCount > 0) {
     logger.info('');
-    logger.info(`✓ Migration complete!`);
+    logger.info('✓ Migration complete!');
     logger.info(`  Modified ${modifiedCount} project(s):`);
     modifiedProjects.forEach((name) => {
       logger.info(`    - ${name}`);

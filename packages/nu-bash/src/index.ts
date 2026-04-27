@@ -24,7 +24,7 @@ const bashParameters = Type.Object({
   timeout: Type.Optional(
     Type.Number({
       description: 'Optional timeout in seconds before the command is aborted',
-    })
+    }),
   ),
 }) as never;
 
@@ -36,7 +36,7 @@ function getEnvSuggestions(prefix: string): AutocompleteItem[] {
   const normalizedPrefix = prefix.toLowerCase();
 
   return ENV_VARIABLE_NAMES.filter((name) =>
-    prefix ? name.toLowerCase().startsWith(normalizedPrefix) : true
+    prefix ? name.toLowerCase().startsWith(normalizedPrefix) : true,
   ).map((name) => ({
     value: name,
     label: name,
@@ -51,7 +51,7 @@ class NuAutocompleteProvider implements AutocompleteProvider {
     lines: string[],
     cursorLine: number,
     cursorCol: number,
-    options: { signal: AbortSignal; force?: boolean }
+    options: { signal: AbortSignal; force?: boolean },
   ): Promise<AutocompleteSuggestions | null> {
     const currentLine = lines[cursorLine] ?? '';
     const textBeforeCursor = currentLine.slice(0, cursorCol);
@@ -85,7 +85,7 @@ class NuAutocompleteProvider implements AutocompleteProvider {
       lines,
       cursorLine,
       cursorCol,
-      options
+      options,
     );
   }
 
@@ -94,14 +94,14 @@ class NuAutocompleteProvider implements AutocompleteProvider {
     cursorLine: number,
     cursorCol: number,
     item: AutocompleteItem,
-    prefix: string
+    prefix: string,
   ) {
     return this.baseProvider.applyCompletion(
       lines,
       cursorLine,
       cursorCol,
       item,
-      prefix
+      prefix,
     );
   }
 }
@@ -207,7 +207,7 @@ async function executeNushellCommand(
   command: string,
   cwd: string,
   signal?: AbortSignal,
-  onChunk?: (output: string, exitCode?: number) => void
+  onChunk?: (output: string, exitCode?: number) => void,
 ) {
   return new Promise<{
     output: string;
@@ -234,9 +234,9 @@ async function executeNushellCommand(
         formatToolOutput(
           Buffer.concat(stdoutChunks).toString('utf-8'),
           Buffer.concat(stderrChunks).toString('utf-8'),
-          code ?? 0
+          code ?? 0,
         ),
-        code
+        code,
       );
     };
 
@@ -293,7 +293,7 @@ const nuShellUrl = 'https://www.nushell.sh/';
 export default function nuBashExtension(pi: ExtensionAPI) {
   pi.on('session_start', (_, _ctx) => {
     _ctx.ui.setEditorComponent(
-      (tui, theme, keybindings) => new NuEditor(tui, theme, keybindings)
+      (tui, theme, keybindings) => new NuEditor(tui, theme, keybindings),
     );
   });
 
@@ -331,7 +331,7 @@ export default function nuBashExtension(pi: ExtensionAPI) {
               streaming: true,
             },
           });
-        }
+        },
       );
 
       return {

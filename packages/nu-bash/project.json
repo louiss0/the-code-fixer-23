@@ -5,12 +5,10 @@
   "sourceRoot": "packages/nu-bash/src",
   "targets": {
     "build": {
-      "executor": "@nx/vite:build",
+      "executor": "nx:run-commands",
       "outputs": ["{projectRoot}/dist"],
       "options": {
-        "configFile": "packages/nu-bash/build.config.ts",
-        "mode": "production",
-        "outputPath": "{projectRoot}/dist"
+        "command": "pnpm --dir packages/nu-bash run build"
       }
     },
     "typecheck": {
@@ -24,17 +22,22 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
+      "executor": "nx:run-commands",
       "options": {
-        "lintFilePatterns": ["packages/nu-bash/**/*.ts"]
+        "command": "pnpm --dir packages/nu-bash run lint"
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --dir packages/nu-bash run format"
       }
     },
     "test": {
-      "executor": "@nx/vite:test",
+      "executor": "nx:run-commands",
       "outputs": ["{projectRoot}/test-output/vitest"],
       "options": {
-        "config": "packages/nu-bash/build.config.ts",
-        "passWithNoTests": true
+        "command": "pnpm --dir packages/nu-bash run test"
       }
     }
   },

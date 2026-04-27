@@ -6,7 +6,7 @@ export async function ensureParentDirectory(filePath: string) {
 }
 
 export async function readOptionalFile(
-  filePath: string
+  filePath: string,
 ): Promise<string | null> {
   try {
     return await readFile(filePath, 'utf8');

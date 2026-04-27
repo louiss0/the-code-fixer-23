@@ -1,5 +1,5 @@
-import readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
+import readline from 'node:readline/promises';
 
 export function isInteractiveSession() {
   return process.stdin.isTTY === true && process.stdout.isTTY === true;

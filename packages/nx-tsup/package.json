@@ -1,53 +1,10 @@
 {
-  "name": "@code-fixer-23/nx-tsup",
-  "version": "1.2.2",
-  "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "src/executors/**/*.ts",
-    "src/executors/**/schema.json",
-    "src/generators/**/*.ts",
-    "src/generators/**/schema.json",
-    "src/generators/**/files/**/*",
-    "src/migrations/**/*.ts",
-    "!**/*.tsbuildinfo",
-    "generators.json",
-    "executors.json",
-    "migrations.json"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "exports": {
-    "./package.json": "./package.json",
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
-    },
-    "./generators": "./generators.json",
-    "./executors": "./executors.json",
-    "./migrations": "./migrations.json"
-  },
-  "dependencies": {
-    "@nx/devkit": "21.6.3",
-    "enquirer": "^2.4.1",
-    "tslib": "^2.3.0",
-    "tsup": "^8.5.1"
-  },
-  "devDependencies": {
-    "typescript": "~5.9.2",
-    "vite": "^7.0.0",
-    "vite-plugin-dts": "^4.3.0",
-    "vite-plugin-static-copy": "^1.0.5",
-    "vitest": "^3.0.0"
-  },
-  "generators": "./generators.json",
-  "executors": "./executors.json",
-  "nx-migrations": {
-    "migrations": "./migrations.json"
+  "scripts": {
+    "build": "tsc -p tsconfig.lib.json",
+    "typecheck": "tsc -p tsconfig.lib.json --noEmit",
+    "test": "vitest run --config vitest.config.ts",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "check": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build"
   }
 }

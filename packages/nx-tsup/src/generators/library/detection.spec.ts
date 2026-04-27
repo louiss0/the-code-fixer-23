@@ -1,10 +1,10 @@
+import type { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Tree } from '@nx/devkit';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
-  detectTestRunnerFromRootPackageJson,
-  detectLinterFromRootPackageJson,
   detectFormatterFromRootPackageJson,
+  detectLinterFromRootPackageJson,
+  detectTestRunnerFromRootPackageJson,
 } from './detect';
 
 function writeRootPkg(tree: Tree, pkg: Record<string, unknown>) {

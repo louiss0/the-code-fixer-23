@@ -15,7 +15,7 @@ import type {
 } from './types.js';
 
 export async function createPiPackage(
-  options: CreatePiPackageOptions
+  options: CreatePiPackageOptions,
 ): Promise<CreatePiPackageResult> {
   const targetDirectory = path.resolve(options.directory ?? process.cwd());
   const packageName = resolvePackageName(targetDirectory, options.name);
@@ -24,21 +24,21 @@ export async function createPiPackage(
     options.tooling,
     options.yes,
     ['eslint-prettier', 'biome'],
-    defaultChoices.tooling
+    defaultChoices.tooling,
   );
   const testRunner = await resolveOption(
     'test runner',
     options.testRunner,
     options.yes,
     ['vitest', 'jest'],
-    defaultChoices.testRunner
+    defaultChoices.testRunner,
   );
   const mode = await resolveOption(
     'mode',
     options.mode,
     options.yes,
     ['source', 'bundle'],
-    defaultChoices.mode
+    defaultChoices.mode,
   );
 
   await mkdir(targetDirectory, { recursive: true });
@@ -114,7 +114,7 @@ function resolvePackageName(targetDirectory: string, explicitName?: string) {
   const packageName = explicitName ?? path.basename(targetDirectory);
   if (!isKebabCaseName(packageName)) {
     throw new Error(
-      `Package name must be kebab-case. Rename the directory or pass --name with a kebab-case value. Received: ${packageName}`
+      `Package name must be kebab-case. Rename the directory or pass --name with a kebab-case value. Received: ${packageName}`,
     );
   }
   return packageName;
@@ -125,7 +125,7 @@ async function resolveOption<T extends string>(
   value: T | undefined,
   yes: boolean | undefined,
   choices: readonly T[],
-  defaultChoice: T
+  defaultChoice: T,
 ): Promise<T> {
   if (value !== undefined) {
     return value;

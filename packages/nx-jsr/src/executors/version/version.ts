@@ -1,7 +1,7 @@
-import { ExecutorContext, PromiseExecutor, logger } from '@nx/devkit';
 import { execSync } from 'child_process';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
+import { type ExecutorContext, type PromiseExecutor, logger } from '@nx/devkit';
 import * as semver from 'semver';
 import type { VersionExecutorSchema } from './schema.d.ts';
 
@@ -13,7 +13,7 @@ interface JsrConfig {
 
 const runExecutor: PromiseExecutor<VersionExecutorSchema> = async (
   options,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) => {
   const projectRoot = options.packageRoot;
   if (!projectRoot) {
@@ -36,7 +36,7 @@ const runExecutor: PromiseExecutor<VersionExecutorSchema> = async (
 
   if (!existsSync(absolutePackageRoot)) {
     logger.error(
-      `Package root directory does not exist: ${absolutePackageRoot}`
+      `Package root directory does not exist: ${absolutePackageRoot}`,
     );
     return { success: false };
   }
@@ -44,7 +44,7 @@ const runExecutor: PromiseExecutor<VersionExecutorSchema> = async (
   const jsrJsonPath = join(absolutePackageRoot, 'jsr.json');
   if (!existsSync(jsrJsonPath)) {
     logger.error(
-      `jsr.json not found in ${absolutePackageRoot}. This is required for versioning.`
+      `jsr.json not found in ${absolutePackageRoot}. This is required for versioning.`,
     );
     return { success: false };
   }
@@ -55,7 +55,7 @@ const runExecutor: PromiseExecutor<VersionExecutorSchema> = async (
 
   if (!currentVersion || !semver.valid(currentVersion)) {
     logger.error(
-      `Invalid or missing current version in jsr.json: ${currentVersion}`
+      `Invalid or missing current version in jsr.json: ${currentVersion}`,
     );
     return { success: false };
   }
@@ -77,10 +77,10 @@ const runExecutor: PromiseExecutor<VersionExecutorSchema> = async (
       }).trim();
       if (status) {
         logger.error(
-          'Working tree has uncommitted changes. Commit changes before tagging/pushing.'
+          'Working tree has uncommitted changes. Commit changes before tagging/pushing.',
         );
         logger.info(
-          'Hint: commit jsr.json and try again without --push, or tag manually.'
+          'Hint: commit jsr.json and try again without --push, or tag manually.',
         );
         return { success: false };
       }
@@ -100,10 +100,10 @@ const runExecutor: PromiseExecutor<VersionExecutorSchema> = async (
     logger.info('📝 Next steps:');
     logger.info('  1. Review the version change in jsr.json');
     logger.info(
-      `  2. Commit the change: git add ${projectRoot}/jsr.json && git commit -m "chore(release): ${newVersion}"`
+      `  2. Commit the change: git add ${projectRoot}/jsr.json && git commit -m "chore(release): ${newVersion}"`,
     );
     logger.info(
-      `  3. Create a git tag: git tag ${options.tagPrefix || 'v'}${newVersion}`
+      `  3. Create a git tag: git tag ${options.tagPrefix || 'v'}${newVersion}`,
     );
     logger.info('  4. Push to GitHub: git push && git push --tags');
   }

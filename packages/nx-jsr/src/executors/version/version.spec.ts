@@ -1,9 +1,9 @@
-import { ExecutorContext } from '@nx/devkit';
-import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
+import { join } from 'path';
+import type { ExecutorContext } from '@nx/devkit';
 
-import { VersionExecutorSchema } from './schema';
+import type { VersionExecutorSchema } from './schema';
 import executor from './version';
 
 describe('Version Executor', () => {
@@ -27,7 +27,7 @@ describe('Version Executor', () => {
     };
     writeFileSync(
       join(absolutePackageRoot, 'jsr.json'),
-      JSON.stringify(jsrJson, null, 2)
+      JSON.stringify(jsrJson, null, 2),
     );
   });
 

@@ -1,8 +1,8 @@
-import { ExecutorContext } from '@nx/devkit';
-import { mkdirSync, writeFileSync, rmSync } from 'fs';
-import { join } from 'path';
+import { mkdirSync, rmSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { join } from 'path';
+import type { ExecutorContext } from '@nx/devkit';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock child_process.execSync globally to avoid invoking external commands
 vi.mock('child_process', async (importOriginal) => {
@@ -45,7 +45,7 @@ describe('Validate Executor', () => {
     const ctx = makeContext(tempDir);
     const output = await executor(
       { packageRoot: 'does-not-exist', dryRun: true },
-      ctx
+      ctx,
     );
     expect(output.success).toBe(false);
   });
@@ -66,7 +66,7 @@ describe('Validate Executor', () => {
 
     writeFileSync(
       join(absolute, 'jsr.json'),
-      JSON.stringify({ version: '1.0.0', exports: './src/index.ts' }, null, 2)
+      JSON.stringify({ version: '1.0.0', exports: './src/index.ts' }, null, 2),
     );
 
     const output = await executor({ packageRoot }, ctx);
@@ -83,12 +83,12 @@ describe('Validate Executor', () => {
       JSON.stringify(
         { name: '@test/pkg', version: '1.0.0', exports: './src/index.ts' },
         null,
-        2
-      )
+        2,
+      ),
     );
     writeFileSync(
       join(absolute, 'tsconfig.lib.json'),
-      JSON.stringify({ compilerOptions: { declaration: false } }, null, 2)
+      JSON.stringify({ compilerOptions: { declaration: false } }, null, 2),
     );
 
     const output = await executor({ packageRoot }, ctx);
@@ -105,12 +105,12 @@ describe('Validate Executor', () => {
       JSON.stringify(
         { name: '@test/pkg', version: '1.0.0', exports: './src/index.ts' },
         null,
-        2
-      )
+        2,
+      ),
     );
     writeFileSync(
       join(absolute, 'tsconfig.lib.json'),
-      JSON.stringify({ compilerOptions: { declaration: true } }, null, 2)
+      JSON.stringify({ compilerOptions: { declaration: true } }, null, 2),
     );
 
     const output = await executor({ packageRoot, dryRun: true }, ctx);

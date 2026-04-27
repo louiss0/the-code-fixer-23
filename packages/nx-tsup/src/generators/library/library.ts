@@ -1,36 +1,36 @@
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
-  Tree,
+  type Tree,
   addProjectConfiguration,
   formatFiles,
   generateFiles,
   joinPathFragments,
+  logger,
   names,
   offsetFromRoot,
-  logger,
 } from '@nx/devkit';
-import type {
-  LibraryGeneratorSchema,
-  TestRunner,
-  Linter,
-  Formatter,
-} from './schema.d.ts';
 import {
+  detectFormatterFromRootPackageJson,
   detectLinterFromRootPackageJson,
   detectTestRunnerFromRootPackageJson,
-  detectFormatterFromRootPackageJson,
 } from './detect.js';
 import { isInteractive, selectOrDefault } from './prompt.js';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import type {
+  Formatter,
+  LibraryGeneratorSchema,
+  Linter,
+  TestRunner,
+} from './schema.d.ts';
 
 const generatorFilesPath = join(
   dirname(fileURLToPath(import.meta.url)),
-  'files'
+  'files',
 );
 
 export async function libraryGenerator(
   tree: Tree,
-  options: LibraryGeneratorSchema
+  options: LibraryGeneratorSchema,
 ) {
   const name = names(options.name).fileName;
   const dir = options.directory ?? 'packages';
@@ -39,20 +39,20 @@ export async function libraryGenerator(
 
   const resolvedTestRunner: TestRunner = await resolveTestRunner(
     tree,
-    options.testRunner
+    options.testRunner,
   );
   const resolvedLinter: Linter = await resolveLinter(tree, options.linter);
   const resolvedFormatter: Formatter = await resolveFormatter(
     tree,
     options.formatter,
-    resolvedLinter
+    resolvedLinter,
   );
 
   const projectTargets = getProjectTargets(
     projectRoot,
     resolvedTestRunner,
     resolvedLinter,
-    resolvedFormatter
+    resolvedFormatter,
   );
 
   addProjectConfiguration(tree, name, {
@@ -83,7 +83,7 @@ export async function libraryGenerator(
     options,
     resolvedTestRunner,
     resolvedLinter,
-    resolvedFormatter
+    resolvedFormatter,
   );
   createReadme(tree, projectRoot, options, resolvedTestRunner);
 
@@ -115,7 +115,7 @@ export async function libraryGenerator(
 
 async function resolveTestRunner(
   tree: Tree,
-  option?: TestRunner
+  option?: TestRunner,
 ): Promise<TestRunner> {
   if (option !== undefined) return option;
   const { detected, candidates } = detectTestRunnerFromRootPackageJson(tree);
@@ -124,7 +124,7 @@ async function resolveTestRunner(
       const choice = (await selectOrDefault(
         'Both Jest and Vitest are detected in the workspace. Choose a test runner:',
         ['jest', 'vitest'],
-        'jest'
+        'jest',
       )) as TestRunner;
       return choice;
     }
@@ -142,7 +142,7 @@ async function resolveLinter(tree: Tree, option?: Linter): Promise<Linter> {
       const choice = (await selectOrDefault(
         'Both ESLint and Biome are detected in the workspace. Choose a linter:',
         ['eslint', 'biome'],
-        'eslint'
+        'eslint',
       )) as Linter;
       return choice;
     }
@@ -155,7 +155,7 @@ async function resolveLinter(tree: Tree, option?: Linter): Promise<Linter> {
 async function resolveFormatter(
   tree: Tree,
   option: Formatter | undefined,
-  linter: Linter
+  linter: Linter,
 ): Promise<Formatter> {
   // If biome is the linter, default to biome formatter unless explicitly overridden
   if (linter === 'biome' && option === undefined) {
@@ -166,7 +166,7 @@ async function resolveFormatter(
     // Validate: eslint-stylistic requires eslint as linter
     if (option === 'eslint-stylistic' && linter !== 'eslint') {
       logger.warn(
-        'ESLint Stylistic requires ESLint as the linter. Falling back to prettier.'
+        'ESLint Stylistic requires ESLint as the linter. Falling back to prettier.',
       );
       return 'prettier';
     }
@@ -177,7 +177,7 @@ async function resolveFormatter(
 
   // Filter out eslint-stylistic if eslint is not the linter
   const validCandidates = candidates.filter(
-    (c: string) => c !== 'eslint-stylistic' || linter === 'eslint'
+    (c: string) => c !== 'eslint-stylistic' || linter === 'eslint',
   );
 
   if (validCandidates.length >= 2) {
@@ -185,7 +185,7 @@ async function resolveFormatter(
       const choice = (await selectOrDefault(
         'Multiple formatters detected. Choose one:',
         validCandidates,
-        validCandidates[0]
+        validCandidates[0],
       )) as Formatter;
       return choice;
     }
@@ -204,7 +204,7 @@ function getProjectTargets(
   projectRoot: string,
   testRunner: TestRunner,
   linter: Linter,
-  formatter: Formatter
+  formatter: Formatter,
 ) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const targets: any = {
@@ -313,7 +313,7 @@ function createTsConfig(tree: Tree, projectRoot: string) {
 
   tree.write(
     `${projectRoot}/tsconfig.lib.json`,
-    JSON.stringify(tsconfig, null, 2)
+    JSON.stringify(tsconfig, null, 2),
   );
 
   const tsconfigMain = {
@@ -328,14 +328,14 @@ function createTsConfig(tree: Tree, projectRoot: string) {
 
   tree.write(
     `${projectRoot}/tsconfig.json`,
-    JSON.stringify(tsconfigMain, null, 2)
+    JSON.stringify(tsconfigMain, null, 2),
   );
 }
 
 function createTsSpecConfig(
   tree: Tree,
   projectRoot: string,
-  testRunner: TestRunner
+  testRunner: TestRunner,
 ) {
   if (testRunner === 'none') {
     return;
@@ -354,7 +354,7 @@ function createTsSpecConfig(
 
   tree.write(
     `${projectRoot}/tsconfig.spec.json`,
-    JSON.stringify(tsconfigSpec, null, 2)
+    JSON.stringify(tsconfigSpec, null, 2),
   );
 }
 
@@ -364,7 +364,7 @@ function createPackageJson(
   options: LibraryGeneratorSchema,
   testRunner: TestRunner,
   linter: Linter,
-  formatter: Formatter
+  formatter: Formatter,
 ) {
   const isPackageBased = detectPackageBased(tree);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -433,7 +433,7 @@ function createPackageJson(
     pkg.devDependencies.tsup = '^8.0.1';
   } else if (tree.exists('package.json')) {
     const workspacePackageJson = JSON.parse(
-      tree.read('package.json', 'utf-8') || '{}'
+      tree.read('package.json', 'utf-8') || '{}',
     );
     workspacePackageJson.devDependencies ??= {};
     workspacePackageJson.devDependencies.tsup ??= '^8.0.1';
@@ -490,7 +490,7 @@ function createJestConfig(tree: Tree, projectRoot: string) {
 function createExampleTest(
   tree: Tree,
   projectRoot: string,
-  runner: TestRunner
+  runner: TestRunner,
 ) {
   const testContent =
     runner === 'vitest'
@@ -518,7 +518,7 @@ describe('hello', () => {
 function createEslintConfig(
   tree: Tree,
   projectRoot: string,
-  formatter: Formatter
+  formatter: Formatter,
 ) {
   let content: string;
 
@@ -588,7 +588,7 @@ function createReadme(
   tree: Tree,
   projectRoot: string,
   options: LibraryGeneratorSchema,
-  testRunner: TestRunner
+  testRunner: TestRunner,
 ) {
   const testingInfo =
     testRunner !== 'none' ? `**Testing**: ${testRunner}\n\n` : '';

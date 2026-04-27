@@ -32,7 +32,7 @@ export default defineConfig({
       entryRoot: 'src',
       outDir: 'dist',
       insertTypesEntry: true,
-      rollupTypes: true,
+      rollupTypes: false,
       tsconfigPath: path.resolve(packageRoot, 'tsconfig.lib.json'),
     }),
   ],

@@ -98,7 +98,7 @@ describe('createEnum', () => {
 
   it('rejects duplicate member names', () => {
     expect(() => createEnum('string', 'red', 'red')).toThrowError(
-      'Enum names must be unique.'
+      'Enum names must be unique.',
     );
   });
 });
@@ -117,10 +117,10 @@ describe('createLabeledEnum', () => {
     expectTypeOf(articleStatus.parse('Draft')).toEqualTypeOf<'draft'>();
     expectTypeOf(articleStatus.parse('Published')).toEqualTypeOf<'published'>();
     expectTypeOf(
-      articleStatus.labelOf(articleStatus.draft)
+      articleStatus.labelOf(articleStatus.draft),
     ).toEqualTypeOf<'Draft'>();
     expectTypeOf(
-      articleStatus.labelOf(articleStatus.published)
+      articleStatus.labelOf(articleStatus.published),
     ).toEqualTypeOf<'Published'>();
   });
 
@@ -215,7 +215,7 @@ describe('createLabeledEnum', () => {
       createLabeledEnum({
         draft: 'Shared',
         published: 'Shared',
-      })
+      }),
     ).toThrowError('Enum labels must be unique.');
   });
 
@@ -223,7 +223,7 @@ describe('createLabeledEnum', () => {
     expect(() =>
       createLabeledEnum({
         parse: 'Parse',
-      })
+      }),
     ).toThrowError('Enum keys cannot use reserved helper names.');
   });
 });

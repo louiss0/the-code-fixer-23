@@ -1,13 +1,13 @@
-import { ExecutorContext, PromiseExecutor, logger } from '@nx/devkit';
 import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import type { PublishExecutorSchema } from './schema.d.ts';
+import { type ExecutorContext, type PromiseExecutor, logger } from '@nx/devkit';
 import { config as dotenvConfig } from 'dotenv';
+import type { PublishExecutorSchema } from './schema.d.ts';
 
 const runExecutor: PromiseExecutor<PublishExecutorSchema> = async (
   options,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) => {
   // Infer packageRoot when not provided
   let projectRoot = options.packageRoot;
@@ -25,7 +25,7 @@ const runExecutor: PromiseExecutor<PublishExecutorSchema> = async (
       } else {
         projectRoot = '.';
         logger.info(
-          'No project context found; defaulting packageRoot to current directory'
+          'No project context found; defaulting packageRoot to current directory',
         );
       }
     } catch {
@@ -38,7 +38,7 @@ const runExecutor: PromiseExecutor<PublishExecutorSchema> = async (
 
   if (!existsSync(absolutePackageRoot)) {
     logger.error(
-      `Package root directory does not exist: ${absolutePackageRoot}`
+      `Package root directory does not exist: ${absolutePackageRoot}`,
     );
     return { success: false };
   }
@@ -46,7 +46,7 @@ const runExecutor: PromiseExecutor<PublishExecutorSchema> = async (
   const jsrJsonPath = join(absolutePackageRoot, 'jsr.json');
   if (!existsSync(jsrJsonPath)) {
     logger.error(
-      `jsr.json not found in ${absolutePackageRoot}. This is required for JSR publishing.`
+      `jsr.json not found in ${absolutePackageRoot}. This is required for JSR publishing.`,
     );
     return { success: false };
   }
@@ -72,7 +72,7 @@ const runExecutor: PromiseExecutor<PublishExecutorSchema> = async (
   const token = options.token ?? env.JSR_TOKEN;
   if (!options.dryRun && !token) {
     logger.error(
-      'Missing JSR token. Provide --token, set JSR_TOKEN env var, or define it in .env'
+      'Missing JSR token. Provide --token, set JSR_TOKEN env var, or define it in .env',
     );
     return { success: false };
   }
@@ -88,7 +88,7 @@ const runExecutor: PromiseExecutor<PublishExecutorSchema> = async (
     });
 
     logger.info(
-      `Successfully ${options.dryRun ? 'validated' : 'published'} package`
+      `Successfully ${options.dryRun ? 'validated' : 'published'} package`,
     );
     return { success: true };
   } catch (error) {

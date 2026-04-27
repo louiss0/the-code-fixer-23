@@ -1,8 +1,8 @@
+import { type Tree, readProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Tree, readProjectConfiguration } from '@nx/devkit';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { libraryGenerator } from './library';
-import { LibraryGeneratorSchema } from './schema';
+import type { LibraryGeneratorSchema } from './schema';
 
 describe('library generator', () => {
   // Mock prompt utils to control interactivity and user choice
@@ -12,7 +12,7 @@ describe('library generator', () => {
       selectOrDefault: async (
         _q: string,
         _choices: string[],
-        defaultChoice: string
+        defaultChoice: string,
       ) => defaultChoice,
     };
   });
@@ -76,7 +76,7 @@ describe('library generator', () => {
     const jestConfig = tree.read('packages/test-lib/jest.config.ts', 'utf-8');
     const specTsConfig = tree.read(
       'packages/test-lib/tsconfig.spec.json',
-      'utf-8'
+      'utf-8',
     );
 
     expect(config.targets?.test).toBeDefined();
@@ -152,7 +152,7 @@ describe('library generator', () => {
     // Write root package.json with vitest only
     tree.write(
       'package.json',
-      JSON.stringify({ devDependencies: { vitest: '^3.2.4' } }, null, 2)
+      JSON.stringify({ devDependencies: { vitest: '^3.2.4' } }, null, 2),
     );
 
     await libraryGenerator(tree, { ...options });
@@ -165,7 +165,7 @@ describe('library generator', () => {
   it('auto-detects jest when only jest is present and options omitted', async () => {
     tree.write(
       'package.json',
-      JSON.stringify({ devDependencies: { jest: '^29.7.0' } }, null, 2)
+      JSON.stringify({ devDependencies: { jest: '^29.7.0' } }, null, 2),
     );
 
     await libraryGenerator(tree, { ...options });
@@ -181,8 +181,8 @@ describe('library generator', () => {
       JSON.stringify(
         { devDependencies: { jest: '^29.7.0', vitest: '^3.2.4' } },
         null,
-        2
-      )
+        2,
+      ),
     );
 
     await libraryGenerator(tree, { ...options });
@@ -194,7 +194,7 @@ describe('library generator', () => {
   it('auto-detects eslint when only eslint is present and options omitted', async () => {
     tree.write(
       'package.json',
-      JSON.stringify({ devDependencies: { eslint: '^9.37.0' } }, null, 2)
+      JSON.stringify({ devDependencies: { eslint: '^9.37.0' } }, null, 2),
     );
 
     await libraryGenerator(tree, { ...options });
@@ -210,8 +210,8 @@ describe('library generator', () => {
       JSON.stringify(
         { devDependencies: { eslint: '^9.37.0', '@biomejs/biome': '^1.9.4' } },
         null,
-        2
-      )
+        2,
+      ),
     );
 
     await libraryGenerator(tree, { ...options });

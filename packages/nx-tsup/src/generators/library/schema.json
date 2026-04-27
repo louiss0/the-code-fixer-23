@@ -38,19 +38,16 @@
     },
     "testRunner": {
       "type": "string",
-      "description": "Test runner to use for the library",
       "enum": ["vitest", "jest", "none"],
-      "description": "When omitted, this will be auto-detected from the root package.json. If ambiguous or not found, jest is used by default."
+      "description": "Test runner. When omitted, this will be auto-detected from the root package.json. If ambiguous or not found, jest is used by default."
     },
     "linter": {
       "type": "string",
-      "description": "Linter to use for the library",
       "enum": ["eslint", "biome", "none"],
-      "description": "When omitted, this will be auto-detected from the root package.json. If ambiguous or not found, eslint is used by default."
+      "description": "Linter. When omitted, this will be auto-detected from the root package.json. If ambiguous or not found, eslint is used by default."
     },
     "formatter": {
       "type": "string",
-      "description": "Code formatter to use for the library",
       "enum": ["prettier", "biome", "eslint-stylistic", "none"],
       "description": "Code formatter. When omitted, this will be auto-detected. Biome formats and lints. ESLint Stylistic requires eslint as linter. If biome is selected as linter, formatter defaults to biome."
     }

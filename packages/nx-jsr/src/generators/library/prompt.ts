@@ -13,7 +13,7 @@ export function isInteractive(): boolean {
 export async function selectOrDefault(
   question: string,
   choices: string[],
-  defaultChoice: string
+  defaultChoice: string,
 ): Promise<string> {
   if (!isInteractive()) return defaultChoice;
 

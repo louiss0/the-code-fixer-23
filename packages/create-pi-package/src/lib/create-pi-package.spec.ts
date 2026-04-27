@@ -10,7 +10,7 @@ afterEach(async () => {
   await Promise.all(
     tempDirectories
       .splice(0)
-      .map((directory) => rm(directory, { force: true, recursive: true }))
+      .map((directory) => rm(directory, { force: true, recursive: true })),
   );
 });
 
@@ -28,7 +28,7 @@ describe('createPiPackage', () => {
     });
 
     const packageJson = JSON.parse(
-      await readFile(path.join(targetDirectory, 'package.json'), 'utf8')
+      await readFile(path.join(targetDirectory, 'package.json'), 'utf8'),
     ) as { exports: Record<string, unknown>; scripts: Record<string, string> };
 
     expect(result.skippedFiles).toEqual([]);
@@ -37,7 +37,7 @@ describe('createPiPackage', () => {
     });
     expect(packageJson.scripts.build).toContain('loadPiPackage');
     expect(
-      await readFile(path.join(targetDirectory, 'pi-package.json'), 'utf8')
+      await readFile(path.join(targetDirectory, 'pi-package.json'), 'utf8'),
     ).toContain('source');
   });
 
@@ -54,7 +54,7 @@ describe('createPiPackage', () => {
     });
 
     const packageJson = JSON.parse(
-      await readFile(path.join(targetDirectory, 'package.json'), 'utf8')
+      await readFile(path.join(targetDirectory, 'package.json'), 'utf8'),
     ) as { exports: Record<string, unknown>; scripts: Record<string, string> };
 
     expect(packageJson.exports['.']).toMatchObject({
@@ -62,13 +62,13 @@ describe('createPiPackage', () => {
     });
     expect(packageJson.scripts.build).toContain('tsup --config tsup.config.ts');
     expect(
-      await readFile(path.join(targetDirectory, 'tsup.config.ts'), 'utf8')
+      await readFile(path.join(targetDirectory, 'tsup.config.ts'), 'utf8'),
     ).toContain('minify: true');
     expect(
       await readFile(
         path.join(targetDirectory, 'scripts/prepare-dist.mjs'),
-        'utf8'
-      )
+        'utf8',
+      ),
     ).toContain('cpSync');
   });
 });

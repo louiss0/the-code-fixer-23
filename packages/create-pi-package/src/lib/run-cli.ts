@@ -24,7 +24,7 @@ export async function runCli(args: string[]) {
       isInteractiveSession()
     ) {
       console.error(
-        'Target directory is not empty. Re-run with --force to overwrite managed files or --yes once the directory is ready.'
+        'Target directory is not empty. Re-run with --force to overwrite managed files or --yes once the directory is ready.',
       );
       return 1;
     }
@@ -32,7 +32,7 @@ export async function runCli(args: string[]) {
     if (!options.yes && !isInteractiveSession()) {
       if (!options.tooling || !options.testRunner || !options.mode) {
         console.error(
-          'Missing required options in non-interactive mode. Provide --tooling, --test-runner, and --mode, or use --yes.'
+          'Missing required options in non-interactive mode. Provide --tooling, --test-runner, and --mode, or use --yes.',
         );
         return 1;
       }

@@ -40,7 +40,7 @@ describe('parseArgs', () => {
 describe('createPiPackage', () => {
   it('writes a scaffolded PI package in bundle mode', async () => {
     const directory = await mkdtemp(
-      path.join(os.tmpdir(), 'create-pi-package-')
+      path.join(os.tmpdir(), 'create-pi-package-'),
     );
     const result = await createPiPackage({
       directory,
@@ -52,7 +52,7 @@ describe('createPiPackage', () => {
     });
 
     const packageJson = JSON.parse(
-      await readFile(path.join(directory, 'package.json'), 'utf8')
+      await readFile(path.join(directory, 'package.json'), 'utf8'),
     );
 
     expect(result.createdFiles.length).toBeGreaterThan(0);

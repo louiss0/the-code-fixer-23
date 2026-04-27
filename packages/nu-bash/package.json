@@ -1,58 +1,10 @@
 {
-  "name": "@code-fixer-23/nu-bash",
-  "version": "0.2.0",
-  "description": "Pi extension that runs bash and user_bash through Nushell.",
-  "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
-    },
-    "./package.json": "./package.json"
-  },
-  "files": [
-    "dist",
-    "README.md"
-  ],
-  "keywords": [
-    "pi-package",
-    "pi-extension",
-    "nushell"
-  ],
-  "author": "Shelton Louis",
-  "license": "ISC",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/louiss0/the-code-fixer-23.git",
-    "directory": "packages/nu-bash"
-  },
-  "homepage": "https://github.com/louiss0/the-code-fixer-23/tree/main/packages/nu-bash#readme",
-  "bugs": {
-    "url": "https://github.com/louiss0/the-code-fixer-23/issues"
-  },
-  "packageManager": "pnpm@10.33.0",
-  "scripts": {},
-  "dependencies": {
-    "@mariozechner/pi-coding-agent": "^0.67.2",
-    "@mariozechner/pi-tui": "^0.67.2",
-    "@sinclair/typebox": "^0.34.41"
-  },
-  "devDependencies": {
-    "@types/node": "^24.3.0",
-    "typescript": "^5.9.3",
-    "vite": "^7.1.9",
-    "vite-plugin-dts": "^4.5.4"
-  },
-  "pi": {
-    "extensions": [
-      "src/index.ts"
-    ]
-  },
-  "publishConfig": {
-    "access": "public"
+  "scripts": {
+    "build": "vite build --config build.config.ts --mode production",
+    "typecheck": "tsc -p tsconfig.lib.json --noEmit",
+    "test": "vitest run --config build.config.ts --passWithNoTests",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "check": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build"
   }
 }

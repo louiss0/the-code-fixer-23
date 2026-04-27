@@ -19,18 +19,18 @@ export function createCommand() {
     .argument('[directory]', 'Target directory')
     .option(
       '--directory <path>',
-      'Target directory. Defaults to current directory.'
+      'Target directory. Defaults to current directory.',
     )
     .option('--name <name>', 'Explicit kebab-case package leaf name.')
     .option(
       '--tooling <preset>',
       'Tooling preset: eslint-prettier or biome',
-      parseTooling
+      parseTooling,
     )
     .option(
       '--test-runner <runner>',
       'Test runner: vitest or jest',
-      parseTestRunner
+      parseTestRunner,
     )
     .option('--mode <mode>', 'Package mode: source or bundle', parseMode)
     .option('--yes', 'Accept recommended defaults for omitted choices.')
@@ -80,7 +80,7 @@ export function getHelpText() {
 function parseTooling(value: string): ToolingPreset {
   if (value !== 'eslint-prettier' && value !== 'biome') {
     throw new InvalidArgumentError(
-      'Tooling preset must be eslint-prettier or biome.'
+      'Tooling preset must be eslint-prettier or biome.',
     );
   }
 

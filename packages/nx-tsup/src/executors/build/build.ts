@@ -1,11 +1,11 @@
-import type { ExecutorContext } from '@nx/devkit';
-import { logger } from '@nx/devkit';
-import { existsSync, promises as fs } from 'node:fs';
+import { promises as fs, existsSync } from 'node:fs';
 import { join, parse, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import type { BuildExecutorSchema } from './schema.d.ts';
-import type { Options as TsupOptions, Format } from 'tsup';
+import type { ExecutorContext } from '@nx/devkit';
+import { logger } from '@nx/devkit';
+import type { Format, Options as TsupOptions } from 'tsup';
 import { build as tsupBuild } from 'tsup';
+import type { BuildExecutorSchema } from './schema.d.ts';
 
 type TsupConfig =
   | TsupOptions
@@ -18,7 +18,7 @@ type TsupConfig =
 
 export default async function runExecutor(
   options: BuildExecutorSchema,
-  context: ExecutorContext
+  context: ExecutorContext,
 ): Promise<{ success: boolean }> {
   try {
     const root = context.root || process.cwd();
@@ -136,7 +136,7 @@ function findTsupConfig(projectRoot: string): string | undefined {
  */
 async function loadTsupConfig(
   configPath: string,
-  env: { watch: boolean; format?: string[] }
+  env: { watch: boolean; format?: string[] },
 ): Promise<TsupOptions | TsupOptions[] | undefined> {
   try {
     const imported = await importConfigModule(configPath);
@@ -160,7 +160,7 @@ async function loadTsupConfig(
   } catch (e: unknown) {
     const error = e as { message?: string };
     logger.warn(
-      `Failed to load config from ${configPath}: ${error.message ?? String(e)}`
+      `Failed to load config from ${configPath}: ${error.message ?? String(e)}`,
     );
     return undefined;
   }
@@ -200,17 +200,17 @@ async function mergeOptions(params: {
 
   // Required options
   const entryPath = toTsupPath(
-    relative(projectRoot, resolve(root, fromProject.main))
+    relative(projectRoot, resolve(root, fromProject.main)),
   );
 
   projectOptions.outDir = toTsupPath(
-    relative(projectRoot, resolve(root, fromProject.outDir))
+    relative(projectRoot, resolve(root, fromProject.outDir)),
   );
   projectOptions.entry = {
     [parse(fromProject.main).name]: entryPath,
   };
   projectOptions.tsconfig = toTsupPath(
-    relative(projectRoot, resolve(root, fromProject.tsConfig))
+    relative(projectRoot, resolve(root, fromProject.tsConfig)),
   );
 
   // Optional boolean/string/array options
@@ -270,7 +270,7 @@ async function mergeOptions(params: {
 
     projectOptions.esbuildOptions = (
       esbuildConfig: any,
-      context: { format: Format }
+      context: { format: Format },
     ) => {
       // Apply base config first if it's a function
       if (typeof baseEsbuildOptions === 'function') {
@@ -291,7 +291,7 @@ async function mergeOptions(params: {
         const resolvedPath = resolve(projectRoot, pluginPath);
         const imported = await import(resolvedPath);
         return imported.default || imported;
-      })
+      }),
     );
 
     if (!projectOptions.esbuildOptions) {
@@ -302,7 +302,7 @@ async function mergeOptions(params: {
       const existingFn = projectOptions.esbuildOptions;
       projectOptions.esbuildOptions = (
         config: any,
-        context: { format: Format }
+        context: { format: Format },
       ) => {
         existingFn(config, context);
         const currentPlugins = Array.isArray(config.plugins)

@@ -1,7 +1,7 @@
-import { ExecutorContext, PromiseExecutor, logger } from '@nx/devkit';
 import { execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
+import { type ExecutorContext, type PromiseExecutor, logger } from '@nx/devkit';
 import { config as dotenvConfig } from 'dotenv';
 
 interface ValidateSchema {
@@ -17,7 +17,7 @@ interface JsrConfigShape {
 
 const runExecutor: PromiseExecutor<ValidateSchema> = async (
   options,
-  context: ExecutorContext
+  context: ExecutorContext,
 ) => {
   // Infer package root similar to publish executor
   let projectRoot = options.packageRoot;
@@ -35,7 +35,7 @@ const runExecutor: PromiseExecutor<ValidateSchema> = async (
       } else {
         projectRoot = '.';
         logger.info(
-          'No project context found; defaulting packageRoot to current directory'
+          'No project context found; defaulting packageRoot to current directory',
         );
       }
     } catch {
@@ -47,7 +47,7 @@ const runExecutor: PromiseExecutor<ValidateSchema> = async (
   const absolutePackageRoot = join(workspaceRoot, projectRoot);
   if (!existsSync(absolutePackageRoot)) {
     logger.error(
-      `Package root directory does not exist: ${absolutePackageRoot}`
+      `Package root directory does not exist: ${absolutePackageRoot}`,
     );
     return { success: false };
   }
@@ -93,7 +93,7 @@ const runExecutor: PromiseExecutor<ValidateSchema> = async (
       const decl = ts?.compilerOptions?.declaration;
       if (decl !== true) {
         logger.error(
-          'tsconfig.lib.json must set compilerOptions.declaration: true for JSR libraries'
+          'tsconfig.lib.json must set compilerOptions.declaration: true for JSR libraries',
         );
         return { success: false };
       }

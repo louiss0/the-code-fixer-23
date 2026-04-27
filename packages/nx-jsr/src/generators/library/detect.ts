@@ -1,4 +1,4 @@
-import { Tree } from '@nx/devkit';
+import type { Tree } from '@nx/devkit';
 
 export type DetectedTestRunner = 'jest' | 'vitest';
 export type DetectedLinter = 'eslint' | 'biome';
