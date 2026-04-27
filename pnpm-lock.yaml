@@ -45,6 +45,9 @@ importers:
       '@biomejs/biome':
         specifier: ^1.9.4
         version: 1.9.4
+      '@code-fixer-23/nx-tsup':
+        specifier: ^1.2.2
+        version: 1.2.2(@microsoft/api-extractor@7.53.1(@types/node@24.6.2))(@swc/core@1.15.24(@swc/helpers@0.5.21))(jiti@2.4.2)(nx@21.6.3(@swc-node/register@1.11.1(@emnapi/core@1.5.0)(@emnapi/runtime@1.5.0)(@swc/core@1.15.24(@swc/helpers@0.5.21))(@swc/types@0.1.26)(typescript@5.9.3))(@swc/core@1.15.24(@swc/helpers@0.5.21)))(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)
       '@nx/jest':
         specifier: ^21.6.3
         version: 21.6.3(@babel/traverse@7.28.4)(@swc-node/register@1.11.1(@emnapi/core@1.5.0)(@emnapi/runtime@1.5.0)(@swc/core@1.15.24(@swc/helpers@0.5.21))(@swc/types@0.1.26)(typescript@5.9.3))(@swc/core@1.15.24(@swc/helpers@0.5.21))(@types/node@24.6.2)(babel-plugin-macros@3.1.0)(nx@21.6.3(@swc-node/register@1.11.1(@emnapi/core@1.5.0)(@emnapi/runtime@1.5.0)(@swc/core@1.15.24(@swc/helpers@0.5.21))(@swc/types@0.1.26)(typescript@5.9.3))(@swc/core@1.15.24(@swc/helpers@0.5.21)))(ts-node@10.9.2(@swc/core@1.15.24(@swc/helpers@0.5.21))(@types/node@24.6.2)(typescript@5.9.3))(typescript@5.9.3)(verdaccio@6.4.0(typanion@3.14.0))
@@ -991,6 +994,9 @@ packages:
 
   '@borewit/text-codec@0.1.1':
     resolution: {integrity: sha512-5L/uBxmjaCIX5h8Z+uu+kA9BQLkc/Wl06UGR5ajNRxu+/XjonB5i8JpgFMrPj3LXTCPA0pv8yxUvbUi+QthGGA==}
+
+  '@code-fixer-23/nx-tsup@1.2.2':
+    resolution: {integrity: sha512-G57cV2nzulX45BTqgJZ7O6RGgyn7SEcZVD6qg5FlrTgeljG4HGM/DbYv4OAmW3vpDpNAbO031AB5Yz+I6hT8qw==}
 
   '@commander-js/extra-typings@13.1.0':
     resolution: {integrity: sha512-q5P52BYb1hwVWE6dtID7VvuJWrlfbCv4klj7BjUUOqMz4jbSZD4C9fJ9lRjL2jnBGTg+gDDlaXN51rkWcLk4fg==}
@@ -7994,6 +8000,23 @@ snapshots:
     optional: true
 
   '@borewit/text-codec@0.1.1': {}
+
+  '@code-fixer-23/nx-tsup@1.2.2(@microsoft/api-extractor@7.53.1(@types/node@24.6.2))(@swc/core@1.15.24(@swc/helpers@0.5.21))(jiti@2.4.2)(nx@21.6.3(@swc-node/register@1.11.1(@emnapi/core@1.5.0)(@emnapi/runtime@1.5.0)(@swc/core@1.15.24(@swc/helpers@0.5.21))(@swc/types@0.1.26)(typescript@5.9.3))(@swc/core@1.15.24(@swc/helpers@0.5.21)))(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)':
+    dependencies:
+      '@nx/devkit': 21.6.3(nx@21.6.3(@swc-node/register@1.11.1(@emnapi/core@1.5.0)(@emnapi/runtime@1.5.0)(@swc/core@1.15.24(@swc/helpers@0.5.21))(@swc/types@0.1.26)(typescript@5.9.3))(@swc/core@1.15.24(@swc/helpers@0.5.21)))
+      enquirer: 2.4.1
+      tslib: 2.8.1
+      tsup: 8.5.1(@microsoft/api-extractor@7.53.1(@types/node@24.6.2))(@swc/core@1.15.24(@swc/helpers@0.5.21))(jiti@2.4.2)(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.3)
+    transitivePeerDependencies:
+      - '@microsoft/api-extractor'
+      - '@swc/core'
+      - jiti
+      - nx
+      - postcss
+      - supports-color
+      - tsx
+      - typescript
+      - yaml
 
   '@commander-js/extra-typings@13.1.0(commander@13.1.0)':
     dependencies:
