@@ -85,6 +85,24 @@ describe('createEnum', () => {
 });
 
 describe('createLabeledEnum', () => {
+  it('infers literal keys and labels for labeled enums', () => {
+    const articleStatus = createLabeledEnum({
+      draft: 'Draft',
+      published: 'Published',
+    });
+
+    expectTypeOf(articleStatus.draft).toEqualTypeOf<'draft'>();
+    expectTypeOf(articleStatus.published).toEqualTypeOf<'published'>();
+    expectTypeOf(articleStatus.labels.draft).toEqualTypeOf<'Draft'>();
+    expectTypeOf(articleStatus.labels.published).toEqualTypeOf<'Published'>();
+    expectTypeOf(articleStatus.parse('Draft')).toEqualTypeOf<'draft'>();
+    expectTypeOf(articleStatus.parse('Published')).toEqualTypeOf<'published'>();
+    expectTypeOf(articleStatus.labelOf('draft')).toEqualTypeOf<'Draft'>();
+    expectTypeOf(
+      articleStatus.labelOf('published')
+    ).toEqualTypeOf<'Published'>();
+  });
+
   it('exposes enum values as direct properties alongside methods', () => {
     const articleStatus = createLabeledEnum({
       draft: 'Draft',
