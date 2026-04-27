@@ -139,7 +139,7 @@ async function loadTsupConfig(
   env: { watch: boolean; format?: string[] }
 ): Promise<TsupOptions | TsupOptions[] | undefined> {
   try {
-    const imported = await import(pathToFileURL(configPath).href);
+    const imported = await importConfigModule(configPath);
     const config: TsupConfig = imported.default || imported;
 
     // Normalize config
@@ -163,6 +163,14 @@ async function loadTsupConfig(
       `Failed to load config from ${configPath}: ${error.message ?? String(e)}`
     );
     return undefined;
+  }
+}
+
+async function importConfigModule(configPath: string) {
+  try {
+    return await import(configPath);
+  } catch {
+    return import(pathToFileURL(configPath).href);
   }
 }
 

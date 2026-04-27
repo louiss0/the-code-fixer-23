@@ -7,6 +7,12 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
+    "src/executors/**/*.ts",
+    "src/executors/**/schema.json",
+    "src/generators/**/*.ts",
+    "src/generators/**/schema.json",
+    "src/generators/**/files/**/*",
+    "src/migrations/**/*.ts",
     "!**/*.tsbuildinfo",
     "generators.json",
     "executors.json",
