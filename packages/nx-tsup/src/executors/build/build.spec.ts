@@ -155,7 +155,7 @@ describe('Build Executor', () => {
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
         expect.objectContaining({
-          outDir: expect.stringContaining('packages/test-lib/dist'),
+          outDir: expect.stringMatching(/packages[\\/]test-lib[\\/]dist/),
         })
       );
     });
