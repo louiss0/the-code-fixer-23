@@ -6,10 +6,34 @@ export type EnumValue<TKind extends EnumKind> = TKind extends 'string'
   ? number
   : symbol;
 
-export type EnumShape<
+type TupleIndexKey<TValue extends readonly unknown[]> = Exclude<
+  keyof TValue,
+  keyof (readonly unknown[])
+>;
+
+type TupleIndexNumber<TValue> = TValue extends `${infer TNumber extends number}`
+  ? TNumber
+  : never;
+
+type EnumMemberValue<
   TKind extends EnumKind,
-  TName extends string = string
-> = Readonly<Record<TName, EnumValue<TKind>>>;
+  TNames extends readonly string[],
+  TIndex extends TupleIndexKey<TNames>
+> = TKind extends 'string'
+  ? TNames[TIndex]
+  : TKind extends 'number'
+  ? TupleIndexNumber<TIndex>
+  : symbol;
+
+export type EnumShapeFromNames<
+  TKind extends EnumKind,
+  TNames extends readonly string[]
+> = Readonly<{
+  [TIndex in TupleIndexKey<TNames> as Extract<
+    TNames[TIndex],
+    string
+  >]: EnumMemberValue<TKind, TNames, TIndex>;
+}>;
 
 export type EnumLabels<TValue extends string = string> = Record<TValue, string>;
 
@@ -40,10 +64,10 @@ export function isParseError(value: unknown): value is ParseError {
   return value instanceof ParseError;
 }
 
-export function createEnum<TKind extends EnumKind, const TName extends string>(
-  kind: TKind,
-  ...names: TName[]
-): EnumShape<TKind, TName> {
+export function createEnum<
+  TKind extends EnumKind,
+  const TNames extends readonly string[]
+>(kind: TKind, ...names: TNames): EnumShapeFromNames<TKind, TNames> {
   assertUniqueValues(names, 'Enum names must be unique.');
 
   const values = Object.freeze(
@@ -52,9 +76,9 @@ export function createEnum<TKind extends EnumKind, const TName extends string>(
         (name, index) => [name, createEnumValue(kind, name, index)] as const
       )
     )
-  ) as Readonly<Record<TName, EnumValue<TKind>>>;
+  ) as EnumShapeFromNames<TKind, TNames>;
 
-  return createImmutableEnumProxy(values) as EnumShape<TKind, TName>;
+  return createImmutableEnumProxy(values) as EnumShapeFromNames<TKind, TNames>;
 }
 
 export function createLabeledEnum<const TValue extends string>(

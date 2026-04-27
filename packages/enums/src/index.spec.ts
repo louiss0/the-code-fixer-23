@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import {
   ParseError,
   createEnum,
@@ -7,6 +7,19 @@ import {
 } from './index.js';
 
 describe('createEnum', () => {
+  it('infers literal keys and values for string enums', () => {
+    const color = createEnum('string', 'red', 'blue');
+
+    expectTypeOf(color.red).toEqualTypeOf<'red'>();
+    expectTypeOf(color.blue).toEqualTypeOf<'blue'>();
+    expectTypeOf(color).toMatchTypeOf<
+      Readonly<{
+        red: 'red';
+        blue: 'blue';
+      }>
+    >();
+  });
+
   it('creates string enums from member names', () => {
     const color = createEnum('string', 'red', 'blue');
 
@@ -21,11 +34,31 @@ describe('createEnum', () => {
     expect(status.done).toBe(1);
   });
 
+  it('infers ordinal literal values for number enums', () => {
+    const status = createEnum('number', 'pending', 'done');
+
+    expectTypeOf(status.pending).toEqualTypeOf<0>();
+    expectTypeOf(status.done).toEqualTypeOf<1>();
+    expectTypeOf(status).toMatchTypeOf<
+      Readonly<{
+        pending: 0;
+        done: 1;
+      }>
+    >();
+  });
+
   it('creates symbol enums from member names', () => {
     const role = createEnum('symbol', 'admin', 'editor');
 
     expect(role.admin).toBe(Symbol.for('@code-fixer-23/enums/admin'));
     expect(role.editor).toBe(Symbol.for('@code-fixer-23/enums/editor'));
+  });
+
+  it('keeps symbol enums typed as symbols', () => {
+    const role = createEnum('symbol', 'admin', 'editor');
+
+    expectTypeOf(role.admin).toEqualTypeOf<symbol>();
+    expectTypeOf(role.editor).toEqualTypeOf<symbol>();
   });
 
   it('keeps enum keys immutable through the proxy', () => {
