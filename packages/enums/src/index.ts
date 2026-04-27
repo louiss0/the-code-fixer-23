@@ -6,6 +6,18 @@ export type EnumValue<TKind extends EnumKind> = TKind extends 'string'
   ? number
   : symbol;
 
+declare const enumSymbolBrand: unique symbol;
+
+export type EnumSymbol<
+  TNames extends readonly string[],
+  TName extends string
+> = symbol & {
+  readonly [enumSymbolBrand]: {
+    readonly enum: TNames;
+    readonly member: TName;
+  };
+};
+
 type TupleIndexKey<TValue extends readonly unknown[]> = Exclude<
   keyof TValue,
   keyof (readonly unknown[])
@@ -23,7 +35,7 @@ type EnumMemberValue<
   ? TNames[TIndex]
   : TKind extends 'number'
   ? TupleIndexNumber<TIndex>
-  : symbol;
+  : EnumSymbol<TNames, Extract<TNames[TIndex], string>>;
 
 export type EnumShapeFromNames<
   TKind extends EnumKind,

@@ -1,5 +1,6 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import {
+  type EnumSymbol,
   ParseError,
   createEnum,
   createLabeledEnum,
@@ -12,7 +13,7 @@ describe('createEnum', () => {
 
     expectTypeOf(color.red).toEqualTypeOf<'red'>();
     expectTypeOf(color.blue).toEqualTypeOf<'blue'>();
-    expectTypeOf(color).toMatchTypeOf<
+    expectTypeOf(color).toExtend<
       Readonly<{
         red: 'red';
         blue: 'blue';
@@ -39,7 +40,7 @@ describe('createEnum', () => {
 
     expectTypeOf(status.pending).toEqualTypeOf<0>();
     expectTypeOf(status.done).toEqualTypeOf<1>();
-    expectTypeOf(status).toMatchTypeOf<
+    expectTypeOf(status).toExtend<
       Readonly<{
         pending: 0;
         done: 1;
@@ -54,11 +55,20 @@ describe('createEnum', () => {
     expect(role.editor).toBe(Symbol.for('@code-fixer-23/enums/editor'));
   });
 
-  it('keeps symbol enums typed as symbols', () => {
+  it('brands symbol enums by member and declaration', () => {
     const role = createEnum('symbol', 'admin', 'editor');
+    const status = createEnum('symbol', 'pending', 'done');
 
-    expectTypeOf(role.admin).toEqualTypeOf<symbol>();
-    expectTypeOf(role.editor).toEqualTypeOf<symbol>();
+    expectTypeOf(role.admin).toExtend<
+      EnumSymbol<['admin', 'editor'], 'admin'>
+    >();
+    expectTypeOf(role.editor).toExtend<
+      EnumSymbol<['admin', 'editor'], 'editor'>
+    >();
+    expectTypeOf(role.admin).toExtend<symbol>();
+    expectTypeOf(status.pending).toExtend<
+      EnumSymbol<['pending', 'done'], 'pending'>
+    >();
   });
 
   it('keeps enum keys immutable through the proxy', () => {
