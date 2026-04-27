@@ -1,0 +1,40 @@
+{
+  "name": "nu-bash",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/nu-bash/src",
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project packages/nu-bash/tsconfig.json"
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --dir packages/nu-bash exec pi --extensions ."
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/test-output/vitest"],
+      "options": {
+        "command": "pnpm exec vitest run --config packages/nu-bash/vite.config.ts"
+      }
+    },
+    "pack:dry": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --dir packages/nu-bash pack --dry-run"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["packages/nu-bash/**/*.ts"]
+      }
+    }
+  },
+  "tags": []
+}
