@@ -27,9 +27,8 @@ type TupleIndexNumber<TValue> = TValue extends `${infer TNumber extends number}`
   ? TNumber
   : never;
 
-type IsTuple<TValue extends readonly unknown[]> = number extends TValue['length']
-  ? false
-  : true;
+type IsTuple<TValue extends readonly unknown[]> =
+  number extends TValue['length'] ? false : true;
 
 type EnumMemberValue<
   TKind extends EnumKind,
@@ -120,7 +119,9 @@ export type LabeledEnum<TLabels extends Record<string, string>> =
     labelOf(value: string): EnumLabelValue<TLabels> | undefined;
     labels: Readonly<TLabels>;
     names: readonly EnumLabelKey<TLabels>[];
-    parse<TLabel extends string>(label: TLabel): ParseValueResult<TLabels, TLabel>;
+    parse<TLabel extends string>(
+      label: TLabel
+    ): ParseValueResult<TLabels, TLabel>;
     validate(
       value: unknown
     ): value is LabeledEnumMemberValue<TLabels, EnumLabelKey<TLabels>>;
