@@ -220,6 +220,8 @@ async function mergeOptions(params: {
     projectOptions.target = fromProject.target;
   if (fromProject.platform !== undefined)
     projectOptions.platform = fromProject.platform;
+  if (fromProject.format && fromProject.format.length > 0)
+    projectOptions.format = fromProject.format;
 
   // Array options (replace, don't concatenate)
   if (fromProject.external) projectOptions.external = fromProject.external;
