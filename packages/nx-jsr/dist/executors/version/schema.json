@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "version": 2,
+  "title": "Version JSR Package (manual)",
+  "description": "Update the version of a JSR package by setting an explicit semver",
+  "type": "object",
+  "properties": {
+    "packageRoot": {
+      "type": "string",
+      "description": "The root directory of the package to version"
+    },
+    "version": {
+      "type": "string",
+      "description": "Exact version to set (e.g., '1.2.3')"
+    },
+    "push": {
+      "type": "boolean",
+      "description": "Attempt to create a git tag and push (requires clean working tree and committed changes)",
+      "default": false
+    },
+    "tagPrefix": {
+      "type": "string",
+      "description": "Git tag prefix (default: 'v')",
+      "default": "v"
+    }
+  },
+  "required": ["packageRoot", "version"]
+}

@@ -155,17 +155,19 @@ describe('Build Executor', () => {
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
         expect.objectContaining({
-          outDir: expect.stringMatching(/packages[\\/]test-lib[\\/]dist/),
+          outDir: 'dist',
         })
       );
     });
 
-    it('should pass main as entry array to tsup', async () => {
+    it('should pass main as entry map to tsup', async () => {
       await executor(options, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
         expect.objectContaining({
-          entry: expect.arrayContaining([expect.stringContaining('index.ts')]),
+          entry: expect.objectContaining({
+            index: expect.stringContaining('index.ts'),
+          }),
         })
       );
     });
@@ -419,7 +421,7 @@ describe('Build Executor', () => {
       expect(mockTsupBuild).toHaveBeenCalledWith(
         expect.objectContaining({
           outDir: expect.any(String),
-          entry: expect.any(Array),
+          entry: expect.any(Object),
           tsconfig: expect.any(String),
         })
       );

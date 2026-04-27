@@ -20,7 +20,13 @@ import {
   detectFormatterFromRootPackageJson,
 } from './detect.js';
 import { isInteractive, selectOrDefault } from './prompt.js';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const generatorFilesPath = join(
+  dirname(fileURLToPath(import.meta.url)),
+  'files'
+);
 
 export async function libraryGenerator(
   tree: Tree,
@@ -58,7 +64,7 @@ export async function libraryGenerator(
   });
 
   // Templates
-  generateFiles(tree, join(__dirname, 'files'), projectRoot, {
+  generateFiles(tree, generatorFilesPath, projectRoot, {
     ...options,
     description: options.description || 'A TypeScript library built with Tsup.',
     tmpl: '',
@@ -425,6 +431,13 @@ function createPackageJson(
 
   if (isPackageBased) {
     pkg.devDependencies.tsup = '^8.0.1';
+  } else if (tree.exists('package.json')) {
+    const workspacePackageJson = JSON.parse(
+      tree.read('package.json', 'utf-8') || '{}'
+    );
+    workspacePackageJson.devDependencies ??= {};
+    workspacePackageJson.devDependencies.tsup ??= '^8.0.1';
+    tree.write('package.json', JSON.stringify(workspacePackageJson, null, 2));
   }
 
   tree.write(`${projectRoot}/package.json`, JSON.stringify(pkg, null, 2));

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "version": 2,
+  "title": "Publish to JSR",
+  "description": "Publish a TypeScript library to JSR (JavaScript Registry)",
+  "type": "object",
+  "properties": {
+    "packageRoot": {
+      "type": "string",
+      "description": "The root directory of the package to publish"
+    },
+    "dryRun": {
+      "type": "boolean",
+      "description": "Run publish in dry-run mode (no actual publishing)",
+      "default": false
+    },
+    "token": {
+      "type": "string",
+      "description": "JSR authentication token (can also be set via JSR_TOKEN env var)"
+    },
+    "allowDirty": {
+      "type": "boolean",
+      "description": "Allow publishing with uncommitted changes",
+      "default": false
+    }
+  },
+  "required": ["packageRoot"]
+}

@@ -1,7 +1,8 @@
 import type { ExecutorContext } from '@nx/devkit';
 import { logger } from '@nx/devkit';
 import { existsSync, promises as fs } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join, parse, relative, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import type { BuildExecutorSchema } from './schema.d.ts';
 import type { Options as TsupOptions, Format } from 'tsup';
 import { build as tsupBuild } from 'tsup';
@@ -75,10 +76,22 @@ export default async function runExecutor(
     logger.info(`Building ${projectName}...`);
     logger.info(`Output: ${outDir}`);
 
-    // Run tsup build
-    await tsupBuild(mergedOptions);
+    const shouldChangeDirectory =
+      !process.env.VITEST && existsSync(projectRoot);
+    const previousCwd = process.cwd();
 
-    // Copy assets if specified
+    if (shouldChangeDirectory) {
+      process.chdir(projectRoot);
+    }
+
+    try {
+      await tsupBuild(mergedOptions);
+    } finally {
+      if (shouldChangeDirectory) {
+        process.chdir(previousCwd);
+      }
+    }
+
     if (options.assets?.length) {
       await copyAssets(root, options.assets, outDir);
     }
@@ -126,18 +139,8 @@ async function loadTsupConfig(
   env: { watch: boolean; format?: string[] }
 ): Promise<TsupOptions | TsupOptions[] | undefined> {
   try {
-    const ext = configPath.split('.').pop();
-    let config: TsupConfig;
-
-    // For TypeScript config files, use require()
-    // This works because ts-node or tsx is typically configured in the project
-    if (ext === 'ts' || ext === 'mts' || ext === 'cts') {
-      config = require(configPath);
-    } else {
-      // For JS files, use dynamic import
-      const imported = await import(configPath);
-      config = imported.default || imported;
-    }
+    const imported = await importConfigModule(configPath);
+    const config: TsupConfig = imported.default || imported;
 
     // Normalize config
     let normalized: TsupOptions | TsupOptions[];
@@ -163,10 +166,22 @@ async function loadTsupConfig(
   }
 }
 
+async function importConfigModule(configPath: string) {
+  try {
+    return await import(configPath);
+  } catch {
+    return import(pathToFileURL(configPath).href);
+  }
+}
+
 /**
  * Merge options from config file and project.json
  * project.json takes precedence over config file
  */
+function toTsupPath(path: string): string {
+  return path.replaceAll('\\', '/');
+}
+
 async function mergeOptions(params: {
   fromFile: TsupOptions | TsupOptions[] | undefined;
   fromProject: BuildExecutorSchema;
@@ -184,9 +199,19 @@ async function mergeOptions(params: {
   const projectOptions: Partial<TsupOptions> = {};
 
   // Required options
-  projectOptions.outDir = resolve(root, fromProject.outDir);
-  projectOptions.entry = [resolve(root, fromProject.main)];
-  projectOptions.tsconfig = resolve(root, fromProject.tsConfig);
+  const entryPath = toTsupPath(
+    relative(projectRoot, resolve(root, fromProject.main))
+  );
+
+  projectOptions.outDir = toTsupPath(
+    relative(projectRoot, resolve(root, fromProject.outDir))
+  );
+  projectOptions.entry = {
+    [parse(fromProject.main).name]: entryPath,
+  };
+  projectOptions.tsconfig = toTsupPath(
+    relative(projectRoot, resolve(root, fromProject.tsConfig))
+  );
 
   // Optional boolean/string/array options
   if (fromProject.dts !== undefined) projectOptions.dts = fromProject.dts;
@@ -203,6 +228,8 @@ async function mergeOptions(params: {
     projectOptions.target = fromProject.target;
   if (fromProject.platform !== undefined)
     projectOptions.platform = fromProject.platform;
+  if (fromProject.format && fromProject.format.length > 0)
+    projectOptions.format = fromProject.format;
 
   // Array options (replace, don't concatenate)
   if (fromProject.external) projectOptions.external = fromProject.external;
@@ -290,6 +317,18 @@ async function mergeOptions(params: {
   const merged: TsupOptions = {
     ...base,
     ...projectOptions,
+    config: false,
+  };
+
+  const existingEsbuildOptions = merged.esbuildOptions;
+  merged.esbuildOptions = (esbuildConfig: any, context: { format: Format }) => {
+    if (typeof existingEsbuildOptions === 'function') {
+      existingEsbuildOptions(esbuildConfig, context);
+    } else if (existingEsbuildOptions) {
+      Object.assign(esbuildConfig, existingEsbuildOptions);
+    }
+
+    esbuildConfig.absWorkingDir = projectRoot;
   };
 
   // Validate outDir is present
