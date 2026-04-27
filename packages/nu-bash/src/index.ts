@@ -184,7 +184,7 @@ const nuOperations: BashOperations = {
           return;
         }
 
-        resolve({ exitCode: code });
+        resolve({ exitCode: code ?? 1 });
       });
     });
   },
@@ -210,12 +210,10 @@ async function executeNushellCommand(
   onChunk?: (output: string, exitCode?: number) => void
 ) {
   return new Promise<{
-    stdout: string;
-    stderr: string;
+    output: string;
     exitCode: number;
     cancelled: boolean;
     truncated: boolean;
-    fullOutputPath?: string;
   }>((resolve, reject) => {
     const child = spawn(NUSHELL_COMMAND, getNuArgs(command), {
       cwd,
@@ -270,6 +268,7 @@ async function executeNushellCommand(
     child.on('close', (code) => {
       signal?.removeEventListener('abort', abortHandler);
 
+      const exitCode = code ?? 1;
       const stdout = Buffer.concat(stdoutChunks).toString('utf-8');
       const stderr = Buffer.concat(stderrChunks).toString('utf-8');
       const output = [stdout, stderr].filter(Boolean).join('\n').trim();
@@ -278,12 +277,11 @@ async function executeNushellCommand(
         maxLines: DEFAULT_MAX_LINES,
       });
 
-      emitUpdate(code ?? 0);
+      emitUpdate(exitCode);
 
       resolve({
-        stdout,
-        stderr,
-        exitCode: code ?? 0,
+        output: truncation.content || formatToolOutput('', '', exitCode),
+        exitCode,
         cancelled: Boolean(signal?.aborted),
         truncated: truncation.truncated,
       });
@@ -340,11 +338,7 @@ export default function nuBashExtension(pi: ExtensionAPI) {
         content: [
           {
             type: 'text',
-            text: formatToolOutput(
-              result.stdout,
-              result.stderr,
-              result.exitCode
-            ),
+            text: result.output,
           },
         ],
         details: {
@@ -352,9 +346,9 @@ export default function nuBashExtension(pi: ExtensionAPI) {
           backend: 'nu',
           cwd: ctx.cwd,
           exitCode: result.exitCode,
-          stdout: result.stdout,
-          stderr: result.stderr,
+          output: result.output,
           killed: result.cancelled,
+          truncated: result.truncated,
         },
         isError: result.exitCode !== 0,
       };

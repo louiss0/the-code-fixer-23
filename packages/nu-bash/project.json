@@ -19,7 +19,8 @@
         "main": "{projectRoot}/src/index.ts",
         "outputPath": "dist/{projectName}",
         "tsConfig": "packages/nu-bash/tsconfig.lib.json",
-        "noEmit": true
+        "noEmit": true,
+        "generatePackageJson": false
       }
     },
     "lint": {
