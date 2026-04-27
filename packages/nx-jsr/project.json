@@ -23,6 +23,16 @@
             "input": "packages/nx-jsr/src",
             "glob": "**/files/**/*",
             "output": "."
+          },
+          {
+            "input": "packages/nx-jsr",
+            "glob": "generators.json",
+            "output": "."
+          },
+          {
+            "input": "packages/nx-jsr",
+            "glob": "executors.json",
+            "output": "."
           }
         ]
       }

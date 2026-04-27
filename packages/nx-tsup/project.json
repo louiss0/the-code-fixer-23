@@ -23,6 +23,21 @@
             "input": "packages/nx-tsup/src",
             "glob": "**/files/**/*",
             "output": "."
+          },
+          {
+            "input": "packages/nx-tsup",
+            "glob": "generators.json",
+            "output": "."
+          },
+          {
+            "input": "packages/nx-tsup",
+            "glob": "executors.json",
+            "output": "."
+          },
+          {
+            "input": "packages/nx-tsup",
+            "glob": "migrations.json",
+            "output": "."
           }
         ]
       }

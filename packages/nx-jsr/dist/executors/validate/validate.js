@@ -1,7 +1,7 @@
-import { logger } from '@nx/devkit';
 import { execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
+import { logger } from '@nx/devkit';
 import { config as dotenvConfig } from 'dotenv';
 const runExecutor = async (options, context) => {
     // Infer package root similar to publish executor

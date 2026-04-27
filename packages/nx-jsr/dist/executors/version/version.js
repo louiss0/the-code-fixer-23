@@ -1,7 +1,7 @@
-import { logger } from '@nx/devkit';
 import { execSync } from 'child_process';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
+import { logger } from '@nx/devkit';
 import * as semver from 'semver';
 const runExecutor = async (options, context) => {
     const projectRoot = options.packageRoot;

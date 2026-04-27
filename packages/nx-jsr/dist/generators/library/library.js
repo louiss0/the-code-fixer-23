@@ -1,8 +1,8 @@
-import { addProjectConfiguration, formatFiles, generateFiles, names, offsetFromRoot, logger, } from '@nx/devkit';
-import * as path from 'path';
-import { detectLinterFromRootPackageJson, detectTestRunnerFromRootPackageJson, detectFormatterFromRootPackageJson, } from './detect.js';
-import { isInteractive, selectOrDefault } from './prompt.js';
 import { fileURLToPath } from 'node:url';
+import * as path from 'path';
+import { addProjectConfiguration, formatFiles, generateFiles, logger, names, offsetFromRoot, } from '@nx/devkit';
+import { detectFormatterFromRootPackageJson, detectLinterFromRootPackageJson, detectTestRunnerFromRootPackageJson, } from './detect.js';
+import { isInteractive, selectOrDefault } from './prompt.js';
 const generatorFilesPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'files');
 export async function libraryGenerator(tree, options) {
     // Standalone mode: if no directory flag provided, generate files in current directory (files-only)
