@@ -8,7 +8,7 @@
       "executor": "@nx/vite:build",
       "outputs": ["{projectRoot}/dist"],
       "options": {
-        "configFile": "packages/nu-bash/vite.config.ts",
+        "configFile": "packages/nu-bash/build.config.ts",
         "mode": "production",
         "outputPath": "{projectRoot}/dist"
       }
@@ -33,7 +33,7 @@
       "executor": "@nx/vite:test",
       "outputs": ["{projectRoot}/test-output/vitest"],
       "options": {
-        "config": "packages/nu-bash/vite.config.ts",
+        "config": "packages/nu-bash/build.config.ts",
         "passWithNoTests": true
       }
     }
