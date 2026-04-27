@@ -1,6 +1,6 @@
 {
   "name": "@code-fixer-23/nu-bash",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Pi extension that runs bash and user_bash through Nushell.",
   "type": "module",
   "main": "./dist/index.js",

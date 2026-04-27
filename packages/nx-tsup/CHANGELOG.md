@@ -1,3 +1,14 @@
+## 1.2.2 (2026-04-27)
+
+### 🩹 Fixes
+
+- **nx-tsup:** correct Windows path assertion in build executor test ([dd0d552](https://github.com/louiss0/the-code-fixer-23/commit/dd0d552))
+- **nx-tsup:** generate esm-safe jest config ([4d4d7ed](https://github.com/louiss0/the-code-fixer-23/commit/4d4d7ed))
+
+### ❤️ Thank You
+
+- louiss0 @louiss0
+
 ## 1.2.1 (2026-04-27)
 
 ### 🩹 Fixes
