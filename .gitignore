@@ -50,3 +50,6 @@ vitest.config.*.timestamp*
 .verdaccio-*.pid
 .verdaccio-*.port
 nul
+.nx/polygraph
+.claude/worktrees
+.claude/settings.local.json
