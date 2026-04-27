@@ -6,12 +6,93 @@ export type EnumValue<TKind extends EnumKind> = TKind extends 'string'
   ? number
   : symbol;
 
-export type EnumShape<
+declare const enumSymbolBrand: unique symbol;
+
+export type EnumSymbol<
+  TNames extends readonly string[],
+  TName extends string
+> = symbol & {
+  readonly [enumSymbolBrand]: {
+    readonly enum: TNames;
+    readonly member: TName;
+  };
+};
+
+type TupleIndexKey<TValue extends readonly unknown[]> = Exclude<
+  keyof TValue,
+  keyof (readonly unknown[])
+>;
+
+type TupleIndexNumber<TValue> = TValue extends `${infer TNumber extends number}`
+  ? TNumber
+  : never;
+
+type IsTuple<TValue extends readonly unknown[]> =
+  number extends TValue['length'] ? false : true;
+
+type EnumMemberValue<
   TKind extends EnumKind,
-  TName extends string = string
-> = Readonly<Record<TName, EnumValue<TKind>>>;
+  TNames extends readonly string[],
+  TIndex extends TupleIndexKey<TNames>
+> = TKind extends 'string'
+  ? TNames[TIndex]
+  : TKind extends 'number'
+  ? TupleIndexNumber<TIndex>
+  : EnumSymbol<TNames, Extract<TNames[TIndex], string>>;
+
+export type EnumShapeFromNames<
+  TKind extends EnumKind,
+  TNames extends readonly string[]
+> = IsTuple<TNames> extends true
+  ? Readonly<{
+      [TIndex in TupleIndexKey<TNames> as Extract<
+        TNames[TIndex],
+        string
+      >]: EnumMemberValue<TKind, TNames, TIndex>;
+    }>
+  : Readonly<Record<string, EnumValue<TKind>>>;
 
 export type EnumLabels<TValue extends string = string> = Record<TValue, string>;
+
+type EnumLabelKey<TLabels extends Record<string, string>> = Extract<
+  keyof TLabels,
+  string
+>;
+
+type EnumLabelValue<TLabels extends Record<string, string>> =
+  TLabels[EnumLabelKey<TLabels>];
+
+type EnumLabelKeyForValue<
+  TLabels extends Record<string, string>,
+  TLabel extends EnumLabelValue<TLabels>
+> = {
+  [TKey in EnumLabelKey<TLabels>]: TLabels[TKey] extends TLabel ? TKey : never;
+}[EnumLabelKey<TLabels>];
+
+type LabeledEnumMemberValue<
+  TLabels extends Record<string, string>,
+  TKey extends EnumLabelKey<TLabels>
+> = TKey;
+
+type LabeledEnumValues<TLabels extends Record<string, string>> = Readonly<{
+  [TKey in EnumLabelKey<TLabels>]: LabeledEnumMemberValue<TLabels, TKey>;
+}>;
+
+type LabeledEnumEntries<TLabels extends Record<string, string>> = readonly {
+  [TKey in EnumLabelKey<TLabels>]: readonly [
+    TKey,
+    LabeledEnumMemberValue<TLabels, TKey>
+  ];
+}[EnumLabelKey<TLabels>][];
+
+type ParseValueResult<
+  TLabels extends Record<string, string>,
+  TLabel extends string
+> = string extends EnumLabelValue<TLabels>
+  ? LabeledEnumMemberValue<TLabels, EnumLabelKey<TLabels>> | ParseError
+  : TLabel extends EnumLabelValue<TLabels>
+  ? LabeledEnumMemberValue<TLabels, EnumLabelKeyForValue<TLabels, TLabel>>
+  : LabeledEnumMemberValue<TLabels, EnumLabelKey<TLabels>> | ParseError;
 
 export class ParseError extends Error {
   readonly input: string;
@@ -23,27 +104,38 @@ export class ParseError extends Error {
   }
 }
 
-export type LabeledEnum<TValue extends string = string> = Readonly<
-  Record<TValue, TValue>
-> & {
-  entries: readonly [TValue, TValue][];
-  hasLabel(label: string): boolean;
-  labelOf(value: string): string | undefined;
-  labels: EnumLabels<TValue>;
-  names: readonly TValue[];
-  parse(label: string): TValue | ParseError;
-  validate(value: unknown): value is TValue;
-  values: Readonly<Record<TValue, TValue>>;
-};
+export type LabeledEnum<TLabels extends Record<string, string>> =
+  LabeledEnumValues<TLabels> & {
+    entries: readonly {
+      [TKey in EnumLabelKey<TLabels>]: [
+        TKey,
+        LabeledEnumMemberValue<TLabels, TKey>
+      ];
+    }[EnumLabelKey<TLabels>][];
+    hasLabel(label: string): label is EnumLabelValue<TLabels>;
+    labelOf<TValue extends EnumLabelKey<TLabels>>(
+      value: LabeledEnumMemberValue<TLabels, TValue>
+    ): TLabels[TValue];
+    labelOf(value: string): EnumLabelValue<TLabels> | undefined;
+    labels: Readonly<TLabels>;
+    names: readonly EnumLabelKey<TLabels>[];
+    parse<TLabel extends string>(
+      label: TLabel
+    ): ParseValueResult<TLabels, TLabel>;
+    validate(
+      value: unknown
+    ): value is LabeledEnumMemberValue<TLabels, EnumLabelKey<TLabels>>;
+    values: LabeledEnumValues<TLabels>;
+  };
 
 export function isParseError(value: unknown): value is ParseError {
   return value instanceof ParseError;
 }
 
-export function createEnum<TKind extends EnumKind, const TName extends string>(
-  kind: TKind,
-  ...names: TName[]
-): EnumShape<TKind, TName> {
+export function createEnum<
+  TKind extends EnumKind,
+  const TNames extends readonly string[]
+>(kind: TKind, ...names: TNames): EnumShapeFromNames<TKind, TNames> {
   assertUniqueValues(names, 'Enum names must be unique.');
 
   const values = Object.freeze(
@@ -52,15 +144,15 @@ export function createEnum<TKind extends EnumKind, const TName extends string>(
         (name, index) => [name, createEnumValue(kind, name, index)] as const
       )
     )
-  ) as Readonly<Record<TName, EnumValue<TKind>>>;
+  ) as EnumShapeFromNames<TKind, TNames>;
 
-  return createImmutableEnumProxy(values) as EnumShape<TKind, TName>;
+  return createImmutableEnumProxy(values) as EnumShapeFromNames<TKind, TNames>;
 }
 
-export function createLabeledEnum<const TValue extends string>(
-  labels: EnumLabels<TValue>
-): LabeledEnum<TValue> {
-  const names = Object.keys(labels) as TValue[];
+export function createLabeledEnum<const TLabels extends Record<string, string>>(
+  labels: TLabels
+): LabeledEnum<TLabels> {
+  const names = Object.keys(labels) as EnumLabelKey<TLabels>[];
   const labelValues = Object.values(labels) as string[];
 
   assertNoReservedEnumKeys(names);
@@ -68,17 +160,33 @@ export function createLabeledEnum<const TValue extends string>(
 
   const values = Object.freeze(
     Object.fromEntries(names.map((name) => [name, name] as const))
-  ) as Readonly<Record<TValue, TValue>>;
-  const valuesSet = new Set<TValue>(names);
-  const labelsMap = Object.freeze({ ...labels });
+  ) as LabeledEnumValues<TLabels>;
+  const valuesSet = new Set(Object.values(values));
+  const labelsMap = Object.freeze({ ...labels }) as Readonly<TLabels>;
   const entries = Object.freeze(
-    names.map((name) => [name, values[name]] as [TValue, TValue])
+    names.map((name) => [name, values[name]] as const)
+  ) as LabeledEnumEntries<TLabels>;
+  const parsedValues = new Map<
+    string,
+    LabeledEnumMemberValue<TLabels, EnumLabelKey<TLabels>>
+  >(
+    names.map(
+      (name) => [labels[name], values[name]] as const
+    ) as readonly (readonly [
+      string,
+      LabeledEnumMemberValue<TLabels, EnumLabelKey<TLabels>>
+    ])[]
   );
-  const parsedValues = new Map<string, TValue>(
-    names.map((name) => [labels[name], values[name]] as const)
-  );
-  const valueLabels = new Map<TValue, string>(
-    names.map((name) => [values[name], labels[name]] as const)
+  const valueLabels = new Map<
+    LabeledEnumMemberValue<TLabels, EnumLabelKey<TLabels>>,
+    EnumLabelValue<TLabels>
+  >(
+    names.map(
+      (name) => [values[name], labels[name]] as const
+    ) as readonly (readonly [
+      LabeledEnumMemberValue<TLabels, EnumLabelKey<TLabels>>,
+      EnumLabelValue<TLabels>
+    ])[]
   );
   const api = Object.freeze({
     ...values,
@@ -93,10 +201,14 @@ export function createLabeledEnum<const TValue extends string>(
       return parsedValues.has(label);
     },
     labelOf(value: string) {
-      return valueLabels.get(value as TValue);
+      return valueLabels.get(value as EnumLabelKey<TLabels>);
     },
-    validate(value: unknown): value is TValue {
-      return valuesSet.has(value as TValue);
+    validate(
+      value: unknown
+    ): value is LabeledEnumMemberValue<TLabels, EnumLabelKey<TLabels>> {
+      return valuesSet.has(
+        value as LabeledEnumMemberValue<TLabels, EnumLabelKey<TLabels>>
+      );
     },
   });
 
@@ -104,7 +216,7 @@ export function createLabeledEnum<const TValue extends string>(
     api,
     values,
     'Cannot assign to immutable labeled enum property "{property}".'
-  ) as LabeledEnum<TValue>;
+  ) as LabeledEnum<TLabels>;
 }
 
 function createImmutableEnumProxy<

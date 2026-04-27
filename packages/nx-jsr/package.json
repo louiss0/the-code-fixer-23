@@ -15,7 +15,11 @@
   },
   "files": [
     "dist",
+    "src/executors/**/*.ts",
     "src/executors/**/schema.json",
+    "src/generators/**/*.ts",
+    "src/generators/**/schema.json",
+    "src/generators/**/files/**/*",
     "!**/*.tsbuildinfo",
     "generators.json",
     "executors.json"

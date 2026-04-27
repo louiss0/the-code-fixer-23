@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import {
+  type EnumSymbol,
   ParseError,
   createEnum,
   createLabeledEnum,
@@ -7,9 +8,31 @@ import {
 } from './index.js';
 
 describe('createEnum', () => {
+  it('infers literal keys and values for string enums', () => {
+    const color = createEnum('string', 'red', 'blue');
+
+    expectTypeOf(color.red).toEqualTypeOf<'red'>();
+    expectTypeOf(color.blue).toEqualTypeOf<'blue'>();
+    expectTypeOf(color).toExtend<
+      Readonly<{
+        red: 'red';
+        blue: 'blue';
+      }>
+    >();
+  });
+
   it('creates string enums from member names', () => {
     const color = createEnum('string', 'red', 'blue');
 
+    expect(color.red).toBe('red');
+    expect(color.blue).toBe('blue');
+  });
+
+  it('falls back to string-keyed records for dynamic member arrays', () => {
+    const names = ['red', 'blue'] as string[];
+    const color = createEnum('string', ...names);
+
+    expectTypeOf(color).toExtend<Readonly<Record<string, string>>>();
     expect(color.red).toBe('red');
     expect(color.blue).toBe('blue');
   });
@@ -21,11 +44,40 @@ describe('createEnum', () => {
     expect(status.done).toBe(1);
   });
 
+  it('infers ordinal literal values for number enums', () => {
+    const status = createEnum('number', 'pending', 'done');
+
+    expectTypeOf(status.pending).toEqualTypeOf<0>();
+    expectTypeOf(status.done).toEqualTypeOf<1>();
+    expectTypeOf(status).toExtend<
+      Readonly<{
+        pending: 0;
+        done: 1;
+      }>
+    >();
+  });
+
   it('creates symbol enums from member names', () => {
     const role = createEnum('symbol', 'admin', 'editor');
 
     expect(role.admin).toBe(Symbol.for('@code-fixer-23/enums/admin'));
     expect(role.editor).toBe(Symbol.for('@code-fixer-23/enums/editor'));
+  });
+
+  it('brands symbol enums by member and declaration', () => {
+    const role = createEnum('symbol', 'admin', 'editor');
+    const status = createEnum('symbol', 'pending', 'done');
+
+    expectTypeOf(role.admin).toExtend<
+      EnumSymbol<readonly ['admin', 'editor'], 'admin'>
+    >();
+    expectTypeOf(role.editor).toExtend<
+      EnumSymbol<readonly ['admin', 'editor'], 'editor'>
+    >();
+    expectTypeOf(role.admin).toExtend<symbol>();
+    expectTypeOf(status.pending).toExtend<
+      EnumSymbol<readonly ['pending', 'done'], 'pending'>
+    >();
   });
 
   it('keeps enum keys immutable through the proxy', () => {
@@ -52,6 +104,26 @@ describe('createEnum', () => {
 });
 
 describe('createLabeledEnum', () => {
+  it('infers literal string values and labels for labeled enums', () => {
+    const articleStatus = createLabeledEnum({
+      draft: 'Draft',
+      published: 'Published',
+    });
+
+    expectTypeOf(articleStatus.draft).toEqualTypeOf<'draft'>();
+    expectTypeOf(articleStatus.published).toEqualTypeOf<'published'>();
+    expectTypeOf(articleStatus.labels.draft).toEqualTypeOf<'Draft'>();
+    expectTypeOf(articleStatus.labels.published).toEqualTypeOf<'Published'>();
+    expectTypeOf(articleStatus.parse('Draft')).toEqualTypeOf<'draft'>();
+    expectTypeOf(articleStatus.parse('Published')).toEqualTypeOf<'published'>();
+    expectTypeOf(
+      articleStatus.labelOf(articleStatus.draft)
+    ).toEqualTypeOf<'Draft'>();
+    expectTypeOf(
+      articleStatus.labelOf(articleStatus.published)
+    ).toEqualTypeOf<'Published'>();
+  });
+
   it('exposes enum values as direct properties alongside methods', () => {
     const articleStatus = createLabeledEnum({
       draft: 'Draft',
@@ -64,8 +136,8 @@ describe('createLabeledEnum', () => {
       draft: 'Draft',
       published: 'Published',
     });
-    expect(articleStatus.parse('Published')).toBe('published');
-    expect(articleStatus.validate('draft')).toBe(true);
+    expect(articleStatus.parse('Published')).toBe(articleStatus.published);
+    expect(articleStatus.validate(articleStatus.draft)).toBe(true);
     expect(articleStatus.validate('archived')).toBe(false);
   });
 
@@ -100,6 +172,19 @@ describe('createLabeledEnum', () => {
     });
   });
 
+  it('falls back to string or ParseError for generic label maps', () => {
+    const labels = {
+      draft: 'Draft',
+      published: 'Published',
+    } as Record<string, string>;
+    const articleStatus = createLabeledEnum(labels);
+
+    expectTypeOf(articleStatus.parse('Draft')).toEqualTypeOf<
+      string | ParseError
+    >();
+    expect(articleStatus.parse('Draft')).toBe('draft');
+  });
+
   it('exposes names and entries for iteration', () => {
     const articleStatus = createLabeledEnum({
       draft: 'Draft',
@@ -119,7 +204,7 @@ describe('createLabeledEnum', () => {
       published: 'Published',
     });
 
-    expect(articleStatus.labelOf('published')).toBe('Published');
+    expect(articleStatus.labelOf(articleStatus.published)).toBe('Published');
     expect(articleStatus.labelOf('archived')).toBeUndefined();
     expect(articleStatus.hasLabel('Draft')).toBe(true);
     expect(articleStatus.hasLabel('Archived')).toBe(false);
