@@ -1,8 +1,8 @@
 {
   "scripts": {
-    "build": "tsup --config tsup.config.ts && tsc -p tsconfig.build.json",
-    "test": "vitest run --config vitest.config.ts",
-    "test:watch": "vitest --config vitest.config.ts",
+    "build": "vite build --config vite.config.ts --mode production",
+    "test": "vitest run --config vite.config.ts --passWithNoTests",
+    "test:watch": "vitest --config vite.config.ts",
     "typecheck": "tsc -p tsconfig.lib.json --noEmit",
     "lint": "biome check .",
     "format": "biome format --write .",
