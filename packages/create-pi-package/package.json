@@ -1,4 +1,27 @@
 {
+  "name": "@code-fixer-23/create-pi-package",
+  "version": "0.2.0",
+  "type": "module",
+  "description": "Scaffold PI packages with prompts, skills, and extensions.",
+  "keywords": ["cli", "generator", "pi-package", "scaffold"],
+  "main": "./dist/index",
+  "module": "./dist/index",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "create-pi-package": "./dist/index"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index",
+      "default": "./dist/index"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "!**/*.tsbuildinfo"],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "vite build --config vite.config.ts --mode production",
     "test": "vitest run --config vite.config.ts --passWithNoTests",
@@ -7,5 +30,8 @@
     "lint": "biome check .",
     "format": "biome format --write .",
     "check": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build"
+  },
+  "dependencies": {
+    "commander": "^13.1.0"
   }
 }

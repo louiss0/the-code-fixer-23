@@ -23,6 +23,9 @@ export default defineConfig({
     target: 'node20',
     rollupOptions: {
       external: isExternal,
+      output: {
+        banner: '#!/usr/bin/env node',
+      },
     },
   },
   plugins: [
