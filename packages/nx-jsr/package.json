@@ -3,7 +3,7 @@
     "build": "tsc -p tsconfig.lib.json",
     "typecheck": "tsc -p tsconfig.lib.json --noEmit",
     "test": "vitest run --config vitest.config.ts",
-    "lint": "biome check .",
+    "lint": "eslint .",
     "format": "biome format --write .",
     "check": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build"
   }

@@ -33,7 +33,7 @@ Important source files:
 
 | Path                           | Purpose                                                       |
 | ------------------------------ | ------------------------------------------------------------- |
-| `src/cli.ts`                   | Node executable entry point.                                  |
+| `src/index.ts`                 | Node executable entry point and exported CLI helpers.         |
 | `src/lib/command.ts`           | Commander command definition and flag validation.             |
 | `src/lib/prompts.ts`           | Interactive questionnaire and option resolution.              |
 | `src/lib/create-pi-package.ts` | Main package creation flow.                                   |
@@ -91,7 +91,7 @@ After tests pass, build the package and run the CLI from a temporary directory:
 
 ```bash
 pnpm run build
-node dist/cli.js ./tmp-smoke --extensions --prompts --skills --themes --bundle --bundler tsup --test-runner vitest --no-install --force
+node dist/index.js ./tmp-smoke --extensions --prompts --skills --themes --bundler tsup --test-runner vitest --no-install --force
 ```
 
 Inspect the generated package:

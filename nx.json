@@ -52,7 +52,7 @@
     },
     "lint": {
       "cache": true,
-      "inputs": ["default", "{workspaceRoot}/biome.json"]
+      "inputs": ["default", "{workspaceRoot}/eslint.config.mjs"]
     }
   },
   "release": {

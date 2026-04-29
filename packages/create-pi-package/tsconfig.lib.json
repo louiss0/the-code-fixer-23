@@ -8,10 +8,10 @@
     "emitDeclarationOnly": false,
     "module": "esnext",
     "moduleResolution": "bundler",
-    "types": ["node"],
+    "types": ["node", "vite/client"],
     "resolveJsonModule": true
   },
   "include": ["src/**/*.ts"],
   "references": [],
-  "exclude": ["vitest.config.ts", "src/**/*.test.ts", "src/**/*.spec.ts"]
+  "exclude": ["vite.config.ts", "src/**/*.test.ts", "src/**/*.spec.ts"]
 }

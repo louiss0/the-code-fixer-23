@@ -5,23 +5,28 @@
   "sourceRoot": "packages/create-pi-package/src",
   "targets": {
     "build": {
-      "executor": "nx:run-commands",
-      "outputs": ["{projectRoot}/dist"],
+      "executor": "@nx/vite:build",
       "options": {
-        "command": "pnpm --dir packages/create-pi-package run build"
+        "configFile": "packages/create-pi-package/vite.config.ts",
+        "outputPath": "packages/create-pi-package/dist",
+        "tsConfig": "packages/create-pi-package/tsconfig.lib.json"
       }
     },
     "typecheck": {
-      "executor": "nx:run-commands",
+      "executor": "@nx/js:tsc",
       "options": {
-        "command": "pnpm --dir packages/create-pi-package run typecheck"
+        "main": "{projectRoot}/src/index.ts",
+        "outputPath": "dist/{projectName}",
+        "tsConfig": "packages/create-pi-package/tsconfig.lib.json",
+        "noEmit": true,
+        "generatePackageJson": false
       }
     },
     "test": {
-      "executor": "nx:run-commands",
-      "outputs": ["{projectRoot}/test-output/vitest"],
+      "executor": "@nx/vite:test",
       "options": {
-        "command": "pnpm --dir packages/create-pi-package run test"
+        "configFile": "packages/create-pi-package/vite.config.ts",
+        "reportsDirectory": "packages/create-pi-package/test-output/vitest/coverage"
       }
     },
     "lint": {
