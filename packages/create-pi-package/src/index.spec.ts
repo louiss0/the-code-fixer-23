@@ -13,7 +13,7 @@ vi.mock("node:fs", async () => {
 
   return {
     mkdirSync: vi.fn(fs.mkdirSync.bind(fs)),
-    writeFile: vi.fn((file: string, content: string, callback: (error?: Error) => void) => {
+    writeFile: vi.fn((file: string, content: string, callback: (error?: Error | null) => void) => {
       const absoluteFile = file.startsWith("/") ? file : `/${file}`;
       const directory = absoluteFile.split("/").slice(0, -1).join("/") || "/";
 
