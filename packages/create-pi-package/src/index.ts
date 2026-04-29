@@ -235,6 +235,8 @@ export class Prompter {
 }
 
 export class FileCreator {
+  constructor(private readonly directory = "") {}
+
   createPiFoldersBasedOnChoices(choices: AllowedFolderChioceValues) {
     choices.forEach((choice) => {
       const file = fileByFolderChoice[choice];
@@ -260,19 +262,23 @@ export class FileCreator {
   }
 
   createFile(file: string, content: string) {
-    const directory = path.dirname(file);
+    const targetFile = this.directory ? path.posix.join(this.directory, file) : file;
+    const directory = path.dirname(targetFile);
 
     if (directory !== ".") mkdirSync(directory, { recursive: true });
-    writeFile(file, content, (error) => {
+    writeFile(targetFile, content, (error) => {
       if (error) throw error;
     });
   }
 }
 
+type HandlerOptions = Record<string, string | number | boolean | string[] | undefined>;
+
 interface Deps {
   prompter: Prompter;
   fileCreator: FileCreator;
   installPackages?: InstallPackages;
+  notifyUser?: (message: string) => void;
 }
 
 export async function resolvePackageManager(
@@ -292,17 +298,24 @@ export async function resolvePackageManager(
   return prompter.askForWhichPackageManager(detectedPackageManagers);
 }
 
-export async function handler(object: Record<string, string | number | boolean>, deps: Deps) {
-  const choices = await deps.prompter.askForWhatTheyWantToMake();
-  deps.fileCreator.createPiFoldersBasedOnChoices(choices);
+export async function handler(object: HandlerOptions, deps: Deps) {
+  const choices = getFolderChoices(object) ?? (await deps.prompter.askForWhatTheyWantToMake());
+  const fileCreator = getPackageName(object) ? new FileCreator(getPackageName(object)) : deps.fileCreator;
+  fileCreator.createPiFoldersBasedOnChoices(choices);
 
   if (choices.includes("extensions")) {
-    const testRunner = await deps.prompter.askForWhichTestRunner();
+    const testRunner = getTestRunner(object) ?? (await deps.prompter.askForWhichTestRunner());
+
+    if (!testRunner) {
+      deps.notifyUser?.("No test runner selected. PI package starter files were still generated.");
+      return;
+    }
+
     const bundler = await deps.prompter.askForWhichBundler();
 
-    deps.fileCreator.createTestRunnerConfig(testRunner);
-    deps.fileCreator.createTsConfig();
-    deps.fileCreator.createPackageJson(bundler, testRunner, choices);
+    fileCreator.createTestRunnerConfig(testRunner);
+    fileCreator.createTsConfig();
+    fileCreator.createPackageJson(bundler, testRunner, choices);
 
     if (object.install !== false) {
       const packageManager = await resolvePackageManager(deps.prompter);
@@ -312,14 +325,44 @@ export async function handler(object: Record<string, string | number | boolean>,
 }
 
 export function setupRunCli(
-  handler: (object: Record<string, string | number | boolean>, deps: Deps) => Promise<void>,
+  handler: (object: HandlerOptions, deps: Deps) => Promise<void>,
   deps: Deps,
 ) {
   return async (...args: string[]) => {
-    const program = new Command().option("--no-install", "Skip installing generated package dependencies");
-    const flags = args.length > 0 ? program.parse(args, { from: "user" }).opts() : {};
-    await handler(flags, deps);
+    const program = new Command()
+      .argument("[packageName]", "Package folder to create")
+      .option("--folder <folder>", "PI package folder to create", collectValues, [])
+      .option("--runner <runner>", "Test runner to use when extensions are selected")
+      .option("--no-install", "Skip installing generated package dependencies");
+    const parsedProgram = args.length > 0 ? program.parse(args, { from: "user" }) : program;
+    const flags = parsedProgram.opts() as HandlerOptions;
+    const packageName = parsedProgram.args[0];
+
+    await handler(packageName ? { ...flags, args: [packageName] } : flags, deps);
   };
+}
+
+function collectValues(value: string, values: string[]) {
+  return [...values, value];
+}
+
+function getFolderChoices(object: HandlerOptions) {
+  const folders = object.folder;
+
+  if (Array.isArray(folders)) return folders.length > 0 ? (folders as AllowedFolderChioceValues) : undefined;
+  if (typeof folders === "string") return [folders] as AllowedFolderChioceValues;
+
+  return undefined;
+}
+
+function getTestRunner(object: HandlerOptions) {
+  return allowedTestRunnerChioces.find((testRunner) => testRunner === object.runner);
+}
+
+function getPackageName(object: HandlerOptions) {
+  const args = object.args;
+
+  return Array.isArray(args) ? args[0] : undefined;
 }
 
 function createTsConfig() {

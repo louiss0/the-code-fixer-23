@@ -260,6 +260,7 @@ describe("runCli", () => {
   let runCli: ReturnType<typeof setupRunCli>;
   const prompter = new MockPrompter();
   const fileCreator = new FileCreator();
+  const installPackages = vi.fn();
 
   beforeEach(() => {
     vi.spyOn(fileCreator, "createPiFoldersBasedOnChoices");
@@ -267,6 +268,7 @@ describe("runCli", () => {
     runCli = setupRunCli(handlerSpy, {
       prompter,
       fileCreator,
+      installPackages,
     });
   });
 
@@ -335,6 +337,167 @@ describe("runCli", () => {
         });
       },
     );
+  });
+
+  describe("CLI flags", () => {
+    it("places generated files in the package name folder when the package name argument is provided", async () => {
+      vi.spyOn(prompter, "askForWhatTheyWantToMake").mockResolvedValue(["prompts"]);
+
+      await runCli("my-pi-package");
+
+      expect(writeFile).toBeCalledWith(
+        "my-pi-package/prompts/example.md",
+        expect.any(String),
+        expect.any(Function),
+      );
+    });
+
+    it("passes all CLI options to the handler", async () => {
+      await runCli(
+        "my-pi-package",
+        "--folder",
+        "extensions",
+        "--folder",
+        "prompts",
+        "--runner",
+        "jest",
+        "--no-install",
+      );
+
+      expect(handlerSpy).toBeCalledWith(
+        expect.objectContaining({
+          args: ["my-pi-package"],
+          folder: ["extensions", "prompts"],
+          runner: "jest",
+          install: false,
+        }),
+        expect.objectContaining({ prompter, fileCreator, installPackages }),
+      );
+    });
+
+    it("supports the package name argument without other options", async () => {
+      vi.spyOn(prompter, "askForWhatTheyWantToMake").mockResolvedValue(["skills"]);
+
+      await runCli("my-pi-package");
+
+      expect(writeFile).toBeCalledWith(
+        "my-pi-package/skills/example/SKILL.md",
+        expect.any(String),
+        expect.any(Function),
+      );
+    });
+
+    it("supports the folder option without other options", async () => {
+      const askForWhatTheyWantToMake = vi.spyOn(prompter, "askForWhatTheyWantToMake");
+
+      await runCli("--folder", "themes");
+
+      expect(askForWhatTheyWantToMake).not.toBeCalled();
+      expect(fileCreator.createPiFoldersBasedOnChoices).toBeCalledWith(["themes"]);
+      expectWriteFileToWriteBasedOnExpectedValue("themes");
+    });
+
+    it("ignores the runner option without activating extension code when used alone", async () => {
+      vi.spyOn(prompter, "askForWhatTheyWantToMake").mockResolvedValue(["prompts"]);
+      const askForWhichTestRunner = vi.spyOn(prompter, "askForWhichTestRunner");
+      const askForWhichBundler = vi.spyOn(prompter, "askForWhichBundler");
+      const createTestRunnerConfig = vi.spyOn(fileCreator, "createTestRunnerConfig");
+
+      await runCli("--runner", "vitest");
+
+      expect(askForWhichTestRunner).not.toBeCalled();
+      expect(askForWhichBundler).not.toBeCalled();
+      expect(createTestRunnerConfig).not.toBeCalled();
+      expectWriteFileToWriteBasedOnExpectedValue("prompts");
+    });
+
+    it("ignores the no-install option without activating extension code when used alone", async () => {
+      vi.spyOn(prompter, "askForWhatTheyWantToMake").mockResolvedValue(["prompts"]);
+      const askForWhichTestRunner = vi.spyOn(prompter, "askForWhichTestRunner");
+      const askForWhichBundler = vi.spyOn(prompter, "askForWhichBundler");
+
+      await runCli("--no-install");
+
+      expect(askForWhichTestRunner).not.toBeCalled();
+      expect(askForWhichBundler).not.toBeCalled();
+      expect(installPackages).not.toBeCalled();
+      expectWriteFileToWriteBasedOnExpectedValue("prompts");
+    });
+
+    it("passes repeated folder flags to the handler as a folder list", async () => {
+      await runCli("--folder", "prompts", "--folder", "skills");
+
+      expect(handlerSpy).toBeCalledWith(
+        expect.objectContaining({ folder: ["prompts", "skills"] }),
+        expect.objectContaining({ prompter, fileCreator }),
+      );
+    });
+
+    it("creates selected folder files from folder flags without asking for folder choices", async () => {
+      const askForWhatTheyWantToMake = vi.spyOn(prompter, "askForWhatTheyWantToMake");
+
+      await handler({ folder: ["prompts", "skills"] }, { prompter, fileCreator });
+
+      expect(askForWhatTheyWantToMake).not.toBeCalled();
+      expect(fileCreator.createPiFoldersBasedOnChoices).toBeCalledWith(["prompts", "skills"]);
+      expectWriteFileToWriteBasedOnExpectedValue("prompts");
+      expectWriteFileToWriteBasedOnExpectedValue("skills");
+    });
+
+    it("uses the runner flag when extension files are selected", async () => {
+      const askForWhichTestRunner = vi.spyOn(prompter, "askForWhichTestRunner");
+      const createTestRunnerConfig = vi.spyOn(fileCreator, "createTestRunnerConfig");
+
+      await handler({ folder: ["extensions"], runner: "jest", install: false }, { prompter, fileCreator });
+
+      expect(askForWhichTestRunner).not.toBeCalled();
+      expect(createTestRunnerConfig).toBeCalledWith("jest");
+    });
+
+    it("ignores runner and no-install behavior when extension files are not selected", async () => {
+      const askForWhichTestRunner = vi.spyOn(prompter, "askForWhichTestRunner");
+      const askForWhichBundler = vi.spyOn(prompter, "askForWhichBundler");
+      const createTestRunnerConfig = vi.spyOn(fileCreator, "createTestRunnerConfig");
+      const createTsConfig = vi.spyOn(fileCreator, "createTsConfig");
+      const createPackageJson = vi.spyOn(fileCreator, "createPackageJson");
+      const installPackages = vi.fn();
+
+      await handler(
+        { folder: ["prompts"], runner: "vitest", install: false },
+        { prompter, fileCreator, installPackages },
+      );
+
+      expect(askForWhichTestRunner).not.toBeCalled();
+      expect(askForWhichBundler).not.toBeCalled();
+      expect(createTestRunnerConfig).not.toBeCalled();
+      expect(createTsConfig).not.toBeCalled();
+      expect(createPackageJson).not.toBeCalled();
+      expect(installPackages).not.toBeCalled();
+      expect(fileCreator.createPiFoldersBasedOnChoices).toBeCalledWith(["prompts"]);
+    });
+
+    it("skips installing packages only after extension tooling would be generated", async () => {
+      const installPackages = vi.fn();
+      const createTestRunnerConfig = vi.spyOn(fileCreator, "createTestRunnerConfig");
+
+      await handler({ folder: ["extensions"], runner: "vitest", install: false }, { prompter, fileCreator, installPackages });
+
+      expect(createTestRunnerConfig).toBeCalledWith("vitest");
+      expect(installPackages).not.toBeCalled();
+    });
+
+    it("creates selected files and notifies the user when test runner selection is cancelled", async () => {
+      const notifyUser = vi.fn();
+      vi.spyOn(prompter, "askForWhatTheyWantToMake").mockResolvedValue(["extensions", "prompts"]);
+      vi.spyOn(prompter, "askForWhichTestRunner").mockResolvedValue(undefined as unknown as AllowedTestRunnerChioces);
+
+      await handler({ install: false }, { prompter, fileCreator, notifyUser });
+
+      expect(fileCreator.createPiFoldersBasedOnChoices).toBeCalledWith(["extensions", "prompts"]);
+      expectWriteFileToWriteBasedOnExpectedValue("extensions");
+      expectWriteFileToWriteBasedOnExpectedValue("prompts");
+      expect(notifyUser).toBeCalledWith(expect.stringContaining("test runner"));
+    });
   });
 
   describe("User chooses to make extensions and they choose a test runner", () => {
