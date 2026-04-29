@@ -1,6 +1,6 @@
 import { mkdirSync, writeFile } from "node:fs";
 import { vol } from "memfs";
-import { handler, resolvePackageManager, setupRunCli, FileCreator } from "./index";
+import { handler, resolvePackageManager, setupRunCli, FileCreator, Logger } from "./index";
 import type {
   AllowedBundlers,
   AllowedFolderChioceValues,
@@ -180,6 +180,28 @@ function expectWriteFileToWriteBasedOnExpectedValue(chioce: AllowedFolderChioceV
   );
 }
 
+describe("Logger", () => {
+  it("wraps Signale methods behind semantic logging methods", () => {
+    const signale = {
+      start: vi.fn(),
+      success: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+    };
+    const logger = new Logger(signale);
+
+    logger.message("Creating files...");
+    logger.command("pnpm install");
+    logger.warn("Prompting for package manager...");
+    logger.error("Install failed");
+
+    expect(signale.success).toBeCalledWith("Creating files...");
+    expect(signale.start).toBeCalledWith("Executing command: pnpm install");
+    expect(signale.warn).toBeCalledWith("Prompting for package manager...");
+    expect(signale.error).toBeCalledWith("Install failed");
+  });
+});
+
 describe("FileCreator", () => {
   afterEach(() => {
     vol.reset();
@@ -261,6 +283,12 @@ describe("runCli", () => {
   const prompter = new MockPrompter();
   const fileCreator = new FileCreator();
   const installPackages = vi.fn();
+  const logger = new Logger({
+    start: vi.fn(),
+    success: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  });
 
   beforeEach(() => {
     vi.spyOn(fileCreator, "createPiFoldersBasedOnChoices");
@@ -269,6 +297,7 @@ describe("runCli", () => {
       prompter,
       fileCreator,
       installPackages,
+      logger,
     });
   });
 
@@ -433,10 +462,19 @@ describe("runCli", () => {
       );
     });
 
+    it("logs the selected folder files created from folder flags", async () => {
+      vi.spyOn(logger, "message");
+
+      await handler({ folder: ["prompts", "skills"] }, { prompter, fileCreator, logger });
+
+      expect(logger.message).toBeCalledWith("Creating PI package folders: prompts, skills");
+      expect(logger.message).toBeCalledWith("Created PI package starter files.");
+    });
+
     it("creates selected folder files from folder flags without asking for folder choices", async () => {
       const askForWhatTheyWantToMake = vi.spyOn(prompter, "askForWhatTheyWantToMake");
 
-      await handler({ folder: ["prompts", "skills"] }, { prompter, fileCreator });
+      await handler({ folder: ["prompts", "skills"] }, { prompter, fileCreator, logger });
 
       expect(askForWhatTheyWantToMake).not.toBeCalled();
       expect(fileCreator.createPiFoldersBasedOnChoices).toBeCalledWith(["prompts", "skills"]);
@@ -448,7 +486,7 @@ describe("runCli", () => {
       const askForWhichTestRunner = vi.spyOn(prompter, "askForWhichTestRunner");
       const createTestRunnerConfig = vi.spyOn(fileCreator, "createTestRunnerConfig");
 
-      await handler({ folder: ["extensions"], runner: "jest", install: false }, { prompter, fileCreator });
+      await handler({ folder: ["extensions"], runner: "jest", install: false }, { prompter, fileCreator, logger });
 
       expect(askForWhichTestRunner).not.toBeCalled();
       expect(createTestRunnerConfig).toBeCalledWith("jest");
@@ -464,7 +502,7 @@ describe("runCli", () => {
 
       await handler(
         { folder: ["prompts"], runner: "vitest", install: false },
-        { prompter, fileCreator, installPackages },
+        { prompter, fileCreator, installPackages, logger },
       );
 
       expect(askForWhichTestRunner).not.toBeCalled();
@@ -480,23 +518,47 @@ describe("runCli", () => {
       const installPackages = vi.fn();
       const createTestRunnerConfig = vi.spyOn(fileCreator, "createTestRunnerConfig");
 
-      await handler({ folder: ["extensions"], runner: "vitest", install: false }, { prompter, fileCreator, installPackages });
+      await handler({ folder: ["extensions"], runner: "vitest", install: false }, { prompter, fileCreator, installPackages, logger });
 
       expect(createTestRunnerConfig).toBeCalledWith("vitest");
       expect(installPackages).not.toBeCalled();
     });
 
+    it("logs install commands when extension dependencies are installed", async () => {
+      const installPackages = vi.fn();
+      vi.spyOn(logger, "command");
+
+      await handler({ folder: ["extensions"], runner: "vitest" }, { prompter, fileCreator, installPackages, logger });
+
+      expect(logger.command).toBeCalledWith("npm install");
+      expect(installPackages).toBeCalledWith("npm", process.cwd());
+    });
+
+    it("logs install errors before rethrowing them", async () => {
+      const error = new Error("Install failed");
+      const installPackages = vi.fn().mockRejectedValue(error);
+      vi.spyOn(logger, "error");
+
+      await expect(
+        handler({ folder: ["extensions"], runner: "vitest" }, { prompter, fileCreator, installPackages, logger }),
+      ).rejects.toBe(error);
+
+      expect(logger.error).toBeCalledWith("Failed to install dependencies with npm.");
+    });
+
     it("creates selected files and notifies the user when test runner selection is cancelled", async () => {
       const notifyUser = vi.fn();
+      vi.spyOn(logger, "warn");
       vi.spyOn(prompter, "askForWhatTheyWantToMake").mockResolvedValue(["extensions", "prompts"]);
       vi.spyOn(prompter, "askForWhichTestRunner").mockResolvedValue(undefined as unknown as AllowedTestRunnerChioces);
 
-      await handler({ install: false }, { prompter, fileCreator, notifyUser });
+      await handler({ install: false }, { prompter, fileCreator, notifyUser, logger });
 
       expect(fileCreator.createPiFoldersBasedOnChoices).toBeCalledWith(["extensions", "prompts"]);
       expectWriteFileToWriteBasedOnExpectedValue("extensions");
       expectWriteFileToWriteBasedOnExpectedValue("prompts");
       expect(notifyUser).toBeCalledWith(expect.stringContaining("test runner"));
+      expect(logger.warn).toBeCalledWith(expect.stringContaining("test runner"));
     });
   });
 

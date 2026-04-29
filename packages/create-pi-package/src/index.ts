@@ -3,6 +3,7 @@ import { mkdirSync, writeFile } from "node:fs";
 import path from "node:path";
 import { Command } from "@commander-js/extra-typings";
 import inquirer from "inquirer";
+import { Signale } from "signale";
 
 const allowedFolderChioces = ["extensions", "prompts", "skills", "themes"] as const;
 export type AllowedFolderChioceValues = Array<(typeof allowedFolderChioces)[number]>;
@@ -19,6 +20,7 @@ type DetectedPackageManagers = Exclude<AllowedPackageManagers, "npm">;
 
 type FindExecutablePath = (packageManager: DetectedPackageManagers) => Promise<string | undefined>;
 type InstallPackages = (packageManager: AllowedPackageManagers, directory: string) => Promise<void>;
+type SignaleLogger = Pick<Signale, "start" | "success" | "warn" | "error">;
 
 const extensionContent = `export default function (pi:ExtensionAPI) {
 
@@ -180,6 +182,26 @@ const testRunnerConfigByChoice: Record<AllowedTestRunnerChioces, { file: string;
   },
 };
 
+export class Logger {
+  constructor(private readonly signale: SignaleLogger = new Signale()) {}
+
+  message(message: string) {
+    this.signale.success(message);
+  }
+
+  command(command: string) {
+    this.signale.start(`Executing command: ${command}`);
+  }
+
+  warn(message: string) {
+    this.signale.warn(message);
+  }
+
+  error(message: string) {
+    this.signale.error(message);
+  }
+}
+
 export class Prompter {
   async askForWhatTheyWantToMake(): Promise<AllowedFolderChioceValues> {
     const answers = await inquirer.prompt<{ choices: AllowedFolderChioceValues }>([
@@ -279,6 +301,7 @@ interface Deps {
   fileCreator: FileCreator;
   installPackages?: InstallPackages;
   notifyUser?: (message: string) => void;
+  logger?: Logger;
 }
 
 export async function resolvePackageManager(
@@ -299,27 +322,50 @@ export async function resolvePackageManager(
 }
 
 export async function handler(object: HandlerOptions, deps: Deps) {
-  const choices = getFolderChoices(object) ?? (await deps.prompter.askForWhatTheyWantToMake());
+  const logger = deps.logger ?? new Logger();
+  const flaggedChoices = getFolderChoices(object);
+
+  if (!flaggedChoices) logger.warn("Asking which PI package folders to create.");
+
+  const choices = flaggedChoices ?? (await deps.prompter.askForWhatTheyWantToMake());
   const fileCreator = getPackageName(object) ? new FileCreator(getPackageName(object)) : deps.fileCreator;
+
+  logger.message(`Creating PI package folders: ${choices.join(", ")}`);
   fileCreator.createPiFoldersBasedOnChoices(choices);
+  logger.message("Created PI package starter files.");
 
   if (choices.includes("extensions")) {
-    const testRunner = getTestRunner(object) ?? (await deps.prompter.askForWhichTestRunner());
+    const flaggedTestRunner = getTestRunner(object);
+
+    if (!flaggedTestRunner) logger.warn("Asking which test runner to use for extension tooling.");
+
+    const testRunner = flaggedTestRunner ?? (await deps.prompter.askForWhichTestRunner());
 
     if (!testRunner) {
-      deps.notifyUser?.("No test runner selected. PI package starter files were still generated.");
+      const message = "No test runner selected. PI package starter files were still generated.";
+      deps.notifyUser?.(message);
+      logger.warn(message);
       return;
     }
 
+    logger.warn("Asking which bundler to use for extension tooling.");
     const bundler = await deps.prompter.askForWhichBundler();
 
+    logger.message(`Creating ${testRunner} and ${bundler} extension tooling.`);
     fileCreator.createTestRunnerConfig(testRunner);
     fileCreator.createTsConfig();
     fileCreator.createPackageJson(bundler, testRunner, choices);
 
     if (object.install !== false) {
       const packageManager = await resolvePackageManager(deps.prompter);
-      await (deps.installPackages ?? installPackages)(packageManager, process.cwd());
+      logger.command(`${packageManager} install`);
+
+      try {
+        await (deps.installPackages ?? installPackages)(packageManager, process.cwd());
+      } catch (error) {
+        logger.error(`Failed to install dependencies with ${packageManager}.`);
+        throw error;
+      }
     }
   }
 }
@@ -434,6 +480,7 @@ async function findPackageManagerExecutablePath(packageManager: DetectedPackageM
 const deps: Deps = {
   prompter: new Prompter(),
   fileCreator: new FileCreator(),
+  logger: new Logger(),
 };
 
 if (import.meta.env.PROD) {

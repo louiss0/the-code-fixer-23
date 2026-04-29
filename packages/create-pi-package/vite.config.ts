@@ -6,7 +6,13 @@ import dts from "vite-plugin-dts";
 const packageRoot = path.dirname(fileURLToPath(import.meta.url));
 
 function isExternal(id: string) {
-  return id === "commander" || id === "inquirer" || id.startsWith("@inquirer/") || id.startsWith("node:");
+  return (
+    id === "commander" ||
+    id === "inquirer" ||
+    id === "signale" ||
+    id.startsWith("@inquirer/") ||
+    id.startsWith("node:")
+  );
 }
 
 export default defineConfig({
