@@ -6,7 +6,7 @@ Scaffold publish-ready PI packages with `extensions/`, `skills/`, `prompts/`, a 
 
 ```sh
 pnpm create-pi-package
-pnpm create-pi-package --tooling biome --test-runner jest --mode bundle
+pnpm create-pi-package --tooling biome --test-runner jest
 ```
 
 ## Options
@@ -15,7 +15,6 @@ pnpm create-pi-package --tooling biome --test-runner jest --mode bundle
 - `--name <name>` explicit package leaf name; otherwise inferred from the target directory
 - `--tooling <eslint-prettier|biome>` tooling preset
 - `--test-runner <vitest|jest>` test runner preset
-- `--mode <source|bundle>` package output mode
 - `--yes` accept defaults for omitted interactive choices
 - `--force` overwrite managed scaffold files when they already exist
 

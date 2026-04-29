@@ -3,8 +3,6 @@ import { Command } from "@commander-js/extra-typings";
 const allowedFolderChioces = ["extensions", "prompts", "skills", "themes"] as const;
 export type AllowedFolderChioceValues = Array<(typeof allowedFolderChioces)[number]>;
 
-const allowedPackageTypeChioces = ["bundler", "source"] as const;
-export type AllowedPackageTypeChioces = (typeof allowedPackageTypeChioces)[number];
 const allowedTestRunnerChioces = ["jest", "vitest"] as const;
 export type AllowedTestRunnerChioces = (typeof allowedTestRunnerChioces)[number];
 
@@ -13,7 +11,6 @@ export type AllowedBundlers = (typeof allowedBundlers)[number];
 
 export interface Prompter {
   askForWhatTheyWantToMake(): Promise<AllowedFolderChioceValues>;
-  askIftheyWantToBundleOrNot(): Promise<AllowedPackageTypeChioces>;
   askForWhichTestRunner(): Promise<AllowedTestRunnerChioces>;
   askForWhichBundler(): Promise<AllowedBundlers>;
 }

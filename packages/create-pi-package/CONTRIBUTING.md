@@ -91,7 +91,7 @@ After tests pass, build the package and run the CLI from a temporary directory:
 
 ```bash
 pnpm run build
-node dist/index.js ./tmp-smoke --extensions --prompts --skills --themes --bundle --bundler tsup --test-runner vitest --no-install --force
+node dist/index.js ./tmp-smoke --extensions --prompts --skills --themes --bundler tsup --test-runner vitest --no-install --force
 ```
 
 Inspect the generated package:

@@ -3,7 +3,6 @@ import { handler, setupRunCli } from "./index";
 import type {
   AllowedBundlers,
   AllowedFolderChioceValues,
-  AllowedPackageTypeChioces,
   AllowedTestRunnerChioces,
   Prompter,
 } from "./index";
@@ -11,10 +10,6 @@ import type {
 class MockPrompter implements Prompter {
   askForWhatTheyWantToMake(): Promise<AllowedFolderChioceValues> {
     return Promise.resolve([]);
-  }
-
-  askIftheyWantToBundleOrNot(): Promise<AllowedPackageTypeChioces> {
-    return Promise.resolve("bundler");
   }
 
   askForWhichTestRunner(): Promise<AllowedTestRunnerChioces> {
@@ -175,12 +170,9 @@ describe("runCli", () => {
         expect(handlerSpy).toBeCalled();
         expect(askForWhatTheyWantToMake).toBeCalled();
 
-        const askIftheyWantToBundleOrNot = vi.spyOn(prompter, "askIftheyWantToBundleOrNot");
-
         const askForTestRunner = vi.spyOn(prompter, "askForWhichTestRunner");
         const askForWhichBundler = vi.spyOn(prompter, "askForWhichBundler");
 
-        expect(askIftheyWantToBundleOrNot).toBeCalled();
         expect(askForTestRunner).toBeCalled();
         expect(askForWhichBundler).toBeCalled();
 
@@ -188,74 +180,6 @@ describe("runCli", () => {
         values.forEach((value) => {
           expectWriteFileToWriteBasedOnExpectedValue(value);
         });
-      },
-    );
-  });
-
-  describe("When extension is selected and they choose to bundle", () => {
-    const bundlerToFileAndContentMap = {
-      rollup: {
-        file: "rollup.config.js",
-        content: `import resolve from '@rollup/plugin-node-resolve';
-        import typescript from '@rollup/plugin-typescript';
-
-        export default {
-          input: 'extension/index.ts',
-          output: {
-            file: 'dist/extension/index.js',
-            format: 'esm',
-          },
-
-          plugins: [
-            resolve(),
-            typescript(),
-          ],
-        };`,
-      },
-      vite: {
-        file: "vite.config.js",
-        content: `import { defineConfig } from 'vite';
-
-        export default defineConfig({
-          build: {
-            lib: {
-              entry: 'src/index.ts',
-              formats: ['es'], // ESM only
-              fileName: 'index',
-            },
-            sourcemap: true,
-          },
-        });`,
-      },
-    };
-
-    it.for(Object.keys(bundlerToFileAndContentMap) as Array<AllowedBundlers>)(
-      "For $i bundler file and content are written",
-      async (bundler) => {
-        const askForWhatTheyWantToMake = vi
-          .spyOn(prompter, "askForWhatTheyWantToMake")
-          .mockResolvedValue(["extensions"]);
-
-        const askIftheyWantToBundleOrNot = vi
-          .spyOn(prompter, "askIftheyWantToBundleOrNot")
-          .mockResolvedValue("bundler");
-
-        const askForWhichBundler = vi.spyOn(prompter, "askForWhichBundler");
-
-        runCli();
-
-        expect(askForWhatTheyWantToMake).toBeCalled();
-
-        expect(askIftheyWantToBundleOrNot).toBeCalled();
-
-        expect(askForWhichBundler).toBeCalledWith(bundler);
-
-        expect(writeFile).toBeCalledWith(
-          bundlerToFileAndContentMap[bundler].file,
-          bundlerToFileAndContentMap[bundler].content,
-        );
-
-        expect(createPiFolderBasedOnChioces).toBeCalledWith(["extensions"]);
       },
     );
   });
