@@ -546,18 +546,16 @@ describe("runCli", () => {
       expect(logger.error).toBeCalledWith("Failed to install dependencies with npm.");
     });
 
-    it("creates selected files and notifies the user when test runner selection is cancelled", async () => {
-      const notifyUser = vi.fn();
+    it("creates selected files and logs when test runner selection is cancelled", async () => {
       vi.spyOn(logger, "warn");
       vi.spyOn(prompter, "askForWhatTheyWantToMake").mockResolvedValue(["extensions", "prompts"]);
       vi.spyOn(prompter, "askForWhichTestRunner").mockResolvedValue(undefined as unknown as AllowedTestRunnerChioces);
 
-      await handler({ install: false }, { prompter, fileCreator, notifyUser, logger });
+      await handler({ install: false }, { prompter, fileCreator, logger });
 
       expect(fileCreator.createPiFoldersBasedOnChoices).toBeCalledWith(["extensions", "prompts"]);
       expectWriteFileToWriteBasedOnExpectedValue("extensions");
       expectWriteFileToWriteBasedOnExpectedValue("prompts");
-      expect(notifyUser).toBeCalledWith(expect.stringContaining("test runner"));
       expect(logger.warn).toBeCalledWith(expect.stringContaining("test runner"));
     });
   });

@@ -300,8 +300,7 @@ interface Deps {
   prompter: Prompter;
   fileCreator: FileCreator;
   installPackages?: InstallPackages;
-  notifyUser?: (message: string) => void;
-  logger?: Logger;
+  logger: Logger;
 }
 
 export async function resolvePackageManager(
@@ -322,7 +321,7 @@ export async function resolvePackageManager(
 }
 
 export async function handler(object: HandlerOptions, deps: Deps) {
-  const logger = deps.logger ?? new Logger();
+  const logger = deps.logger;
   const flaggedChoices = getFolderChoices(object);
 
   if (!flaggedChoices) logger.warn("Asking which PI package folders to create.");
@@ -343,7 +342,6 @@ export async function handler(object: HandlerOptions, deps: Deps) {
 
     if (!testRunner) {
       const message = "No test runner selected. PI package starter files were still generated.";
-      deps.notifyUser?.(message);
       logger.warn(message);
       return;
     }
