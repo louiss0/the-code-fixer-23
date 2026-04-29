@@ -1,17 +1,29 @@
 import { Command } from "@commander-js/extra-typings";
 
+const allowedFolderChioces = ["extensions", "prompts", "skills", "themes"] as const;
+export type AllowedFolderChioceValues = Array<(typeof allowedFolderChioces)[number]>;
+
+const allowedPackageTypeChioces = ["bundler", "source"] as const;
+export type AllowedPackageTypeChioces = (typeof allowedPackageTypeChioces)[number];
+const allowedTestRunnerChioces = ["jest", "vitest"] as const;
+export type AllowedTestRunnerChioces = (typeof allowedTestRunnerChioces)[number];
+
+export const allowedBundlers = ["vite", "rollup"] as const;
+export type AllowedBundlers = (typeof allowedBundlers)[number];
+
+export interface Prompter {
+  askForWhatTheyWantToMake(): Promise<AllowedFolderChioceValues>;
+  askIftheyWantToBundleOrNot(): Promise<AllowedPackageTypeChioces>;
+  askForWhichTestRunner(): Promise<AllowedTestRunnerChioces>;
+  askForWhichBundler(): Promise<AllowedBundlers>;
+}
+
 interface Deps {
-  prompter: {
-    askForWhatTheyWantToMake(): Promise<string[]>;
-  };
+  prompter: Prompter;
+  createPiFolderBasedOnChioces: (choices: AllowedFolderChioceValues) => void;
 }
 
-export async function handler(object: Record<string, string | number | boolean>, deps: Deps) {
-  const choices = await deps.prompter.askForWhatTheyWantToMake();
-  console.log(choices);
-
-  // console.log(object, deps);
-}
+export async function handler(object: Record<string, string | number | boolean>, deps: Deps) {}
 const program = new Command();
 
 export function setupRunCli(
