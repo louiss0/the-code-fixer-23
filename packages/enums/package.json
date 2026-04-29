@@ -1,4 +1,32 @@
 {
+  "name": "@code-fixer-23/enums",
+  "version": "0.2.2",
+  "type": "module",
+  "description": "Typed enum factories for immutable string, number, symbol, and labeled enums.",
+  "keywords": [
+    "enum",
+    "typescript",
+    "labeled-enum",
+    "factory"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup --config tsup.config.ts",
     "typecheck": "tsc -p tsconfig.lib.json --noEmit",
@@ -6,5 +34,12 @@
     "lint": "eslint .",
     "format": "biome format --write .",
     "check": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build"
+  },
+  "dependencies": {
+    "tslib": "^2.6.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.37.0",
+    "vitest": "^3.2.4"
   }
 }

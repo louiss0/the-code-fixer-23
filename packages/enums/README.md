@@ -1,6 +1,8 @@
 # @code-fixer-23/enums
 
-Typed enum factories for string, number, and symbol values. Both enum factories return immutable proxy objects so values are accessed as properties while writes are rejected.
+Typed enum factories for immutable TypeScript-friendly enum objects. Use it when
+you want property access, literal inference, runtime validation, and label
+parsing without reaching for TypeScript `enum`.
 
 ## Installation
 
@@ -8,9 +10,30 @@ Typed enum factories for string, number, and symbol values. Both enum factories 
 pnpm add @code-fixer-23/enums
 ```
 
+## Quick Start
+
+```ts
+import { createEnum, createLabeledEnum, isParseError } from '@code-fixer-23/enums';
+
+const status = createEnum('string', 'draft', 'published');
+status.draft;
+// 'draft'
+
+const priority = createLabeledEnum({
+  low: 'Low',
+  high: 'High',
+});
+
+const parsedPriority = priority.parse('High');
+if (!isParseError(parsedPriority)) {
+  parsedPriority;
+  // 'high'
+}
+```
+
 ## `createEnum(kind, ...names)`
 
-Create enum values from member names.
+Create immutable enum values from member names.
 
 ```ts
 import { createEnum } from '@code-fixer-23/enums';
@@ -33,11 +56,14 @@ role.admin;
 - `string` uses each member name as its value.
 - `number` assigns zero-based numeric values in declaration order.
 - `symbol` creates global symbols with `Symbol.for('@code-fixer-23/enums/<name>')`.
-- duplicate member names are rejected.
+- Duplicate member names are rejected.
+- Enum member properties are immutable at runtime.
 
 ## `createLabeledEnum(labels)`
 
-Create labeled string enums from caller-provided key/value pairs. The returned enum uses a Proxy so enum values and helper methods are available on the same object.
+Create labeled string enums from caller-provided key/value pairs. The returned
+enum uses a Proxy so enum values and helper methods are available on the same
+object.
 
 ```ts
 import {
@@ -101,7 +127,9 @@ A labeled enum returns:
 - `hasLabel(label)`: returns `true` when the label exists
 - `labelOf(value)`: returns the matching label, or `undefined`
 - `validate(value)`: returns `true` when the value belongs to the enum
-- duplicate labels are rejected to keep parsing unambiguous
+- Duplicate labels are rejected to keep parsing unambiguous.
+- Reserved helper names such as `parse`, `values`, and `labels` are rejected as
+  enum keys.
 
 ### Parse errors
 
@@ -115,10 +143,18 @@ if (result instanceof ParseError) {
 }
 ```
 
+## Package Format
+
+This package publishes ESM with generated TypeScript declarations:
+
+- Runtime entrypoint: `dist/index.js`
+- Type declarations: `dist/index.d.ts`
+- Package export: `@code-fixer-23/enums`
+
 ## Development
 
 ```sh
+pnpm nx typecheck enums
 pnpm nx test enums
 pnpm nx build enums
-pnpm nx typecheck enums
 ```
