@@ -1,3 +1,7 @@
+# 1.0.0 (2026-04-29)
+
+This was a version bump only for enums to align it with other projects, there were no code changes.
+
 ## 0.2.2 (2026-04-27)
 
 ### 🩹 Fixes

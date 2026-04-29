@@ -1,6 +1,6 @@
 {
   "name": "@code-fixer-23/enums",
-  "version": "0.2.2",
+  "version": "1.0.0",
   "type": "module",
   "description": "Typed enum factories for immutable string, number, symbol, and labeled enums.",
   "keywords": [
