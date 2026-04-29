@@ -2,7 +2,6 @@ import { mkdirSync, writeFile } from "node:fs";
 import { vol } from "memfs";
 import { handler, resolvePackageManager, setupRunCli, FileCreator, Logger } from "./index";
 import type {
-  AllowedBundlers,
   AllowedFolderChioceValues,
   AllowedPackageManagers,
   AllowedTestRunnerChioces,
@@ -38,10 +37,6 @@ class MockPrompter implements Prompter {
 
   askForWhichTestRunner(): Promise<AllowedTestRunnerChioces> {
     return Promise.resolve("vitest");
-  }
-
-  askForWhichBundler(): Promise<AllowedBundlers> {
-    return Promise.resolve("rollup");
   }
 
   askForWhichPackageManager(): Promise<AllowedPackageManagers> {
@@ -231,11 +226,54 @@ describe("FileCreator", () => {
 
     fileCreator.createTestRunnerConfig("vitest");
     fileCreator.createTsConfig();
-    fileCreator.createPackageJson("vite", "vitest", ["extensions"]);
+    fileCreator.createPackageJson("vitest", ["extensions"]);
 
     expect(writeFile).toBeCalledWith("vitest.config.ts", expect.any(String), expect.any(Function));
     expect(writeFile).toBeCalledWith("tsconfig.json", expect.any(String), expect.any(Function));
     expect(writeFile).toBeCalledWith("package.json", expect.any(String), expect.any(Function));
+  });
+
+  it("creates scripts based on selected PI package folders", () => {
+    const fileCreator = new FileCreator();
+
+    fileCreator.createScriptsBasedOnChoices(["prompts", "skills"]);
+
+    expect(writeFile).toBeCalledWith(
+      "scripts/create-prompt.ts",
+      expect.stringContaining("const fileName = process.argv[2];"),
+      expect.any(Function),
+    );
+    expect(writeFile).toBeCalledWith(
+      "scripts/create-skill.ts",
+      expect.stringContaining('writeFileSync(join(directory, "SKILL.md")'),
+      expect.any(Function),
+    );
+  });
+
+  it("creates an extension script that accepts a path name", () => {
+    const fileCreator = new FileCreator();
+
+    fileCreator.createScriptsBasedOnChoices(["extensions"]);
+
+    expect(writeFile).toBeCalledWith(
+      "scripts/create-extension.ts",
+      expect.stringContaining("const extensionPath = process.argv[2];"),
+      expect.any(Function),
+    );
+    expect(writeFile).toBeCalledWith(
+      "scripts/create-extension.ts",
+      expect.stringContaining('join("extensions", extensionPath)'),
+      expect.any(Function),
+    );
+  });
+
+  it("creates agent instruction files", () => {
+    const fileCreator = new FileCreator();
+
+    fileCreator.createAgentInstructions();
+
+    expect(writeFile).toBeCalledWith("AGENTS.md", expect.stringContaining("coding agents"), expect.any(Function));
+    expect(writeFile).toBeCalledWith("CLAUDE.md", expect.stringContaining("Claude"), expect.any(Function));
   });
 });
 
@@ -292,6 +330,7 @@ describe("runCli", () => {
 
   beforeEach(() => {
     vi.spyOn(fileCreator, "createPiFoldersBasedOnChoices");
+    vi.spyOn(fileCreator, "createScriptsBasedOnChoices");
     handlerSpy = vi.fn(handler);
     runCli = setupRunCli(handlerSpy, {
       prompter,
@@ -351,16 +390,15 @@ describe("runCli", () => {
           .mockResolvedValue(values);
 
         const askForTestRunner = vi.spyOn(prompter, "askForWhichTestRunner");
-        const askForWhichBundler = vi.spyOn(prompter, "askForWhichBundler");
 
         await runCli();
 
         expect(handlerSpy).toBeCalled();
         expect(askForWhatTheyWantToMake).toBeCalled();
         expect(askForTestRunner).toBeCalled();
-        expect(askForWhichBundler).toBeCalled();
 
         expect(fileCreator.createPiFoldersBasedOnChoices).toBeCalledWith(values);
+        expect(fileCreator.createScriptsBasedOnChoices).toBeCalledWith(values);
         values.forEach((value) => {
           expectWriteFileToWriteBasedOnExpectedValue(value);
         });
@@ -429,13 +467,11 @@ describe("runCli", () => {
     it("ignores the runner option without activating extension code when used alone", async () => {
       vi.spyOn(prompter, "askForWhatTheyWantToMake").mockResolvedValue(["prompts"]);
       const askForWhichTestRunner = vi.spyOn(prompter, "askForWhichTestRunner");
-      const askForWhichBundler = vi.spyOn(prompter, "askForWhichBundler");
       const createTestRunnerConfig = vi.spyOn(fileCreator, "createTestRunnerConfig");
 
       await runCli("--runner", "vitest");
 
       expect(askForWhichTestRunner).not.toBeCalled();
-      expect(askForWhichBundler).not.toBeCalled();
       expect(createTestRunnerConfig).not.toBeCalled();
       expectWriteFileToWriteBasedOnExpectedValue("prompts");
     });
@@ -443,12 +479,10 @@ describe("runCli", () => {
     it("ignores the no-install option without activating extension code when used alone", async () => {
       vi.spyOn(prompter, "askForWhatTheyWantToMake").mockResolvedValue(["prompts"]);
       const askForWhichTestRunner = vi.spyOn(prompter, "askForWhichTestRunner");
-      const askForWhichBundler = vi.spyOn(prompter, "askForWhichBundler");
 
       await runCli("--no-install");
 
       expect(askForWhichTestRunner).not.toBeCalled();
-      expect(askForWhichBundler).not.toBeCalled();
       expect(installPackages).not.toBeCalled();
       expectWriteFileToWriteBasedOnExpectedValue("prompts");
     });
@@ -478,8 +512,28 @@ describe("runCli", () => {
 
       expect(askForWhatTheyWantToMake).not.toBeCalled();
       expect(fileCreator.createPiFoldersBasedOnChoices).toBeCalledWith(["prompts", "skills"]);
+      expect(fileCreator.createScriptsBasedOnChoices).toBeCalledWith(["prompts", "skills"]);
       expectWriteFileToWriteBasedOnExpectedValue("prompts");
       expectWriteFileToWriteBasedOnExpectedValue("skills");
+    });
+
+    it("passes the instructions flag to the handler", async () => {
+      await runCli("--instructions");
+
+      expect(handlerSpy).toBeCalledWith(
+        expect.objectContaining({ instructions: true }),
+        expect.objectContaining({ prompter, fileCreator }),
+      );
+    });
+
+    it("creates agent instruction files when the instructions flag is used", async () => {
+      const createAgentInstructions = vi.spyOn(fileCreator, "createAgentInstructions");
+
+      await handler({ folder: ["prompts"], instructions: true }, { prompter, fileCreator, logger });
+
+      expect(createAgentInstructions).toBeCalled();
+      expect(writeFile).toBeCalledWith("AGENTS.md", expect.stringContaining("coding agents"), expect.any(Function));
+      expect(writeFile).toBeCalledWith("CLAUDE.md", expect.stringContaining("Claude"), expect.any(Function));
     });
 
     it("uses the runner flag when extension files are selected", async () => {
@@ -494,7 +548,6 @@ describe("runCli", () => {
 
     it("ignores runner and no-install behavior when extension files are not selected", async () => {
       const askForWhichTestRunner = vi.spyOn(prompter, "askForWhichTestRunner");
-      const askForWhichBundler = vi.spyOn(prompter, "askForWhichBundler");
       const createTestRunnerConfig = vi.spyOn(fileCreator, "createTestRunnerConfig");
       const createTsConfig = vi.spyOn(fileCreator, "createTsConfig");
       const createPackageJson = vi.spyOn(fileCreator, "createPackageJson");
@@ -506,7 +559,6 @@ describe("runCli", () => {
       );
 
       expect(askForWhichTestRunner).not.toBeCalled();
-      expect(askForWhichBundler).not.toBeCalled();
       expect(createTestRunnerConfig).not.toBeCalled();
       expect(createTsConfig).not.toBeCalled();
       expect(createPackageJson).not.toBeCalled();
@@ -556,6 +608,9 @@ describe("runCli", () => {
       expect(fileCreator.createPiFoldersBasedOnChoices).toBeCalledWith(["extensions", "prompts"]);
       expectWriteFileToWriteBasedOnExpectedValue("extensions");
       expectWriteFileToWriteBasedOnExpectedValue("prompts");
+      expect(writeFile).toBeCalledWith("package.json", expect.stringContaining('"create:extension"'), expect.any(Function));
+      expect(writeFile).toBeCalledWith("package.json", expect.not.stringContaining('"jest"'), expect.any(Function));
+      expect(writeFile).toBeCalledWith("package.json", expect.not.stringContaining('"vitest"'), expect.any(Function));
       expect(logger.warn).toBeCalledWith(expect.stringContaining("test runner"));
     });
   });

@@ -11,15 +11,17 @@ export type AllowedFolderChioceValues = Array<(typeof allowedFolderChioces)[numb
 const allowedTestRunnerChioces = ["jest", "vitest"] as const;
 export type AllowedTestRunnerChioces = (typeof allowedTestRunnerChioces)[number];
 
-export const allowedBundlers = ["vite", "rollup"] as const;
-export type AllowedBundlers = (typeof allowedBundlers)[number];
-
 export const allowedPackageManagers = ["bun", "pnpm", "yarn", "npm"] as const;
 export type AllowedPackageManagers = (typeof allowedPackageManagers)[number];
 type DetectedPackageManagers = Exclude<AllowedPackageManagers, "npm">;
 
-type FindExecutablePath = (packageManager: DetectedPackageManagers) => Promise<string | undefined>;
-type InstallPackages = (packageManager: AllowedPackageManagers, directory: string) => Promise<void>;
+type FindExecutablePath = (
+  packageManager: DetectedPackageManagers,
+) => Promise<string | undefined>;
+type InstallPackages = (
+  packageManager: AllowedPackageManagers,
+  directory: string,
+) => Promise<void>;
 type SignaleLogger = Pick<typeof signaleLogger, "start" | "success" | "warn" | "error">;
 
 const extensionContent = `export default function (pi:ExtensionAPI) {
@@ -131,14 +133,100 @@ const themeContent = `{
       }
     }`;
 
-const fileByFolderChoice: Record<AllowedFolderChioceValues[number], { file: string; content: string }> = {
+const agentsContent = `# AGENTS.md
+
+Use this file to document repository-specific instructions for coding agents.
+`;
+
+const claudeContent = `# CLAUDE.md
+
+Use this file to document repository-specific instructions for Claude.
+`;
+
+const fileByFolderChoice: Record<
+  AllowedFolderChioceValues[number],
+  { file: string; content: string }
+> = {
   extensions: { file: "extensions/index.ts", content: extensionContent },
   prompts: { file: "prompts/example.md", content: promptContent },
   skills: { file: "skills/example/SKILL.md", content: skillContent },
   themes: { file: "themes/theme.json", content: themeContent },
 };
 
-const testRunnerConfigByChoice: Record<AllowedTestRunnerChioces, { file: string; content: string }> = {
+const scriptByFolderChoice: Record<
+  AllowedFolderChioceValues[number],
+  { file: string; content: string }
+> = {
+  extensions: {
+    file: "scripts/create-extension.ts",
+    content: `import { dirname, join } from "node:path";
+import { mkdirSync, writeFileSync } from "node:fs";
+
+const extensionPath = process.argv[2];
+
+if (!extensionPath) {
+  throw new Error("Provide an extension path. Example: pnpm create:extension auth/index.ts");
+}
+
+const file = join("extensions", extensionPath);
+
+mkdirSync(dirname(file), { recursive: true });
+writeFileSync(file, ${JSON.stringify(extensionContent)});
+`,
+  },
+  prompts: {
+    file: "scripts/create-prompt.ts",
+    content: `import { join } from "node:path";
+import { mkdirSync, writeFileSync } from "node:fs";
+
+const fileName = process.argv[2];
+
+if (!fileName) {
+  throw new Error("Provide a prompt file name. Example: pnpm create:prompt summarize.md");
+}
+
+mkdirSync("prompts", { recursive: true });
+writeFileSync(join("prompts", fileName), ${JSON.stringify(promptContent)});
+`,
+  },
+  skills: {
+    file: "scripts/create-skill.ts",
+    content: `import { join } from "node:path";
+import { mkdirSync, writeFileSync } from "node:fs";
+
+const skillName = process.argv[2];
+
+if (!skillName) {
+  throw new Error("Provide a skill name. Example: pnpm create:skill summarize-text");
+}
+
+const directory = join("skills", skillName);
+
+mkdirSync(directory, { recursive: true });
+writeFileSync(join(directory, "SKILL.md"), ${JSON.stringify(skillContent)});
+`,
+  },
+  themes: {
+    file: "scripts/create-theme.ts",
+    content: `import { join } from "node:path";
+import { mkdirSync, writeFileSync } from "node:fs";
+
+const fileName = process.argv[2];
+
+if (!fileName) {
+  throw new Error("Provide a theme file name. Example: pnpm create:theme theme.json");
+}
+
+mkdirSync("themes", { recursive: true });
+writeFileSync(join("themes", fileName), ${JSON.stringify(themeContent)});
+`,
+  },
+};
+
+const testRunnerConfigByChoice: Record<
+  AllowedTestRunnerChioces,
+  { file: string; content: string }
+> = {
   vitest: {
     file: "vitest.config.ts",
     content: `// vitest.config.ts
@@ -229,20 +317,9 @@ export class Prompter {
     return answers.testRunner;
   }
 
-  async askForWhichBundler(): Promise<AllowedBundlers> {
-    const answers = await inquirer.prompt<{ bundler: AllowedBundlers }>([
-      {
-        type: "list",
-        name: "bundler",
-        message: "Which bundler do you want to use?",
-        choices: [...allowedBundlers],
-      },
-    ]);
-
-    return answers.bundler;
-  }
-
-  async askForWhichPackageManager(packageManagers: DetectedPackageManagers[]): Promise<AllowedPackageManagers> {
+  async askForWhichPackageManager(
+    packageManagers: DetectedPackageManagers[],
+  ): Promise<AllowedPackageManagers> {
     const answers = await inquirer.prompt<{ packageManager: AllowedPackageManagers }>([
       {
         type: "list",
@@ -266,6 +343,18 @@ export class FileCreator {
     });
   }
 
+  createScriptsBasedOnChoices(choices: AllowedFolderChioceValues) {
+    choices.forEach((choice) => {
+      const file = scriptByFolderChoice[choice];
+      this.createFile(file.file, file.content);
+    });
+  }
+
+  createAgentInstructions() {
+    this.createFile("AGENTS.md", agentsContent);
+    this.createFile("CLAUDE.md", claudeContent);
+  }
+
   createTestRunnerConfig(testRunner: AllowedTestRunnerChioces) {
     const file = testRunnerConfigByChoice[testRunner];
     this.createFile(file.file, file.content);
@@ -275,12 +364,11 @@ export class FileCreator {
     this.createFile("tsconfig.json", JSON.stringify(createTsConfig(), null, 2));
   }
 
-  createPackageJson(
-    bundler: AllowedBundlers,
-    testRunner: AllowedTestRunnerChioces,
-    choices: AllowedFolderChioceValues,
-  ) {
-    this.createFile("package.json", JSON.stringify(createPackageJson(bundler, testRunner, choices), null, 2));
+  createPackageJson(testRunner: AllowedTestRunnerChioces | undefined, choices: AllowedFolderChioceValues) {
+    this.createFile(
+      "package.json",
+      JSON.stringify(createPackageJson(testRunner, choices), null, 2),
+    );
   }
 
   createFile(file: string, content: string) {
@@ -327,32 +415,37 @@ export async function handler(object: HandlerOptions, deps: Deps) {
   if (!flaggedChoices) logger.warn("Asking which PI package folders to create.");
 
   const choices = flaggedChoices ?? (await deps.prompter.askForWhatTheyWantToMake());
-  const fileCreator = getPackageName(object) ? new FileCreator(getPackageName(object)) : deps.fileCreator;
+  const fileCreator = getPackageName(object)
+    ? new FileCreator(getPackageName(object))
+    : deps.fileCreator;
 
   logger.message(`Creating PI package folders: ${choices.join(", ")}`);
   fileCreator.createPiFoldersBasedOnChoices(choices);
+  fileCreator.createScriptsBasedOnChoices(choices);
   logger.message("Created PI package starter files.");
+
+  if (object.instructions === true) {
+    logger.message("Creating agent instruction files.");
+    fileCreator.createAgentInstructions();
+  }
 
   if (choices.includes("extensions")) {
     const flaggedTestRunner = getTestRunner(object);
 
-    if (!flaggedTestRunner) logger.warn("Asking which test runner to use for extension tooling.");
+    if (!flaggedTestRunner)
+      logger.warn("Asking which test runner to use for extension tooling.");
 
     const testRunner = flaggedTestRunner ?? (await deps.prompter.askForWhichTestRunner());
 
     if (!testRunner) {
       const message = "No test runner selected. PI package starter files were still generated.";
       logger.warn(message);
-      return;
     }
 
-    logger.warn("Asking which bundler to use for extension tooling.");
-    const bundler = await deps.prompter.askForWhichBundler();
-
-    logger.message(`Creating ${testRunner} and ${bundler} extension tooling.`);
-    fileCreator.createTestRunnerConfig(testRunner);
+    logger.message(`Creating extension tooling${testRunner ? ` with ${testRunner}` : ""}.`);
+    if (testRunner) fileCreator.createTestRunnerConfig(testRunner);
     fileCreator.createTsConfig();
-    fileCreator.createPackageJson(bundler, testRunner, choices);
+    fileCreator.createPackageJson(testRunner, choices);
 
     if (object.install !== false) {
       const packageManager = await resolvePackageManager(deps.prompter);
@@ -377,6 +470,7 @@ export function setupRunCli(
       .argument("[packageName]", "Package folder to create")
       .option("--folder <folder>", "PI package folder to create", collectValues, [])
       .option("--runner <runner>", "Test runner to use when extensions are selected")
+      .option("--instructions", "Generate AGENTS.md and CLAUDE.md files")
       .option("--no-install", "Skip installing generated package dependencies");
     const parsedProgram = args.length > 0 ? program.parse(args, { from: "user" }) : program;
     const flags = parsedProgram.opts() as HandlerOptions;
@@ -393,7 +487,8 @@ function collectValues(value: string, values: string[]) {
 function getFolderChoices(object: HandlerOptions) {
   const folders = object.folder;
 
-  if (Array.isArray(folders)) return folders.length > 0 ? (folders as AllowedFolderChioceValues) : undefined;
+  if (Array.isArray(folders))
+    return folders.length > 0 ? (folders as AllowedFolderChioceValues) : undefined;
   if (typeof folders === "string") return [folders] as AllowedFolderChioceValues;
 
   return undefined;
@@ -425,27 +520,23 @@ function createTsConfig() {
   };
 }
 
-function createPackageJson(
-  bundler: AllowedBundlers,
-  testRunner: AllowedTestRunnerChioces,
-  choices: AllowedFolderChioceValues,
-) {
-  const scripts: Record<string, string> = {
-    build: bundler === "vite" ? "vite build" : "rollup -c",
-    test: testRunner === "vitest" ? "vitest run" : "jest",
-  };
+function createPackageJson(testRunner: AllowedTestRunnerChioces | undefined, choices: AllowedFolderChioceValues) {
+  const scripts: Record<string, string> = {};
 
   choices.forEach((choice) => {
-    scripts[`create:${choice.slice(0, -1)}`] = `pi create ${choice.slice(0, -1)}`;
+    scripts[`create:${choice.slice(0, -1)}`] = `tsx scripts/create-${choice.slice(0, -1)}.ts`;
   });
+
+  if (testRunner) scripts.test = testRunner === "vitest" ? "vitest run" : "jest";
 
   return {
     type: "module",
     scripts,
     devDependencies: {
       typescript: "latest",
-      ...(bundler === "vite" ? { vite: "latest" } : { rollup: "latest", "@rollup/plugin-typescript": "latest" }),
-      ...(testRunner === "vitest" ? { vitest: "latest" } : { jest: "latest", "ts-jest": "latest" }),
+      tsx: "latest",
+      ...(testRunner === "vitest" ? { vitest: "latest" } : {}),
+      ...(testRunner === "jest" ? { jest: "latest", "ts-jest": "latest" } : {}),
     },
   };
 }
@@ -459,10 +550,15 @@ async function installPackages(packageManager: AllowedPackageManagers, directory
   };
 
   await new Promise<void>((resolve, reject) => {
-    execFile(packageManager, argsByPackageManager[packageManager], { cwd: directory }, (error) => {
-      if (error) reject(error);
-      else resolve();
-    });
+    execFile(
+      packageManager,
+      argsByPackageManager[packageManager],
+      { cwd: directory },
+      (error) => {
+        if (error) reject(error);
+        else resolve();
+      },
+    );
   });
 }
 
