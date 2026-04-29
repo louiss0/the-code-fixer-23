@@ -9,7 +9,8 @@
     "test": "pnpm nx run-many -t test",
     "lint": "pnpm nx run-many -t lint",
     "format": "biome format --write .",
-    "check": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build"
+    "check": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build",
+    "create-pi-package:local": "pnpm --filter @code-fixer-23/create-pi-package build && pnpm --package ./packages/create-pi-package dlx create-pi-package"
   },
   "dependencies": {
     "@mariozechner/pi-coding-agent": "^0.67.68",

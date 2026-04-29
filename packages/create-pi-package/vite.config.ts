@@ -7,7 +7,6 @@ const packageRoot = path.dirname(fileURLToPath(import.meta.url));
 
 function isExternal(id: string) {
   return (
-    id === "commander" ||
     id === "inquirer" ||
     id === "signale" ||
     id.startsWith("@inquirer/") ||

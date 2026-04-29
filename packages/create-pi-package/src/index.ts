@@ -3,7 +3,7 @@ import { mkdirSync, writeFile } from "node:fs";
 import path from "node:path";
 import { Command } from "@commander-js/extra-typings";
 import inquirer from "inquirer";
-import { Signale } from "signale";
+import signaleLogger from "signale";
 
 const allowedFolderChioces = ["extensions", "prompts", "skills", "themes"] as const;
 export type AllowedFolderChioceValues = Array<(typeof allowedFolderChioces)[number]>;
@@ -20,7 +20,7 @@ type DetectedPackageManagers = Exclude<AllowedPackageManagers, "npm">;
 
 type FindExecutablePath = (packageManager: DetectedPackageManagers) => Promise<string | undefined>;
 type InstallPackages = (packageManager: AllowedPackageManagers, directory: string) => Promise<void>;
-type SignaleLogger = Pick<Signale, "start" | "success" | "warn" | "error">;
+type SignaleLogger = Pick<typeof signaleLogger, "start" | "success" | "warn" | "error">;
 
 const extensionContent = `export default function (pi:ExtensionAPI) {
 
@@ -183,7 +183,7 @@ const testRunnerConfigByChoice: Record<AllowedTestRunnerChioces, { file: string;
 };
 
 export class Logger {
-  constructor(private readonly signale: SignaleLogger = new Signale()) {}
+  constructor(private readonly signale: SignaleLogger = signaleLogger) {}
 
   message(message: string) {
     this.signale.success(message);
