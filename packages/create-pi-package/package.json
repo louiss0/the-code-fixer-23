@@ -1,6 +1,6 @@
 {
   "name": "@code-fixer-23/create-pi-package",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "type": "module",
   "description": "Scaffold PI packages with prompts, skills, and extensions.",
   "keywords": [

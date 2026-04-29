@@ -1,3 +1,22 @@
+# 1.0.0 (2026-04-29)
+
+### 🚀 Features
+
+- **create-pi-package:** add generated file scripts ([c852ec8](https://github.com/louiss0/the-code-fixer-23/commit/c852ec8))
+- **create-pi-package:** add signale logging ([1b7696d](https://github.com/louiss0/the-code-fixer-23/commit/1b7696d))
+- **create-pi-package:** support package CLI options ([344f198](https://github.com/louiss0/the-code-fixer-23/commit/344f198))
+- **create-pi-package:** add inquirer package prompts ([91ecd84](https://github.com/louiss0/the-code-fixer-23/commit/91ecd84))
+
+### 🩹 Fixes
+
+- **create-pi-package:** enable vitest globals in tests ([51c551e](https://github.com/louiss0/the-code-fixer-23/commit/51c551e))
+- **create-pi-package:** move commander typings to package ([2007f9d](https://github.com/louiss0/the-code-fixer-23/commit/2007f9d))
+- **create-pi-package:** restore cli package metadata ([8d863af](https://github.com/louiss0/the-code-fixer-23/commit/8d863af))
+
+### ❤️ Thank You
+
+- louiss0 @louiss0
+
 ## 0.2.0 (2026-04-26)
 
 ### 🚀 Features
