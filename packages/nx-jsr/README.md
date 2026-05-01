@@ -19,20 +19,28 @@ pnpm add -D @code-fixer-23/nx-jsr
 
 Generate a new JSR TypeScript library.
 
+**Use without installing the plugin first:** run the generator through `pnpm dlx` with transient `nx` and `@code-fixer-23/nx-jsr` packages.
+
 - Default: Standalone/package-based mode in the current directory (no Nx project registered, package dev dependencies written locally)
 - Monorepo/integrated mode: Provide `--directory=<dir>` to generate into `<dir>/<name>`, register an Nx project, generate Jest/Vitest config with Nx generators, add wildcard dependencies to the workspace root, and install them with the package manager Nx detects from the workspace
 
 ### Usage
 
 ```sh
-# Standalone (default - files in current directory)
-npx nx g @code-fixer-23/nx-jsr:library my-lib --importPath=@scope/my-lib
+# Standalone via dlx (no prior plugin install)
+pnpm dlx -p nx -p @code-fixer-23/nx-jsr nx g @code-fixer-23/nx-jsr:library my-lib --scope=scope
+
+# Standalone when the plugin is already installed
+npx nx g @code-fixer-23/nx-jsr:library my-lib --scope=scope
+
+# Override the derived @scope/my-lib import path
+npx nx g @code-fixer-23/nx-jsr:library my-lib --scope=scope --importPath=@other/custom
 
 # Monorepo mode (creates packages/my-lib/ and registers Nx project)
-npx nx g @code-fixer-23/nx-jsr:library my-lib --importPath=@scope/my-lib --directory=packages
+npx nx g @code-fixer-23/nx-jsr:library my-lib --scope=scope --directory=packages
 
 # Custom directory
-npx nx g @code-fixer-23/nx-jsr:library my-lib --importPath=@scope/my-lib --directory=libs
+npx nx g @code-fixer-23/nx-jsr:library my-lib --scope=scope --directory=libs
 ```
 
 ### Options
@@ -40,7 +48,8 @@ npx nx g @code-fixer-23/nx-jsr:library my-lib --importPath=@scope/my-lib --direc
 | Option        | Type                         | Required | Description                                                     |
 | ------------- | ---------------------------- | -------- | --------------------------------------------------------------- |
 | `name`        | `string`                     | Yes      | Library name in kebab-case                                      |
-| `importPath`  | `string`                     | Yes      | JSR import path, for example `@scope/package-name`              |
+| `scope`       | `string`                     | Yes      | JSR scope used to derive `@<scope>/<package_name>`              |
+| `importPath`  | `string`                     | No       | Override derived JSR import path, for example `@scope/package`  |
 | `directory`   | `string`                     | No       | Create files in `<directory>/<name>` and register an Nx project |
 | `description` | `string`                     | No       | Package description                                             |
 | `skipFormat`  | `boolean`                    | No       | Skip formatting generated files                                 |
@@ -80,16 +89,21 @@ packages/
 
 ```json
 {
+  "$schema": "https://jsr.io/schema/config-file.v1.json",
   "name": "@scope/my-lib",
   "version": "0.1.0",
-  "exports": "./src/index.ts"
+  "exports": "./src/index.ts",
+  "publish": {
+    "include": ["LICENSE.txt", "README.md", "src/**/*"],
+    "exclude": ["src/**/*.test.ts"]
+  }
 }
 ```
 
 ### Dependency handling
 
 Standalone mode writes package-based wildcard `devDependencies` into the generated `package.json`.
-Integrated Nx mode keeps the generated package manifest minimal, uses Nx generators for Jest/Vitest configuration, adds wildcard dependencies to the workspace root `package.json`, then installs with the package manager Nx detects from the workspace lockfile/configuration.
+Integrated Nx mode keeps the generated package manifest minimal, uses Nx generators for Jest/Vitest configuration, and adds wildcard dependencies to the workspace root `package.json`. It only installs with the package manager Nx detects from the workspace lockfile/configuration when `--skipInstall=false` is provided.
 
 ### Nx Targets (monorepo mode)
 

@@ -34,17 +34,41 @@ const generatorFilesPath = path.join(
   'files',
 );
 
+interface NormalizedLibraryGeneratorSchema extends LibraryGeneratorSchema {
+  importPath: string;
+}
+
+function normalizeOptions(
+  options: LibraryGeneratorSchema,
+): NormalizedLibraryGeneratorSchema {
+  if (options.importPath) {
+    return { ...options, importPath: options.importPath };
+  }
+
+  if (!options.scope) {
+    throw new Error('scope is required when importPath is not provided');
+  }
+
+  return {
+    ...options,
+    importPath: `@${options.scope}/${names(options.name).fileName}`,
+  };
+}
+
 export async function libraryGenerator(
   tree: Tree,
   options: LibraryGeneratorSchema,
 ) {
+  const resolvedOptions = normalizeOptions(options);
+
   // Standalone mode: if no directory flag provided, generate files in current directory (files-only)
   // If directory flag is provided, create/use that directory with project name subfolder and register Nx project
-  const isStandalone = !options.directory || options.directory === '.';
+  const isStandalone =
+    !resolvedOptions.directory || resolvedOptions.directory === '.';
   const projectRoot = isStandalone
     ? '.'
-    : `${options.directory}/${options.name}`;
-  const parsedNames = names(options.name);
+    : `${resolvedOptions.directory}/${resolvedOptions.name}`;
+  const parsedNames = names(resolvedOptions.name);
 
   const resolvedTestRunner: TestRunner = await resolveTestRunner(
     tree,
@@ -61,7 +85,7 @@ export async function libraryGenerator(
   const packageManagerCommands = getPackageManagerCommand(packageManager);
 
   const templateOptions = {
-    ...options,
+    ...resolvedOptions,
     ...parsedNames,
     offsetFromRoot: offsetFromRoot(projectRoot),
     template: '',
@@ -69,19 +93,25 @@ export async function libraryGenerator(
 
   generateFiles(tree, generatorFilesPath, projectRoot, templateOptions);
 
-  createJsrJson(tree, projectRoot, options);
-  createTsConfig(tree, projectRoot, options);
+  createJsrJson(tree, projectRoot, resolvedOptions);
+  createTsConfig(tree, projectRoot, resolvedOptions);
   const devDependencies = getDevDependencies(
     resolvedTestRunner,
     resolvedLinter,
     resolvedFormatter,
   );
 
-  createPackageJson(tree, projectRoot, options, isStandalone, devDependencies);
+  createPackageJson(
+    tree,
+    projectRoot,
+    resolvedOptions,
+    isStandalone,
+    devDependencies,
+  );
   createReadme(
     tree,
     projectRoot,
-    options,
+    resolvedOptions,
     resolvedTestRunner,
     packageManagerCommands.exec,
   );
@@ -126,23 +156,23 @@ export async function libraryGenerator(
 
     installTask = await configureIntegratedTestRunner(
       tree,
-      options.name,
+      resolvedOptions.name,
       resolvedTestRunner,
-      options.skipFormat,
+      resolvedOptions.skipFormat,
     );
 
     addDependenciesToPackageJson(tree, {}, devDependencies);
   }
 
-  if (!options.skipFormat) {
+  if (!resolvedOptions.skipFormat) {
     await formatFiles(tree);
   }
 
-  if (!isStandalone && !options.skipInstall) {
+  if (!isStandalone && !resolvedOptions.skipInstall) {
     installPackagesTask(tree, true, undefined, packageManager);
   }
 
-  if (isStandalone || options.skipInstall) {
+  if (isStandalone || resolvedOptions.skipInstall) {
     return () => {};
   }
 
@@ -340,12 +370,17 @@ describe('example', () => {
 function createJsrJson(
   tree: Tree,
   projectRoot: string,
-  options: LibraryGeneratorSchema,
+  options: NormalizedLibraryGeneratorSchema,
 ) {
   const jsrJson = {
+    $schema: 'https://jsr.io/schema/config-file.v1.json',
     name: options.importPath,
     version: '0.1.0',
     exports: './src/index.ts',
+    publish: {
+      include: ['LICENSE.txt', 'README.md', 'src/**/*'],
+      exclude: ['src/**/*.test.ts'],
+    },
   };
 
   tree.write(`${projectRoot}/jsr.json`, JSON.stringify(jsrJson, null, 2));
@@ -354,7 +389,7 @@ function createJsrJson(
 function createTsConfig(
   tree: Tree,
   projectRoot: string,
-  options: LibraryGeneratorSchema,
+  options: NormalizedLibraryGeneratorSchema,
 ) {
   // Determine if project is at root level
   const isRootLevel = !projectRoot.includes('/');
@@ -392,7 +427,7 @@ function createTsConfig(
 function createPackageJson(
   tree: Tree,
   projectRoot: string,
-  options: LibraryGeneratorSchema,
+  options: NormalizedLibraryGeneratorSchema,
   isStandalone: boolean,
   devDependencies: Record<string, string>,
 ) {
@@ -464,7 +499,7 @@ function getDevDependencies(
 function createReadme(
   tree: Tree,
   projectRoot: string,
-  options: LibraryGeneratorSchema,
+  options: NormalizedLibraryGeneratorSchema,
   testRunner: TestRunner,
   execCommand: string,
 ) {
