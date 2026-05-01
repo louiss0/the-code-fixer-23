@@ -4,6 +4,8 @@ import {
   type Tree,
   addProjectConfiguration,
   formatFiles,
+  getDependencyVersionFromPackageJson,
+  getPackageManagerCommand,
   generateFiles,
   joinPathFragments,
   logger,
@@ -238,7 +240,9 @@ function createTsSpecConfig(
 
   const rootOffset = offsetFromRoot(projectRoot);
   const types =
-    testRunner === 'vitest' ? ['vitest/globals', 'node'] : ['jest', 'node'];
+    testRunner === 'vitest'
+      ? ['vitest/globals', 'vitest/importMeta', 'vite/client', 'node']
+      : ['jest', 'node'];
   const tsconfigSpec = {
     extends: './tsconfig.json',
     compilerOptions: {
@@ -262,6 +266,9 @@ function createPackageJson(
   linter: Linter,
   formatter: Formatter,
 ) {
+  const packageManagerCommand = getPackageManagerCommand(
+    detectPackageManagerFromTree(tree),
+  );
   const pkg: {
     name: string;
     version: string;
@@ -301,24 +308,38 @@ function createPackageJson(
   };
 
   if (testRunner === 'vitest') {
-    pkg.scripts.test = 'vitest run';
-    pkg.devDependencies.vitest = '^3.0.0';
-    pkg.devDependencies['@vitest/ui'] = '^3.0.0';
-    pkg.devDependencies['happy-dom'] = '^15.0.0';
+    pkg.scripts.test = 'vitest run --config vitest.config.ts';
+    pkg.devDependencies.vitest = getDependencyVersion(tree, 'vitest');
+    pkg.devDependencies['@vitest/ui'] = getDependencyVersion(
+      tree,
+      '@vitest/ui',
+    );
+    pkg.devDependencies['happy-dom'] = getDependencyVersion(tree, 'happy-dom');
   } else if (testRunner === 'jest') {
-    pkg.scripts.test = 'jest';
-    pkg.devDependencies.jest = '^29.7.0';
-    pkg.devDependencies['ts-jest'] = '^29.1.1';
-    pkg.devDependencies['@types/jest'] = '^29.5.12';
+    pkg.scripts.test = 'jest --config jest.config.ts';
+    pkg.devDependencies.jest = getDependencyVersion(tree, 'jest');
+    pkg.devDependencies['ts-jest'] = getDependencyVersion(tree, 'ts-jest');
+    pkg.devDependencies['@types/jest'] = getDependencyVersion(
+      tree,
+      '@types/jest',
+    );
   }
 
   if (linter === 'eslint') {
-    pkg.scripts.lint = 'eslint .';
-    pkg.devDependencies.eslint = '^9.9.0';
-    pkg.devDependencies['@eslint/js'] = '^9.8.0';
+    pkg.scripts.lint = 'eslint . --config eslint.config.mjs';
+    pkg.scripts['configure:eslint'] =
+      `${packageManagerCommand.dlx} @eslint/create-config@latest`;
+    pkg.devDependencies.eslint = getDependencyVersion(tree, 'eslint');
+    pkg.devDependencies['@eslint/js'] = getDependencyVersion(
+      tree,
+      '@eslint/js',
+    );
   } else if (linter === 'biome') {
     pkg.scripts.lint = 'biome lint .';
-    pkg.devDependencies['@biomejs/biome'] = '^1.8.3';
+    pkg.devDependencies['@biomejs/biome'] = getDependencyVersion(
+      tree,
+      '@biomejs/biome',
+    );
   }
 
   if (formatter === 'prettier') {
@@ -337,9 +358,21 @@ function createPackageJson(
     pkg.scripts.format = 'biome format --write .';
   }
 
-  pkg.devDependencies.tsup = '^8.0.1';
+  pkg.devDependencies.tsup = getDependencyVersion(tree, 'tsup');
 
   tree.write(`${projectRoot}/package.json`, JSON.stringify(pkg, null, 2));
+}
+
+function getDependencyVersion(tree: Tree, name: string): string {
+  return getDependencyVersionFromPackageJson(tree, name) ?? 'latest';
+}
+
+function detectPackageManagerFromTree(tree: Tree) {
+  if (tree.exists('pnpm-lock.yaml')) return 'pnpm';
+  if (tree.exists('package-lock.json')) return 'npm';
+  if (tree.exists('yarn.lock')) return 'yarn';
+  if (tree.exists('bun.lockb') || tree.exists('bun.lock')) return 'bun';
+  return 'pnpm';
 }
 
 function createVitestConfig(tree: Tree, projectRoot: string) {
@@ -349,10 +382,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'happy-dom',
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-    },
+    coverage: { provider: 'v8' },
   },
 });
 `;
@@ -489,10 +519,15 @@ function createReadme(
   options: LibraryGeneratorSchema,
   testRunner: TestRunner,
 ) {
+  const packageManager = detectPackageManagerFromTree(tree);
+  const packageManagerCommand = getPackageManagerCommand(packageManager);
+  const installCommand = `${packageManagerCommand.add} ${options.importPath}`;
   const testingInfo =
     testRunner !== 'none' ? `**Testing**: ${testRunner}\n\n` : '';
   const testCommand =
-    testRunner !== 'none' ? `\n# Run tests\nnpx nx test ${options.name}\n` : '';
+    testRunner !== 'none'
+      ? `\n# Run tests\n${packageManagerCommand.run('test')}\n`
+      : '';
 
   const content = `# ${options.importPath}
 
@@ -501,11 +536,7 @@ ${options.description || 'A TypeScript library built with Tsup'}
 ${testingInfo}## Installation
 
 \`\`\`sh
-# Using pnpm
-pnpm add ${options.importPath}
-
-# Or using JPD if available
-jpd add ${options.importPath}
+${installCommand}
 \`\`\`
 
 ## Usage
@@ -520,12 +551,15 @@ console.log(hello());
 
 \`\`\`sh
 # Build the library
-npx nx build ${options.name}
+${packageManagerCommand.run('build')}
+
+# Watch for changes
+${packageManagerCommand.run('dev')}
 
 # Run type checking
-npx nx typecheck ${options.name}${testCommand}
+${packageManagerCommand.run('typecheck')}${testCommand}
 # Lint
-npx nx lint ${options.name}
+${packageManagerCommand.run('lint')}
 \`\`\`
 `;
 
