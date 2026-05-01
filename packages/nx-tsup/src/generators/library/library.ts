@@ -267,7 +267,7 @@ function createPackageJson(
   formatter: Formatter,
 ) {
   const packageManagerCommand = getPackageManagerCommand(
-    detectPackageManagerFromTree(tree),
+    detectPackageManagerFromCommand(),
   );
   const pkg: {
     name: string;
@@ -367,12 +367,24 @@ function getDependencyVersion(tree: Tree, name: string): string {
   return getDependencyVersionFromPackageJson(tree, name) ?? 'latest';
 }
 
-function detectPackageManagerFromTree(tree: Tree) {
-  if (tree.exists('pnpm-lock.yaml')) return 'pnpm';
-  if (tree.exists('package-lock.json')) return 'npm';
-  if (tree.exists('yarn.lock')) return 'yarn';
-  if (tree.exists('bun.lockb') || tree.exists('bun.lock')) return 'bun';
-  return 'pnpm';
+function detectPackageManagerFromCommand() {
+  const commandSignals = [
+    process.env.npm_config_user_agent,
+    process.env.npm_execpath,
+    process.env.npm_lifecycle_script,
+  ];
+
+  for (const commandSignal of commandSignals) {
+    const command = commandSignal?.toLowerCase();
+    if (!command) continue;
+
+    if (command.includes('pnpm')) return 'pnpm';
+    if (command.includes('yarn')) return 'yarn';
+    if (command.includes('bun')) return 'bun';
+    if (command.includes('npm')) return 'npm';
+  }
+
+  return 'npm';
 }
 
 function createVitestConfig(tree: Tree, projectRoot: string) {
@@ -519,7 +531,7 @@ function createReadme(
   options: LibraryGeneratorSchema,
   testRunner: TestRunner,
 ) {
-  const packageManager = detectPackageManagerFromTree(tree);
+  const packageManager = detectPackageManagerFromCommand();
   const packageManagerCommand = getPackageManagerCommand(packageManager);
   const installCommand = `${packageManagerCommand.add} ${options.importPath}`;
   const testingInfo =

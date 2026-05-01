@@ -26,6 +26,7 @@ describe('library generator', () => {
   };
 
   beforeEach(() => {
+    vi.unstubAllEnvs();
     tree = createTreeWithEmptyWorkspace();
   });
 
@@ -143,8 +144,9 @@ describe('library generator', () => {
     expect(tree.exists('packages/test-lib/eslint.config.mjs')).toBe(true);
   });
 
-  it('should use the detected package manager for eslint config creation', async () => {
-    tree.write('package-lock.json', '{}');
+  it('should use the command package manager for eslint config creation', async () => {
+    vi.stubEnv('npm_config_user_agent', 'npm/10.0.0 node/v25.1.0');
+    tree.write('pnpm-lock.yaml', 'lockfileVersion: 9');
 
     await libraryGenerator(tree, { ...options, linter: 'eslint' });
 
