@@ -2,19 +2,20 @@ import { fileURLToPath } from 'node:url';
 import * as path from 'path';
 import {
   type Tree,
+  addDependenciesToPackageJson,
   addProjectConfiguration,
+  detectPackageManager,
   formatFiles,
   generateFiles,
+  getPackageManagerCommand,
+  installPackagesTask,
   logger,
   names,
   offsetFromRoot,
+  runTasksInSerial,
 } from '@nx/devkit';
-import {
-  detectFormatterFromRootPackageJson,
-  detectLinterFromRootPackageJson,
-  detectTestRunnerFromRootPackageJson,
-} from './detect.js';
-import { isInteractive, selectOrDefault } from './prompt.js';
+import { configurationGenerator as jestConfigurationGenerator } from '@nx/jest';
+import { vitestGenerator } from '@nx/vite';
 import type {
   Formatter,
   LibraryGeneratorSchema,
@@ -22,22 +23,163 @@ import type {
   TestRunner,
 } from './schema.d.ts';
 
+type DetectedTestRunner = 'jest' | 'vitest';
+type DetectedLinter = 'eslint' | 'biome';
+type DetectedFormatter = 'prettier' | 'biome' | 'eslint-stylistic';
+
 const generatorFilesPath = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
   'files',
 );
 
+interface NormalizedLibraryGeneratorSchema extends LibraryGeneratorSchema {
+  importPath: string;
+}
+
+function readRootPackageJson(tree: Tree): Record<string, unknown> | null {
+  try {
+    const raw = tree.read('package.json', 'utf-8');
+    if (!raw) return null;
+    return JSON.parse(raw) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function hasDep(pkg: Record<string, unknown>, name: string): boolean {
+  const deps = (pkg?.dependencies as Record<string, string>) ?? {};
+  const devDeps = (pkg?.devDependencies as Record<string, string>) ?? {};
+  return Boolean(deps[name] || devDeps[name]);
+}
+
+function detectTestRunnerFromRootPackageJson(tree: Tree): {
+  detected: DetectedTestRunner | null;
+  candidates: DetectedTestRunner[];
+} {
+  const pkg = readRootPackageJson(tree) ?? {};
+  const candidates: DetectedTestRunner[] = [];
+  if (hasDep(pkg, 'jest')) candidates.push('jest');
+  if (hasDep(pkg, 'vitest')) candidates.push('vitest');
+
+  if (candidates.length === 1) {
+    return { detected: candidates[0], candidates };
+  }
+  return { detected: null, candidates };
+}
+
+function detectLinterFromRootPackageJson(tree: Tree): {
+  detected: DetectedLinter | null;
+  candidates: DetectedLinter[];
+} {
+  const pkg = readRootPackageJson(tree) ?? {};
+  const candidates: DetectedLinter[] = [];
+  if (hasDep(pkg, 'eslint')) candidates.push('eslint');
+  if (hasDep(pkg, '@biomejs/biome')) candidates.push('biome');
+
+  if (candidates.length === 1) {
+    return { detected: candidates[0], candidates };
+  }
+  return { detected: null, candidates };
+}
+
+function detectFormatterFromRootPackageJson(tree: Tree): {
+  detected: DetectedFormatter | null;
+  candidates: DetectedFormatter[];
+} {
+  const pkg = readRootPackageJson(tree) ?? {};
+  const candidates: DetectedFormatter[] = [];
+  if (hasDep(pkg, 'prettier')) candidates.push('prettier');
+  if (hasDep(pkg, '@biomejs/biome')) candidates.push('biome');
+  if (hasDep(pkg, '@stylistic/eslint-plugin'))
+    candidates.push('eslint-stylistic');
+
+  if (candidates.length === 1) {
+    return { detected: candidates[0], candidates };
+  }
+  return { detected: null, candidates };
+}
+
+function isInteractive(): boolean {
+  const nxInteractive = process.env.NX_INTERACTIVE;
+  if (nxInteractive === 'true') return true;
+  if (nxInteractive === 'false') return false;
+
+  const isCi = /^1|true$/i.test(String(process.env.CI ?? ''));
+  const tty =
+    typeof process.stdout !== 'undefined' && process.stdout.isTTY === true;
+  return !isCi && tty;
+}
+
+async function selectOrDefault(
+  question: string,
+  choices: string[],
+  defaultChoice: string,
+): Promise<string> {
+  if (!isInteractive()) return defaultChoice;
+
+  try {
+    const mod = (await import('enquirer')) as {
+      Select?: new (options: unknown) => { run: () => Promise<string> };
+      prompt?: (options: unknown) => Promise<{ choice?: string }>;
+      default?: {
+        Select?: new (options: unknown) => { run: () => Promise<string> };
+      };
+    };
+    const Select = mod.Select ?? mod.default?.Select;
+
+    if (Select) {
+      const prompt = new Select({ name: 'choice', message: question, choices });
+      const answer = await prompt.run();
+      return typeof answer === 'string' ? answer : defaultChoice;
+    }
+
+    if (typeof mod.prompt === 'function') {
+      const res = await mod.prompt({
+        type: 'select',
+        name: 'choice',
+        message: question,
+        choices,
+      });
+      return res?.choice ?? defaultChoice;
+    }
+  } catch {
+    // Fall back to the default in non-interactive or minimal installs.
+  }
+
+  return defaultChoice;
+}
+
+function normalizeOptions(
+  options: LibraryGeneratorSchema,
+): NormalizedLibraryGeneratorSchema {
+  if (options.importPath) {
+    return { ...options, importPath: options.importPath };
+  }
+
+  if (!options.scope) {
+    throw new Error('scope is required when importPath is not provided');
+  }
+
+  return {
+    ...options,
+    importPath: `@${options.scope}/${names(options.name).fileName}`,
+  };
+}
+
 export async function libraryGenerator(
   tree: Tree,
   options: LibraryGeneratorSchema,
 ) {
+  const resolvedOptions = normalizeOptions(options);
+
   // Standalone mode: if no directory flag provided, generate files in current directory (files-only)
   // If directory flag is provided, create/use that directory with project name subfolder and register Nx project
-  const isStandalone = !options.directory || options.directory === '.';
+  const isStandalone =
+    !resolvedOptions.directory || resolvedOptions.directory === '.';
   const projectRoot = isStandalone
     ? '.'
-    : `${options.directory}/${options.name}`;
-  const parsedNames = names(options.name);
+    : `${resolvedOptions.directory}/${resolvedOptions.name}`;
+  const parsedNames = names(resolvedOptions.name);
 
   const resolvedTestRunner: TestRunner = await resolveTestRunner(
     tree,
@@ -50,8 +192,11 @@ export async function libraryGenerator(
     resolvedLinter,
   );
 
+  const packageManager = detectPackageManager(tree.root);
+  const packageManagerCommands = getPackageManagerCommand(packageManager);
+
   const templateOptions = {
-    ...options,
+    ...resolvedOptions,
     ...parsedNames,
     offsetFromRoot: offsetFromRoot(projectRoot),
     template: '',
@@ -59,24 +204,37 @@ export async function libraryGenerator(
 
   generateFiles(tree, generatorFilesPath, projectRoot, templateOptions);
 
-  createJsrJson(tree, projectRoot, options);
-  createTsConfig(tree, projectRoot, options);
-  createPackageJson(
-    tree,
-    projectRoot,
-    options,
+  createJsrJson(tree, projectRoot, resolvedOptions);
+  createTsConfig(tree, projectRoot, resolvedOptions);
+  const devDependencies = getDevDependencies(
     resolvedTestRunner,
     resolvedLinter,
     resolvedFormatter,
   );
-  createReadme(tree, projectRoot, options, resolvedTestRunner);
 
-  if (resolvedTestRunner === 'vitest') {
-    createVitestConfig(tree, projectRoot);
-    createExampleTest(tree, projectRoot, 'vitest');
-  } else if (resolvedTestRunner === 'jest') {
-    createJestConfig(tree, projectRoot);
-    createExampleTest(tree, projectRoot, 'jest');
+  createPackageJson(
+    tree,
+    projectRoot,
+    resolvedOptions,
+    isStandalone,
+    devDependencies,
+  );
+  createReadme(
+    tree,
+    projectRoot,
+    resolvedOptions,
+    resolvedTestRunner,
+    packageManagerCommands.exec,
+  );
+
+  if (isStandalone) {
+    if (resolvedTestRunner === 'vitest') {
+      createVitestConfig(tree, projectRoot);
+      createExampleTest(tree, projectRoot, 'vitest');
+    } else if (resolvedTestRunner === 'jest') {
+      createJestConfig(tree, projectRoot);
+      createExampleTest(tree, projectRoot, 'jest');
+    }
   }
 
   if (resolvedLinter === 'eslint') {
@@ -91,6 +249,8 @@ export async function libraryGenerator(
   }
 
   // Only register an Nx project when generating into a subdirectory (monorepo mode)
+  let installTask = () => {};
+
   if (!isStandalone) {
     const targets = getProjectTargets(
       projectRoot,
@@ -104,11 +264,64 @@ export async function libraryGenerator(
       sourceRoot: `${projectRoot}/src`,
       targets,
     });
+
+    installTask = await configureIntegratedTestRunner(
+      tree,
+      resolvedOptions.name,
+      resolvedTestRunner,
+      resolvedOptions.skipFormat,
+    );
+
+    addDependenciesToPackageJson(tree, {}, devDependencies);
   }
 
-  if (!options.skipFormat) {
+  if (!resolvedOptions.skipFormat) {
     await formatFiles(tree);
   }
+
+  if (!isStandalone && !resolvedOptions.skipInstall) {
+    installPackagesTask(tree, true, undefined, packageManager);
+  }
+
+  if (isStandalone || resolvedOptions.skipInstall) {
+    return () => {};
+  }
+
+  return runTasksInSerial(installTask);
+}
+
+async function configureIntegratedTestRunner(
+  tree: Tree,
+  projectName: string,
+  testRunner: TestRunner,
+  skipFormat = false,
+) {
+  if (testRunner === 'vitest') {
+    return vitestGenerator(
+      tree,
+      {
+        project: projectName,
+        uiFramework: 'none',
+        coverageProvider: 'v8',
+        testEnvironment: 'happy-dom',
+        skipFormat,
+      },
+      false,
+      true,
+    );
+  }
+
+  if (testRunner === 'jest') {
+    return jestConfigurationGenerator(tree, {
+      project: projectName,
+      testEnvironment: 'node',
+      compiler: 'tsc',
+      skipPackageJson: true,
+      skipFormat,
+    });
+  }
+
+  return () => {};
 }
 
 function getProjectTargets(
@@ -157,25 +370,6 @@ function getProjectTargets(
       },
     },
   };
-
-  if (testRunner && testRunner !== 'none') {
-    targets.test =
-      testRunner === 'vitest'
-        ? {
-            executor: '@nx/vite:test',
-            outputs: ['{projectRoot}/coverage'],
-            options: {
-              config: `${projectRoot}/vitest.config.ts`,
-            },
-          }
-        : {
-            executor: '@nx/jest:jest',
-            outputs: ['{projectRoot}/coverage'],
-            options: {
-              jestConfig: `${projectRoot}/jest.config.ts`,
-            },
-          };
-  }
 
   if (linter && linter !== 'none') {
     targets.lint =
@@ -287,12 +481,17 @@ describe('example', () => {
 function createJsrJson(
   tree: Tree,
   projectRoot: string,
-  options: LibraryGeneratorSchema,
+  options: NormalizedLibraryGeneratorSchema,
 ) {
   const jsrJson = {
+    $schema: 'https://jsr.io/schema/config-file.v1.json',
     name: options.importPath,
     version: '0.1.0',
     exports: './src/index.ts',
+    publish: {
+      include: ['LICENSE.txt', 'README.md', 'src/**/*'],
+      exclude: ['src/**/*.test.ts'],
+    },
   };
 
   tree.write(`${projectRoot}/jsr.json`, JSON.stringify(jsrJson, null, 2));
@@ -301,7 +500,7 @@ function createJsrJson(
 function createTsConfig(
   tree: Tree,
   projectRoot: string,
-  options: LibraryGeneratorSchema,
+  options: NormalizedLibraryGeneratorSchema,
 ) {
   // Determine if project is at root level
   const isRootLevel = !projectRoot.includes('/');
@@ -339,59 +538,24 @@ function createTsConfig(
 function createPackageJson(
   tree: Tree,
   projectRoot: string,
-  options: LibraryGeneratorSchema,
-  testRunner: TestRunner,
-  linter: Linter,
-  formatter: Formatter,
+  options: NormalizedLibraryGeneratorSchema,
+  isStandalone: boolean,
+  devDependencies: Record<string, string>,
 ) {
-  const devDependencies: Record<string, string> = {};
-  const scripts: Record<string, string> = {};
-
-  if (testRunner === 'vitest') {
-    devDependencies.vitest = '^2.0.0';
-    devDependencies['@vitest/ui'] = '^2.0.0';
-    devDependencies['happy-dom'] = '^15.0.0';
-    scripts.test = 'vitest run';
-  } else if (testRunner === 'jest') {
-    devDependencies.jest = '^29.0.0';
-    devDependencies['@types/jest'] = '^29.0.0';
-    devDependencies['ts-jest'] = '^29.0.0';
-    scripts.test = 'jest';
-  }
-
-  if (linter === 'eslint') {
-    devDependencies.eslint = '^9.9.0';
-    devDependencies['@eslint/js'] = '^9.8.0';
-  } else if (linter === 'biome') {
-    devDependencies['@biomejs/biome'] = '^1.8.3';
-  }
-
-  if (formatter === 'prettier') {
-    devDependencies.prettier = '^3.0.0';
-    scripts.format = 'prettier --write .';
-  } else if (formatter === 'biome' && linter !== 'biome') {
-    devDependencies['@biomejs/biome'] = '^1.8.3';
-    scripts.format = 'biome format --write .';
-  } else if (formatter === 'eslint-stylistic') {
-    devDependencies['@stylistic/eslint-plugin'] = '^2.0.0';
-    devDependencies['eslint-config-prettier'] = '^9.0.0';
-    scripts.format = 'eslint --fix .';
-  } else if (formatter === 'biome' && linter === 'biome') {
-    scripts.format = 'biome format --write .';
-  }
-
-  const packageJson: any = {
+  const packageJson: {
+    name: string;
+    version: string;
+    description: string;
+    type: 'module';
+    devDependencies?: Record<string, string>;
+  } = {
     name: options.importPath,
     version: '0.1.0',
     description: options.description || '',
     type: 'module',
   };
 
-  if (Object.keys(scripts).length > 0) {
-    packageJson.scripts = scripts;
-  }
-
-  if (Object.keys(devDependencies).length > 0) {
+  if (isStandalone && Object.keys(devDependencies).length > 0) {
     packageJson.devDependencies = devDependencies;
   }
 
@@ -401,17 +565,62 @@ function createPackageJson(
   );
 }
 
+function getDevDependencies(
+  testRunner: TestRunner,
+  linter: Linter,
+  formatter: Formatter,
+): Record<string, string> {
+  const devDependencies: Record<string, string> = {
+    '@nx/js': '*',
+    '@nx/vitest': '*',
+    '@types/node': '*',
+    jsr: '*',
+    typescript: '*',
+  };
+
+  if (testRunner === 'vitest') {
+    devDependencies.vitest = '*';
+    devDependencies['@vitest/ui'] = '*';
+    devDependencies['happy-dom'] = '*';
+  } else if (testRunner === 'jest') {
+    devDependencies.jest = '*';
+    devDependencies['@types/jest'] = '*';
+    devDependencies['ts-jest'] = '*';
+  }
+
+  if (linter === 'eslint') {
+    devDependencies.eslint = '*';
+    devDependencies['@eslint/js'] = '*';
+  } else if (linter === 'biome') {
+    devDependencies['@biomejs/biome'] = '*';
+  }
+
+  if (formatter === 'prettier') {
+    devDependencies.prettier = '*';
+  } else if (formatter === 'biome') {
+    devDependencies['@biomejs/biome'] = '*';
+  } else if (formatter === 'eslint-stylistic') {
+    devDependencies['@stylistic/eslint-plugin'] = '*';
+    devDependencies['eslint-config-prettier'] = '*';
+  }
+
+  return devDependencies;
+}
+
 function createReadme(
   tree: Tree,
   projectRoot: string,
-  options: LibraryGeneratorSchema,
+  options: NormalizedLibraryGeneratorSchema,
   testRunner: TestRunner,
+  execCommand: string,
 ) {
   const testingInfo =
     testRunner !== 'none' ? `**Testing**: ${testRunner}\n\n` : '';
 
   const testCommand =
-    testRunner !== 'none' ? `\n# Run tests\nnpx nx test ${options.name}\n` : '';
+    testRunner !== 'none'
+      ? `\n# Run tests\n${execCommand} nx test ${options.name}\n`
+      : '';
 
   const content = `# ${options.importPath}
 
@@ -421,7 +630,7 @@ ${testingInfo}## Installation
 
 \`\`\`sh
 # Using JSR
-npx jsr add ${options.importPath}
+${execCommand} jsr add ${options.importPath}
 \`\`\`
 
 ## Usage
@@ -434,14 +643,14 @@ import { } from '${options.importPath}';
 
 \`\`\`sh
 # Build the library
-npx nx build ${options.name}
+${execCommand} nx build ${options.name}
 
 # Run type checking
-npx nx typecheck ${options.name}${testCommand}
+${execCommand} nx typecheck ${options.name}${testCommand}
 # Validate JSR package (dry-run publish)
-npx nx validate ${options.name}
+${execCommand} nx validate ${options.name}
 # Publish to JSR
-npx nx publish ${options.name}
+${execCommand} nx publish ${options.name}
 \`\`\`
 `;
 

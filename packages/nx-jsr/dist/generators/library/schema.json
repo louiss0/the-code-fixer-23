@@ -19,10 +19,15 @@
       "type": "string",
       "description": "Directory where the library will be created. If not specified, files are generated in the current directory (standalone mode). If specified, a subfolder with the project name will be created."
     },
+    "scope": {
+      "type": "string",
+      "description": "The JSR scope used to derive the package name as @<scope>/<package_name>",
+      "x-prompt": "What JSR scope should be used?",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
     "importPath": {
       "type": "string",
-      "description": "The JSR import path (e.g., @scope/package-name)",
-      "x-prompt": "What is the JSR import path? (e.g., @scope/package-name)",
+      "description": "Override the derived JSR import path (e.g., @scope/package-name)",
       "pattern": "^@[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$"
     },
     "description": {
@@ -33,6 +38,11 @@
     "skipFormat": {
       "type": "boolean",
       "description": "Skip formatting files",
+      "default": false
+    },
+    "skipInstall": {
+      "type": "boolean",
+      "description": "Skip installing dependencies in integrated Nx workspaces",
       "default": false
     },
     "testRunner": {
@@ -70,5 +80,6 @@
       "description": "Code formatter. When omitted, this will be auto-detected. Biome formats and lints. ESLint Stylistic requires eslint as linter. If biome is selected as linter, formatter defaults to biome."
     }
   },
-  "required": ["name", "importPath"]
+  "required": ["name"],
+  "anyOf": [{ "required": ["scope"] }, { "required": ["importPath"] }]
 }

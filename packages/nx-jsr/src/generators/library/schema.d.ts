@@ -5,9 +5,11 @@ export type Formatter = 'prettier' | 'biome' | 'eslint-stylistic' | 'none';
 export interface LibraryGeneratorSchema {
   name: string;
   directory?: string;
-  importPath: string;
+  scope?: string;
+  importPath?: string;
   description?: string;
   skipFormat?: boolean;
+  skipInstall?: boolean;
   testRunner?: TestRunner;
   linter?: Linter;
   formatter?: Formatter;

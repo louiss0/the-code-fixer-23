@@ -1,7 +1,13 @@
 import { execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
-import { type ExecutorContext, type PromiseExecutor, logger } from '@nx/devkit';
+import {
+  type ExecutorContext,
+  type PromiseExecutor,
+  detectPackageManager,
+  getPackageManagerCommand,
+  logger,
+} from '@nx/devkit';
 import { config as dotenvConfig } from 'dotenv';
 
 interface ValidateSchema {
@@ -107,8 +113,12 @@ const runExecutor: PromiseExecutor<ValidateSchema> = async (
 
   // Always dry-run publish
   try {
-    logger.info('Running: npx jsr publish --dry-run');
-    execSync('npx jsr publish --dry-run', {
+    const packageManagerCommands = getPackageManagerCommand(
+      detectPackageManager(workspaceRoot),
+    );
+    const command = `${packageManagerCommands.exec} jsr publish --dry-run`;
+    logger.info(`Running: ${command}`);
+    execSync(command, {
       cwd: absolutePackageRoot,
       stdio: 'inherit',
       env: process.env,

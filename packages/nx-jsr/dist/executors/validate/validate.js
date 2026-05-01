@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
-import { logger } from '@nx/devkit';
+import { detectPackageManager, getPackageManagerCommand, logger, } from '@nx/devkit';
 import { config as dotenvConfig } from 'dotenv';
 const runExecutor = async (options, context) => {
     // Infer package root similar to publish executor
@@ -80,8 +80,10 @@ const runExecutor = async (options, context) => {
     }
     // Always dry-run publish
     try {
-        logger.info('Running: npx jsr publish --dry-run');
-        execSync('npx jsr publish --dry-run', {
+        const packageManagerCommands = getPackageManagerCommand(detectPackageManager(workspaceRoot));
+        const command = `${packageManagerCommands.exec} jsr publish --dry-run`;
+        logger.info(`Running: ${command}`);
+        execSync(command, {
             cwd: absolutePackageRoot,
             stdio: 'inherit',
             env: process.env,

@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { logger } from '@nx/devkit';
+import { detectPackageManager, getPackageManagerCommand, logger, } from '@nx/devkit';
 import { config as dotenvConfig } from 'dotenv';
 const runExecutor = async (options, context) => {
     // Infer packageRoot when not provided
@@ -56,8 +56,10 @@ const runExecutor = async (options, context) => {
     if (token)
         env.JSR_TOKEN = token;
     try {
-        logger.info(`Executing: npx ${jsrArgs.join(' ')}`);
-        execSync(`npx ${jsrArgs.join(' ')}`, {
+        const packageManagerCommands = getPackageManagerCommand(detectPackageManager(workspaceRoot));
+        const command = `${packageManagerCommands.exec} ${jsrArgs.join(' ')}`;
+        logger.info(`Executing: ${command}`);
+        execSync(command, {
             cwd: absolutePackageRoot,
             stdio: 'inherit',
             env,
