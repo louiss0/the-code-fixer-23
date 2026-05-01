@@ -4,7 +4,7 @@ An Nx plugin for scaffolding and publishing TypeScript libraries to [JSR (JavaSc
 
 ## Features
 
-- Library Generator: JSR-ready TypeScript libraries (standalone by default)
+- Library Generator: JSR-ready TypeScript libraries (standalone by default, Nx-integrated with `--directory`)
 - Publish Executor: Publish to JSR with dry-run, token, and allow-dirty options
 - Validate Executor: Structural checks + `jsr publish --dry-run`
 - Version Executor: Manual version update for `jsr.json` (Nx Release recommended for semver/versioning workflow)
@@ -19,8 +19,8 @@ pnpm add -D @code-fixer-23/nx-jsr
 
 Generate a new JSR TypeScript library.
 
-- Default: Standalone (files-only) in the current directory (no Nx project registered)
-- Monorepo mode: Provide `--directory=<dir>` to generate into `<dir>/<name>` and register an Nx project with build/typecheck/publish/version/validate targets
+- Default: Standalone/package-based mode in the current directory (no Nx project registered, package dev dependencies written locally)
+- Monorepo/integrated mode: Provide `--directory=<dir>` to generate into `<dir>/<name>`, register an Nx project, generate Jest/Vitest config with Nx generators, add wildcard dependencies to the workspace root, and install them with the package manager Nx detects from the workspace
 
 ### Usage
 
@@ -44,6 +44,7 @@ npx nx g @code-fixer-23/nx-jsr:library my-lib --importPath=@scope/my-lib --direc
 | `directory`   | `string`                     | No       | Create files in `<directory>/<name>` and register an Nx project |
 | `description` | `string`                     | No       | Package description                                             |
 | `skipFormat`  | `boolean`                    | No       | Skip formatting generated files                                 |
+| `skipInstall` | `boolean`                    | No       | Skip dependency installation in integrated Nx mode              |
 | `testRunner`  | `vitest` \| `jest` \| `none` | No       | Choose a test runner for generated projects                     |
 
 ### What Gets Generated
@@ -84,6 +85,11 @@ packages/
   "exports": "./src/index.ts"
 }
 ```
+
+### Dependency handling
+
+Standalone mode writes package-based wildcard `devDependencies` into the generated `package.json`.
+Integrated Nx mode keeps the generated package manifest minimal, uses Nx generators for Jest/Vitest configuration, adds wildcard dependencies to the workspace root `package.json`, then installs with the package manager Nx detects from the workspace lockfile/configuration.
 
 ### Nx Targets (monorepo mode)
 
@@ -183,7 +189,7 @@ Use Nx Release to set versions and create tags, then run `publish` for each pack
 - Node.js 20+
 - Nx 21.6.3+
 - TypeScript 5.9+
-- JSR CLI (via npx)
+- JSR CLI (installed or invoked through the detected package manager)
 
 ## Resources
 

@@ -1,7 +1,13 @@
 import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { join } from 'path';
-import { type ExecutorContext, type PromiseExecutor, logger } from '@nx/devkit';
+import {
+  type ExecutorContext,
+  type PromiseExecutor,
+  detectPackageManager,
+  getPackageManagerCommand,
+  logger,
+} from '@nx/devkit';
 import { config as dotenvConfig } from 'dotenv';
 import type { PublishExecutorSchema } from './schema.d.ts';
 
@@ -79,9 +85,13 @@ const runExecutor: PromiseExecutor<PublishExecutorSchema> = async (
   if (token) env.JSR_TOKEN = token;
 
   try {
-    logger.info(`Executing: npx ${jsrArgs.join(' ')}`);
+    const packageManagerCommands = getPackageManagerCommand(
+      detectPackageManager(workspaceRoot),
+    );
+    const command = `${packageManagerCommands.exec} ${jsrArgs.join(' ')}`;
+    logger.info(`Executing: ${command}`);
 
-    execSync(`npx ${jsrArgs.join(' ')}`, {
+    execSync(command, {
       cwd: absolutePackageRoot,
       stdio: 'inherit',
       env,

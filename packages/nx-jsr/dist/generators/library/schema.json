@@ -35,6 +35,11 @@
       "description": "Skip formatting files",
       "default": false
     },
+    "skipInstall": {
+      "type": "boolean",
+      "description": "Skip installing dependencies in integrated Nx workspaces",
+      "default": false
+    },
     "testRunner": {
       "type": "string",
       "description": "Test runner to use for the library",

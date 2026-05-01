@@ -8,6 +8,7 @@ export interface LibraryGeneratorSchema {
   importPath: string;
   description?: string;
   skipFormat?: boolean;
+  skipInstall?: boolean;
   testRunner?: TestRunner;
   linter?: Linter;
   formatter?: Formatter;
