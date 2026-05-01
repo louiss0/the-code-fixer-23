@@ -20,8 +20,8 @@ import {
   detectFormatterFromRootPackageJson,
   detectLinterFromRootPackageJson,
   detectTestRunnerFromRootPackageJson,
-} from './detect.js';
-import { isInteractive, selectOrDefault } from './prompt.js';
+} from './detect';
+import { isInteractive, selectOrDefault } from './prompt';
 import type {
   Formatter,
   LibraryGeneratorSchema,

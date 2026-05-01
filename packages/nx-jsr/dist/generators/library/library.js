@@ -3,8 +3,8 @@ import * as path from 'path';
 import { addDependenciesToPackageJson, addProjectConfiguration, detectPackageManager, formatFiles, generateFiles, getPackageManagerCommand, installPackagesTask, logger, names, offsetFromRoot, runTasksInSerial, } from '@nx/devkit';
 import { configurationGenerator as jestConfigurationGenerator } from '@nx/jest';
 import { vitestGenerator } from '@nx/vite';
-import { detectFormatterFromRootPackageJson, detectLinterFromRootPackageJson, detectTestRunnerFromRootPackageJson, } from './detect.js';
-import { isInteractive, selectOrDefault } from './prompt.js';
+import { detectFormatterFromRootPackageJson, detectLinterFromRootPackageJson, detectTestRunnerFromRootPackageJson, } from './detect';
+import { isInteractive, selectOrDefault } from './prompt';
 const generatorFilesPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'files');
 function normalizeOptions(options) {
     if (options.importPath) {
