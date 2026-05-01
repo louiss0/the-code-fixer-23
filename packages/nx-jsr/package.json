@@ -6,6 +6,15 @@
   "types": "./dist/index.d.ts",
   "generators": "./generators.json",
   "executors": "./executors.json",
+  "dependencies": {
+    "@nx/devkit": "*",
+    "@nx/jest": "*",
+    "@nx/js": "*",
+    "@nx/vite": "*",
+    "dotenv": "*",
+    "enquirer": "*",
+    "semver": "*"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.lib.json",
     "typecheck": "tsc -p tsconfig.lib.json --noEmit",
