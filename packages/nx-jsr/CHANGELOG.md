@@ -1,3 +1,14 @@
+## 1.2.2 (2026-05-01)
+
+### 🩹 Fixes
+
+- **nx-plugins:** use dist paths in generators/executors JSON manifests ([433adde](https://github.com/louiss0/the-code-fixer-23/commit/433adde))
+
+### ❤️ Thank You
+
+- louiss0 @louiss0
+- Oz
+
 ## 1.2.1 (2026-04-27)
 
 ### 🩹 Fixes
