@@ -1,6 +1,5 @@
 {
   "name": "@code-fixer-23/nx-jsr",
-  "version": "0.0.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

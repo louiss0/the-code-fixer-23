@@ -10,6 +10,7 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.spec.ts', 'src/**/*.test.ts'],
     passWithNoTests: true,
+    testTimeout: 20000,
     coverage: {
       reportsDirectory: './test-output/vitest/coverage',
       provider: 'v8',

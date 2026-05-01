@@ -162,7 +162,9 @@ export async function libraryGenerator(tree, options) {
             sourceRoot: `${projectRoot}/src`,
             targets,
         });
-        installTask = await configureIntegratedTestRunner(tree, resolvedOptions.name, resolvedTestRunner, resolvedOptions.skipFormat);
+        if (!resolvedOptions.skipInstall) {
+            installTask = await configureIntegratedTestRunner(tree, resolvedOptions.name, resolvedTestRunner, resolvedOptions.skipFormat);
+        }
         addDependenciesToPackageJson(tree, {}, devDependencies);
     }
     if (!resolvedOptions.skipFormat) {
