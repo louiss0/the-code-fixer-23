@@ -1,6 +1,7 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  type ProjectConfiguration,
   type Tree,
   addProjectConfiguration,
   formatFiles,
@@ -206,8 +207,7 @@ function getProjectTargets(
   linter: Linter,
   formatter: Formatter,
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const targets: any = {
+  const targets: NonNullable<ProjectConfiguration['targets']> = {
     build: {
       executor: '@code-fixer-23/nx-tsup:build',
       outputs: ['{options.outDir}'],
@@ -367,8 +367,19 @@ function createPackageJson(
   formatter: Formatter,
 ) {
   const isPackageBased = detectPackageBased(tree);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const pkg: any = {
+  const pkg: {
+    name: string;
+    version: string;
+    type: string;
+    main: string;
+    module: string;
+    types: string;
+    exports: Record<string, unknown>;
+    files: string[];
+    scripts: Record<string, string>;
+    dependencies: Record<string, string>;
+    devDependencies: Record<string, string>;
+  } = {
     name: options.importPath,
     version: '0.0.0',
     type: 'module',
