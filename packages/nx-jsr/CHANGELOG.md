@@ -1,3 +1,17 @@
+## 1.3.0 (2026-05-01)
+
+### 🚀 Features
+
+- **nx-jsr:** improve JSR library generation ([#14](https://github.com/louiss0/the-code-fixer-23/pull/14))
+
+### 🩹 Fixes
+
+- **workspace:** update lockfile and stabilize tests ([#15](https://github.com/louiss0/the-code-fixer-23/pull/15))
+
+### ❤️ Thank You
+
+- shelton louis @louiss0
+
 ## 1.2.2 (2026-05-01)
 
 ### 🩹 Fixes

@@ -1,3 +1,7 @@
+## 0.2.2 (2026-05-01)
+
+This was a version bump only for @code-fixer-23/nu-bash to align it with other projects, there were no code changes.
+
 ## 0.2.1 (2026-05-01)
 
 This was a version bump only for @code-fixer-23/nu-bash to align it with other projects, there were no code changes.

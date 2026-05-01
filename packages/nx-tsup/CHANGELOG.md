@@ -1,3 +1,13 @@
+## 1.2.4 (2026-05-01)
+
+### 🩹 Fixes
+
+- **workspace:** update lockfile and stabilize tests ([#15](https://github.com/louiss0/the-code-fixer-23/pull/15))
+
+### ❤️ Thank You
+
+- shelton louis @louiss0
+
 ## 1.2.3 (2026-05-01)
 
 ### 🩹 Fixes
