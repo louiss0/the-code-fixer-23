@@ -265,12 +265,14 @@ export async function libraryGenerator(
       targets,
     });
 
-    installTask = await configureIntegratedTestRunner(
-      tree,
-      resolvedOptions.name,
-      resolvedTestRunner,
-      resolvedOptions.skipFormat,
-    );
+    if (!resolvedOptions.skipInstall) {
+      installTask = await configureIntegratedTestRunner(
+        tree,
+        resolvedOptions.name,
+        resolvedTestRunner,
+        resolvedOptions.skipFormat,
+      );
+    }
 
     addDependenciesToPackageJson(tree, {}, devDependencies);
   }
