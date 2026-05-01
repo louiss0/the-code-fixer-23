@@ -59,10 +59,8 @@ describe('library generator', () => {
     const tsupConfig = tree.read('packages/test-lib/tsup.config.ts', 'utf-8');
 
     expect(config.targets?.build).toBeUndefined();
-    expect(packageJson.scripts.build).toBe('tsup --config tsup.config.ts');
-    expect(packageJson.scripts.dev).toBe(
-      'tsup --config tsup.config.ts --watch',
-    );
+    expect(packageJson.scripts.build).toBe('tsup');
+    expect(packageJson.scripts.dev).toBe('tsup --watch');
     expect(tsupConfig).toContain("format: ['esm', 'cjs']");
     expect(tsupConfig).toContain('minify: true');
   });
@@ -84,9 +82,7 @@ describe('library generator', () => {
     );
 
     expect(config.targets?.test).toBeUndefined();
-    expect(packageJson.scripts.test).toBe(
-      'vitest run --config vitest.config.ts',
-    );
+    expect(packageJson.scripts.test).toBe('vitest run');
     expect(vitestConfig).toContain("coverage: { provider: 'v8' }");
     expect(specTsConfig).toContain('"vitest/importMeta"');
     expect(specTsConfig).toContain('"vite/client"');
@@ -112,7 +108,7 @@ describe('library generator', () => {
     );
 
     expect(config.targets?.test).toBeUndefined();
-    expect(packageJson.scripts.test).toBe('jest --config jest.config.ts');
+    expect(packageJson.scripts.test).toBe('jest');
     expect(packageJson.devDependencies.jest).toBe('^30.0.0');
     expect(jestConfig).toContain("extensionsToTreatAsEsm: ['.ts']");
     expect(jestConfig).toContain('useESM: true');
@@ -140,9 +136,7 @@ describe('library generator', () => {
       tree.read('packages/test-lib/package.json', 'utf-8') ?? '{}',
     );
     expect(config.targets?.lint).toBeUndefined();
-    expect(packageJson.scripts.lint).toBe(
-      'eslint . --config eslint.config.mjs',
-    );
+    expect(packageJson.scripts.lint).toBe('eslint .');
     expect(packageJson.scripts['configure:eslint']).toBe(
       'pnpm dlx @eslint/create-config@latest',
     );
@@ -242,9 +236,7 @@ describe('library generator', () => {
       tree.read('packages/test-lib/package.json', 'utf-8') ?? '{}',
     );
     expect(config.targets?.test).toBeUndefined();
-    expect(packageJson.scripts.test).toBe(
-      'vitest run --config vitest.config.ts',
-    );
+    expect(packageJson.scripts.test).toBe('vitest run');
     expect(tree.exists('packages/test-lib/vitest.config.ts')).toBe(true);
   });
 
@@ -261,7 +253,7 @@ describe('library generator', () => {
       tree.read('packages/test-lib/package.json', 'utf-8') ?? '{}',
     );
     expect(config.targets?.test).toBeUndefined();
-    expect(packageJson.scripts.test).toBe('jest --config jest.config.ts');
+    expect(packageJson.scripts.test).toBe('jest');
     expect(tree.exists('packages/test-lib/jest.config.ts')).toBe(true);
   });
 
@@ -282,7 +274,7 @@ describe('library generator', () => {
       tree.read('packages/test-lib/package.json', 'utf-8') ?? '{}',
     );
     expect(config.targets?.test).toBeUndefined();
-    expect(packageJson.scripts.test).toBe('jest --config jest.config.ts');
+    expect(packageJson.scripts.test).toBe('jest');
   });
 
   it('auto-detects eslint when only eslint is present and options omitted', async () => {
@@ -298,9 +290,7 @@ describe('library generator', () => {
       tree.read('packages/test-lib/package.json', 'utf-8') ?? '{}',
     );
     expect(config.targets?.lint).toBeUndefined();
-    expect(packageJson.scripts.lint).toBe(
-      'eslint . --config eslint.config.mjs',
-    );
+    expect(packageJson.scripts.lint).toBe('eslint .');
     expect(tree.exists('packages/test-lib/eslint.config.mjs')).toBe(true);
   });
 
@@ -321,8 +311,6 @@ describe('library generator', () => {
       tree.read('packages/test-lib/package.json', 'utf-8') ?? '{}',
     );
     expect(config.targets?.lint).toBeUndefined();
-    expect(packageJson.scripts.lint).toBe(
-      'eslint . --config eslint.config.mjs',
-    );
+    expect(packageJson.scripts.lint).toBe('eslint .');
   });
 });

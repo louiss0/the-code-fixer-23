@@ -297,8 +297,8 @@ function createPackageJson(
     },
     files: ['dist'],
     scripts: {
-      build: 'tsup --config tsup.config.ts',
-      dev: 'tsup --config tsup.config.ts --watch',
+      build: 'tsup',
+      dev: 'tsup --watch',
       typecheck: 'tsc -p tsconfig.lib.json --noEmit',
     },
     dependencies: {
@@ -308,7 +308,7 @@ function createPackageJson(
   };
 
   if (testRunner === 'vitest') {
-    pkg.scripts.test = 'vitest run --config vitest.config.ts';
+    pkg.scripts.test = 'vitest run';
     pkg.devDependencies.vitest = getDependencyVersion(tree, 'vitest');
     pkg.devDependencies['@vitest/ui'] = getDependencyVersion(
       tree,
@@ -316,7 +316,7 @@ function createPackageJson(
     );
     pkg.devDependencies['happy-dom'] = getDependencyVersion(tree, 'happy-dom');
   } else if (testRunner === 'jest') {
-    pkg.scripts.test = 'jest --config jest.config.ts';
+    pkg.scripts.test = 'jest';
     pkg.devDependencies.jest = getDependencyVersion(tree, 'jest');
     pkg.devDependencies['ts-jest'] = getDependencyVersion(tree, 'ts-jest');
     pkg.devDependencies['@types/jest'] = getDependencyVersion(
@@ -326,7 +326,7 @@ function createPackageJson(
   }
 
   if (linter === 'eslint') {
-    pkg.scripts.lint = 'eslint . --config eslint.config.mjs';
+    pkg.scripts.lint = 'eslint .';
     pkg.scripts['configure:eslint'] =
       `${packageManagerCommand.dlx} @eslint/create-config@latest`;
     pkg.devDependencies.eslint = getDependencyVersion(tree, 'eslint');
