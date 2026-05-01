@@ -80,5 +80,6 @@
       "description": "Code formatter. When omitted, this will be auto-detected. Biome formats and lints. ESLint Stylistic requires eslint as linter. If biome is selected as linter, formatter defaults to biome."
     }
   },
-  "required": ["name", "scope"]
+  "required": ["name"],
+  "anyOf": [{ "required": ["scope"] }, { "required": ["importPath"] }]
 }

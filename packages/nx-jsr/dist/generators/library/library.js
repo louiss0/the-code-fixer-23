@@ -3,9 +3,97 @@ import * as path from 'path';
 import { addDependenciesToPackageJson, addProjectConfiguration, detectPackageManager, formatFiles, generateFiles, getPackageManagerCommand, installPackagesTask, logger, names, offsetFromRoot, runTasksInSerial, } from '@nx/devkit';
 import { configurationGenerator as jestConfigurationGenerator } from '@nx/jest';
 import { vitestGenerator } from '@nx/vite';
-import { detectFormatterFromRootPackageJson, detectLinterFromRootPackageJson, detectTestRunnerFromRootPackageJson, } from './detect';
-import { isInteractive, selectOrDefault } from './prompt';
 const generatorFilesPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'files');
+function readRootPackageJson(tree) {
+    try {
+        const raw = tree.read('package.json', 'utf-8');
+        if (!raw)
+            return null;
+        return JSON.parse(raw);
+    }
+    catch {
+        return null;
+    }
+}
+function hasDep(pkg, name) {
+    const deps = pkg?.dependencies ?? {};
+    const devDeps = pkg?.devDependencies ?? {};
+    return Boolean(deps[name] || devDeps[name]);
+}
+function detectTestRunnerFromRootPackageJson(tree) {
+    const pkg = readRootPackageJson(tree) ?? {};
+    const candidates = [];
+    if (hasDep(pkg, 'jest'))
+        candidates.push('jest');
+    if (hasDep(pkg, 'vitest'))
+        candidates.push('vitest');
+    if (candidates.length === 1) {
+        return { detected: candidates[0], candidates };
+    }
+    return { detected: null, candidates };
+}
+function detectLinterFromRootPackageJson(tree) {
+    const pkg = readRootPackageJson(tree) ?? {};
+    const candidates = [];
+    if (hasDep(pkg, 'eslint'))
+        candidates.push('eslint');
+    if (hasDep(pkg, '@biomejs/biome'))
+        candidates.push('biome');
+    if (candidates.length === 1) {
+        return { detected: candidates[0], candidates };
+    }
+    return { detected: null, candidates };
+}
+function detectFormatterFromRootPackageJson(tree) {
+    const pkg = readRootPackageJson(tree) ?? {};
+    const candidates = [];
+    if (hasDep(pkg, 'prettier'))
+        candidates.push('prettier');
+    if (hasDep(pkg, '@biomejs/biome'))
+        candidates.push('biome');
+    if (hasDep(pkg, '@stylistic/eslint-plugin'))
+        candidates.push('eslint-stylistic');
+    if (candidates.length === 1) {
+        return { detected: candidates[0], candidates };
+    }
+    return { detected: null, candidates };
+}
+function isInteractive() {
+    const nxInteractive = process.env.NX_INTERACTIVE;
+    if (nxInteractive === 'true')
+        return true;
+    if (nxInteractive === 'false')
+        return false;
+    const isCi = /^1|true$/i.test(String(process.env.CI ?? ''));
+    const tty = typeof process.stdout !== 'undefined' && process.stdout.isTTY === true;
+    return !isCi && tty;
+}
+async function selectOrDefault(question, choices, defaultChoice) {
+    if (!isInteractive())
+        return defaultChoice;
+    try {
+        const mod = (await import('enquirer'));
+        const Select = mod.Select ?? mod.default?.Select;
+        if (Select) {
+            const prompt = new Select({ name: 'choice', message: question, choices });
+            const answer = await prompt.run();
+            return typeof answer === 'string' ? answer : defaultChoice;
+        }
+        if (typeof mod.prompt === 'function') {
+            const res = await mod.prompt({
+                type: 'select',
+                name: 'choice',
+                message: question,
+                choices,
+            });
+            return res?.choice ?? defaultChoice;
+        }
+    }
+    catch {
+        // Fall back to the default in non-interactive or minimal installs.
+    }
+    return defaultChoice;
+}
 function normalizeOptions(options) {
     if (options.importPath) {
         return { ...options, importPath: options.importPath };

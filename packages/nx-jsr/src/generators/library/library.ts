@@ -16,18 +16,16 @@ import {
 } from '@nx/devkit';
 import { configurationGenerator as jestConfigurationGenerator } from '@nx/jest';
 import { vitestGenerator } from '@nx/vite';
-import {
-  detectFormatterFromRootPackageJson,
-  detectLinterFromRootPackageJson,
-  detectTestRunnerFromRootPackageJson,
-} from './detect';
-import { isInteractive, selectOrDefault } from './prompt';
 import type {
   Formatter,
   LibraryGeneratorSchema,
   Linter,
   TestRunner,
 } from './schema.d.ts';
+
+type DetectedTestRunner = 'jest' | 'vitest';
+type DetectedLinter = 'eslint' | 'biome';
+type DetectedFormatter = 'prettier' | 'biome' | 'eslint-stylistic';
 
 const generatorFilesPath = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -36,6 +34,119 @@ const generatorFilesPath = path.join(
 
 interface NormalizedLibraryGeneratorSchema extends LibraryGeneratorSchema {
   importPath: string;
+}
+
+function readRootPackageJson(tree: Tree): Record<string, unknown> | null {
+  try {
+    const raw = tree.read('package.json', 'utf-8');
+    if (!raw) return null;
+    return JSON.parse(raw) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function hasDep(pkg: Record<string, unknown>, name: string): boolean {
+  const deps = (pkg?.dependencies as Record<string, string>) ?? {};
+  const devDeps = (pkg?.devDependencies as Record<string, string>) ?? {};
+  return Boolean(deps[name] || devDeps[name]);
+}
+
+function detectTestRunnerFromRootPackageJson(tree: Tree): {
+  detected: DetectedTestRunner | null;
+  candidates: DetectedTestRunner[];
+} {
+  const pkg = readRootPackageJson(tree) ?? {};
+  const candidates: DetectedTestRunner[] = [];
+  if (hasDep(pkg, 'jest')) candidates.push('jest');
+  if (hasDep(pkg, 'vitest')) candidates.push('vitest');
+
+  if (candidates.length === 1) {
+    return { detected: candidates[0], candidates };
+  }
+  return { detected: null, candidates };
+}
+
+function detectLinterFromRootPackageJson(tree: Tree): {
+  detected: DetectedLinter | null;
+  candidates: DetectedLinter[];
+} {
+  const pkg = readRootPackageJson(tree) ?? {};
+  const candidates: DetectedLinter[] = [];
+  if (hasDep(pkg, 'eslint')) candidates.push('eslint');
+  if (hasDep(pkg, '@biomejs/biome')) candidates.push('biome');
+
+  if (candidates.length === 1) {
+    return { detected: candidates[0], candidates };
+  }
+  return { detected: null, candidates };
+}
+
+function detectFormatterFromRootPackageJson(tree: Tree): {
+  detected: DetectedFormatter | null;
+  candidates: DetectedFormatter[];
+} {
+  const pkg = readRootPackageJson(tree) ?? {};
+  const candidates: DetectedFormatter[] = [];
+  if (hasDep(pkg, 'prettier')) candidates.push('prettier');
+  if (hasDep(pkg, '@biomejs/biome')) candidates.push('biome');
+  if (hasDep(pkg, '@stylistic/eslint-plugin'))
+    candidates.push('eslint-stylistic');
+
+  if (candidates.length === 1) {
+    return { detected: candidates[0], candidates };
+  }
+  return { detected: null, candidates };
+}
+
+function isInteractive(): boolean {
+  const nxInteractive = process.env.NX_INTERACTIVE;
+  if (nxInteractive === 'true') return true;
+  if (nxInteractive === 'false') return false;
+
+  const isCi = /^1|true$/i.test(String(process.env.CI ?? ''));
+  const tty =
+    typeof process.stdout !== 'undefined' && process.stdout.isTTY === true;
+  return !isCi && tty;
+}
+
+async function selectOrDefault(
+  question: string,
+  choices: string[],
+  defaultChoice: string,
+): Promise<string> {
+  if (!isInteractive()) return defaultChoice;
+
+  try {
+    const mod = (await import('enquirer')) as {
+      Select?: new (options: unknown) => { run: () => Promise<string> };
+      prompt?: (options: unknown) => Promise<{ choice?: string }>;
+      default?: {
+        Select?: new (options: unknown) => { run: () => Promise<string> };
+      };
+    };
+    const Select = mod.Select ?? mod.default?.Select;
+
+    if (Select) {
+      const prompt = new Select({ name: 'choice', message: question, choices });
+      const answer = await prompt.run();
+      return typeof answer === 'string' ? answer : defaultChoice;
+    }
+
+    if (typeof mod.prompt === 'function') {
+      const res = await mod.prompt({
+        type: 'select',
+        name: 'choice',
+        message: question,
+        choices,
+      });
+      return res?.choice ?? defaultChoice;
+    }
+  } catch {
+    // Fall back to the default in non-interactive or minimal installs.
+  }
+
+  return defaultChoice;
 }
 
 function normalizeOptions(
