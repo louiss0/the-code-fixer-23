@@ -26,6 +26,7 @@ describe('library generator', () => {
   };
 
   beforeEach(() => {
+    vi.unstubAllEnvs();
     tree = createTreeWithEmptyWorkspace();
   });
 
@@ -49,38 +50,67 @@ describe('library generator', () => {
     expect(tree.exists('packages/test-lib/README.md')).toBe(true);
   });
 
-  it('should configure build target with tsup executor', async () => {
+  it('should build through package scripts backed by tsup config', async () => {
     await libraryGenerator(tree, options);
 
     const config = readProjectConfiguration(tree, 'test-lib');
-    expect(config.targets?.build).toBeDefined();
-    expect(config.targets?.build.executor).toBe('@code-fixer-23/nx-tsup:build');
-    expect(config.targets?.build.options.format).toEqual(['esm']);
-    expect(config.targets?.build.options.dts).toBe(true);
+    const packageJson = JSON.parse(
+      tree.read('packages/test-lib/package.json', 'utf-8') ?? '{}',
+    );
+    const tsupConfig = tree.read('packages/test-lib/tsup.config.ts', 'utf-8');
+
+    expect(config.targets?.build).toBeUndefined();
+    expect(packageJson.scripts.build).toBe('tsup');
+    expect(packageJson.scripts.dev).toBe('tsup --watch');
+    expect(tsupConfig).toContain("format: ['esm', 'cjs']");
+    expect(tsupConfig).toContain('minify: true');
   });
 
-  it('should add test target when testRunner is vitest', async () => {
+  it('should test through package scripts when testRunner is vitest', async () => {
     await libraryGenerator(tree, { ...options, testRunner: 'vitest' });
 
     const config = readProjectConfiguration(tree, 'test-lib');
-    expect(config.targets?.test).toBeDefined();
-    expect(config.targets?.test.executor).toBe('@nx/vite:test');
-    expect(tree.exists('packages/test-lib/vitest.config.ts')).toBe(true);
+    const packageJson = JSON.parse(
+      tree.read('packages/test-lib/package.json', 'utf-8') ?? '{}',
+    );
+    const vitestConfig = tree.read(
+      'packages/test-lib/vitest.config.ts',
+      'utf-8',
+    );
+    const specTsConfig = tree.read(
+      'packages/test-lib/tsconfig.spec.json',
+      'utf-8',
+    );
+
+    expect(config.targets?.test).toBeUndefined();
+    expect(packageJson.scripts.test).toBe('vitest run');
+    expect(vitestConfig).toContain("coverage: { provider: 'v8' }");
+    expect(specTsConfig).toContain('"vitest/importMeta"');
+    expect(specTsConfig).toContain('"vite/client"');
     expect(tree.exists('packages/test-lib/src/index.spec.ts')).toBe(true);
   });
 
   it('should add an ESM-safe jest setup when testRunner is jest', async () => {
+    tree.write(
+      'package.json',
+      JSON.stringify({ devDependencies: { jest: '^30.0.0' } }, null, 2),
+    );
+
     await libraryGenerator(tree, { ...options, testRunner: 'jest' });
 
     const config = readProjectConfiguration(tree, 'test-lib');
+    const packageJson = JSON.parse(
+      tree.read('packages/test-lib/package.json', 'utf-8') ?? '{}',
+    );
     const jestConfig = tree.read('packages/test-lib/jest.config.ts', 'utf-8');
     const specTsConfig = tree.read(
       'packages/test-lib/tsconfig.spec.json',
       'utf-8',
     );
 
-    expect(config.targets?.test).toBeDefined();
-    expect(config.targets?.test.executor).toBe('@nx/jest:jest');
+    expect(config.targets?.test).toBeUndefined();
+    expect(packageJson.scripts.test).toBe('jest');
+    expect(packageJson.devDependencies.jest).toBe('^30.0.0');
     expect(jestConfig).toContain("extensionsToTreatAsEsm: ['.ts']");
     expect(jestConfig).toContain('useESM: true');
     expect(jestConfig).toContain("'^(\\\\.{1,2}/.*)\\\\.js$': '$1'");
@@ -99,20 +129,45 @@ describe('library generator', () => {
     expect(tree.exists('packages/test-lib/jest.config.ts')).toBe(false);
   });
 
-  it('should add lint target when linter is eslint', async () => {
+  it('should lint through package scripts when linter is eslint', async () => {
     await libraryGenerator(tree, { ...options, linter: 'eslint' });
 
     const config = readProjectConfiguration(tree, 'test-lib');
-    expect(config.targets?.lint).toBeDefined();
-    expect(config.targets?.lint.executor).toBe('@nx/eslint:lint');
+    const packageJson = JSON.parse(
+      tree.read('packages/test-lib/package.json', 'utf-8') ?? '{}',
+    );
+    expect(config.targets?.lint).toBeUndefined();
+    expect(packageJson.scripts.lint).toBe('eslint .');
+    expect(packageJson.scripts['configure:eslint']).toBe(
+      'pnpm dlx @eslint/create-config@latest',
+    );
     expect(tree.exists('packages/test-lib/eslint.config.mjs')).toBe(true);
   });
 
-  it('should add lint target when linter is biome', async () => {
+  it('should use the command package manager for eslint config creation', async () => {
+    vi.stubEnv('npm_config_user_agent', 'npm/10.0.0 node/v25.1.0');
+    tree.write('pnpm-lock.yaml', 'lockfileVersion: 9');
+
+    await libraryGenerator(tree, { ...options, linter: 'eslint' });
+
+    const packageJson = JSON.parse(
+      tree.read('packages/test-lib/package.json', 'utf-8') ?? '{}',
+    );
+
+    expect(packageJson.scripts['configure:eslint']).toBe(
+      'npx @eslint/create-config@latest',
+    );
+  });
+
+  it('should lint through package scripts when linter is biome', async () => {
     await libraryGenerator(tree, { ...options, linter: 'biome' });
 
     const config = readProjectConfiguration(tree, 'test-lib');
-    expect(config.targets?.lint).toBeDefined();
+    const packageJson = JSON.parse(
+      tree.read('packages/test-lib/package.json', 'utf-8') ?? '{}',
+    );
+    expect(config.targets?.lint).toBeUndefined();
+    expect(packageJson.scripts.lint).toBe('biome lint .');
     expect(tree.exists('packages/test-lib/biome.json')).toBe(true);
   });
 
@@ -125,13 +180,35 @@ describe('library generator', () => {
     expect(tree.exists('packages/test-lib/biome.json')).toBe(false);
   });
 
-  it('should always add typecheck target', async () => {
+  it('should typecheck through package scripts', async () => {
     await libraryGenerator(tree, options);
 
     const config = readProjectConfiguration(tree, 'test-lib');
-    expect(config.targets?.typecheck).toBeDefined();
-    expect(config.targets?.typecheck.executor).toBe('@nx/js:tsc');
-    expect(config.targets?.typecheck.options.noEmit).toBe(true);
+    const packageJson = JSON.parse(
+      tree.read('packages/test-lib/package.json', 'utf-8') ?? '{}',
+    );
+    expect(config.targets?.typecheck).toBeUndefined();
+    expect(packageJson.scripts.typecheck).toBe(
+      'tsc -p tsconfig.lib.json --noEmit',
+    );
+  });
+
+  it('should generate tsconfig paths relative to package depth', async () => {
+    await libraryGenerator(tree, {
+      ...options,
+      directory: 'libs/shared',
+    });
+
+    const tsconfig = JSON.parse(
+      tree.read('libs/shared/test-lib/tsconfig.json', 'utf-8') ?? '{}',
+    );
+    const tsconfigLib = JSON.parse(
+      tree.read('libs/shared/test-lib/tsconfig.lib.json', 'utf-8') ?? '{}',
+    );
+
+    expect(tsconfig.extends).toBe('../../../tsconfig.json');
+    expect(tsconfigLib.extends).toBe('../../../tsconfig.base.json');
+    expect(tsconfigLib.compilerOptions.outDir).toBe('../../../dist/out-tsc');
   });
 
   it('should create package.json with correct metadata', async () => {
@@ -149,7 +226,6 @@ describe('library generator', () => {
     expect(packageJson.types).toBe('./dist/index.d.ts');
   });
   it('auto-detects vitest when only vitest is present and options omitted', async () => {
-    // Write root package.json with vitest only
     tree.write(
       'package.json',
       JSON.stringify({ devDependencies: { vitest: '^3.2.4' } }, null, 2),
@@ -158,7 +234,11 @@ describe('library generator', () => {
     await libraryGenerator(tree, { ...options });
 
     const config = readProjectConfiguration(tree, 'test-lib');
-    expect(config.targets?.test?.executor).toBe('@nx/vite:test');
+    const packageJson = JSON.parse(
+      tree.read('packages/test-lib/package.json', 'utf-8') ?? '{}',
+    );
+    expect(config.targets?.test).toBeUndefined();
+    expect(packageJson.scripts.test).toBe('vitest run');
     expect(tree.exists('packages/test-lib/vitest.config.ts')).toBe(true);
   });
 
@@ -171,7 +251,11 @@ describe('library generator', () => {
     await libraryGenerator(tree, { ...options });
 
     const config = readProjectConfiguration(tree, 'test-lib');
-    expect(config.targets?.test?.executor).toBe('@nx/jest:jest');
+    const packageJson = JSON.parse(
+      tree.read('packages/test-lib/package.json', 'utf-8') ?? '{}',
+    );
+    expect(config.targets?.test).toBeUndefined();
+    expect(packageJson.scripts.test).toBe('jest');
     expect(tree.exists('packages/test-lib/jest.config.ts')).toBe(true);
   });
 
@@ -188,7 +272,11 @@ describe('library generator', () => {
     await libraryGenerator(tree, { ...options });
 
     const config = readProjectConfiguration(tree, 'test-lib');
-    expect(config.targets?.test?.executor).toBe('@nx/jest:jest');
+    const packageJson = JSON.parse(
+      tree.read('packages/test-lib/package.json', 'utf-8') ?? '{}',
+    );
+    expect(config.targets?.test).toBeUndefined();
+    expect(packageJson.scripts.test).toBe('jest');
   });
 
   it('auto-detects eslint when only eslint is present and options omitted', async () => {
@@ -200,7 +288,11 @@ describe('library generator', () => {
     await libraryGenerator(tree, { ...options });
 
     const config = readProjectConfiguration(tree, 'test-lib');
-    expect(config.targets?.lint?.executor).toBe('@nx/eslint:lint');
+    const packageJson = JSON.parse(
+      tree.read('packages/test-lib/package.json', 'utf-8') ?? '{}',
+    );
+    expect(config.targets?.lint).toBeUndefined();
+    expect(packageJson.scripts.lint).toBe('eslint .');
     expect(tree.exists('packages/test-lib/eslint.config.mjs')).toBe(true);
   });
 
@@ -217,6 +309,10 @@ describe('library generator', () => {
     await libraryGenerator(tree, { ...options });
 
     const config = readProjectConfiguration(tree, 'test-lib');
-    expect(config.targets?.lint?.executor).toBe('@nx/eslint:lint');
+    const packageJson = JSON.parse(
+      tree.read('packages/test-lib/package.json', 'utf-8') ?? '{}',
+    );
+    expect(config.targets?.lint).toBeUndefined();
+    expect(packageJson.scripts.lint).toBe('eslint .');
   });
 });

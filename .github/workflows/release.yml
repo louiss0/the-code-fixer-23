@@ -52,7 +52,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Check formatting
-        run: pnpm exec nx format:check --all
+        run: pnpm run format:check
 
       - name: Validate releasable packages
         run: pnpm exec nx run-many -t lint test build typecheck --exclude='tag:paused'

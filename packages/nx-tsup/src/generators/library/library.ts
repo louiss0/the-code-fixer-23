@@ -4,6 +4,8 @@ import {
   type Tree,
   addProjectConfiguration,
   formatFiles,
+  getDependencyVersionFromPackageJson,
+  getPackageManagerCommand,
   generateFiles,
   joinPathFragments,
   logger,
@@ -48,18 +50,11 @@ export async function libraryGenerator(
     resolvedLinter,
   );
 
-  const projectTargets = getProjectTargets(
-    projectRoot,
-    resolvedTestRunner,
-    resolvedLinter,
-    resolvedFormatter,
-  );
-
   addProjectConfiguration(tree, name, {
     root: projectRoot,
     projectType: 'library',
     sourceRoot,
-    targets: projectTargets,
+    targets: {},
     tags: [],
   });
 
@@ -200,110 +195,12 @@ async function resolveFormatter(
   return linter === 'eslint' ? 'prettier' : 'none';
 }
 
-function getProjectTargets(
-  projectRoot: string,
-  testRunner: TestRunner,
-  linter: Linter,
-  formatter: Formatter,
-) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const targets: any = {
-    build: {
-      executor: '@code-fixer-23/nx-tsup:build',
-      outputs: ['{options.outDir}'],
-      options: {
-        outDir: `${projectRoot}/dist`,
-        main: `${projectRoot}/src/index.ts`,
-        tsConfig: `${projectRoot}/tsconfig.lib.json`,
-        format: ['esm'],
-        dts: true,
-        clean: true,
-        sourcemap: false,
-        minify: false,
-      },
-    },
-    typecheck: {
-      executor: '@nx/js:tsc',
-      outputs: ['{options.outputPath}'],
-      options: {
-        outputPath: `dist/${projectRoot}`,
-        main: `${projectRoot}/src/index.ts`,
-        tsConfig: `${projectRoot}/tsconfig.lib.json`,
-        noEmit: true,
-      },
-    },
-  };
-
-  if (testRunner && testRunner !== 'none') {
-    targets.test =
-      testRunner === 'vitest'
-        ? {
-            executor: '@nx/vite:test',
-            outputs: ['{projectRoot}/coverage'],
-            options: {
-              config: `${projectRoot}/vitest.config.ts`,
-            },
-          }
-        : {
-            executor: '@nx/jest:jest',
-            outputs: ['{projectRoot}/coverage'],
-            options: {
-              jestConfig: `${projectRoot}/jest.config.ts`,
-              passWithNoTests: true,
-            },
-          };
-  }
-
-  if (linter && linter !== 'none') {
-    targets.lint =
-      linter === 'eslint'
-        ? {
-            executor: '@nx/eslint:lint',
-            options: {
-              lintFilePatterns: [`${projectRoot}/**/*.ts`],
-            },
-          }
-        : {
-            executor: '@nx/workspace:run-commands',
-            options: {
-              commands: [`biome lint ${projectRoot}`],
-            },
-          };
-  }
-
-  if (formatter && formatter !== 'none') {
-    if (formatter === 'prettier') {
-      targets.format = {
-        executor: '@nx/workspace:run-commands',
-        options: {
-          commands: [`prettier --write ${projectRoot}`],
-        },
-      };
-    } else if (formatter === 'biome') {
-      targets.format = {
-        executor: '@nx/workspace:run-commands',
-        options: {
-          commands: [`biome format --write ${projectRoot}`],
-        },
-      };
-    } else if (formatter === 'eslint-stylistic') {
-      targets.format = {
-        executor: '@nx/workspace:run-commands',
-        options: {
-          commands: [`eslint --fix ${projectRoot}/**/*.ts`],
-        },
-      };
-    }
-  }
-
-  return targets;
-}
-
 function createTsConfig(tree: Tree, projectRoot: string) {
+  const rootOffset = offsetFromRoot(projectRoot);
   const tsconfig = {
-    extends: '../../tsconfig.base.json',
+    extends: `${rootOffset}tsconfig.base.json`,
     compilerOptions: {
-      outDir: '../../dist/out-tsc',
+      outDir: `${rootOffset}dist/out-tsc`,
       declaration: true,
       types: [],
     },
@@ -317,7 +214,7 @@ function createTsConfig(tree: Tree, projectRoot: string) {
   );
 
   const tsconfigMain = {
-    extends: '../../tsconfig.json',
+    extends: `${rootOffset}tsconfig.json`,
     files: [],
     references: [
       {
@@ -341,12 +238,15 @@ function createTsSpecConfig(
     return;
   }
 
+  const rootOffset = offsetFromRoot(projectRoot);
   const types =
-    testRunner === 'vitest' ? ['vitest/globals', 'node'] : ['jest', 'node'];
+    testRunner === 'vitest'
+      ? ['vitest/globals', 'vitest/importMeta', 'vite/client', 'node']
+      : ['jest', 'node'];
   const tsconfigSpec = {
     extends: './tsconfig.json',
     compilerOptions: {
-      outDir: '../../dist/out-tsc',
+      outDir: `${rootOffset}dist/out-tsc`,
       types,
     },
     include: ['src/**/*.spec.ts', 'src/**/*.test.ts', 'src/**/*.d.ts'],
@@ -366,9 +266,22 @@ function createPackageJson(
   linter: Linter,
   formatter: Formatter,
 ) {
-  const isPackageBased = detectPackageBased(tree);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const pkg: any = {
+  const packageManagerCommand = getPackageManagerCommand(
+    detectPackageManagerFromCommand(),
+  );
+  const pkg: {
+    name: string;
+    version: string;
+    type: string;
+    main: string;
+    module: string;
+    types: string;
+    exports: Record<string, unknown>;
+    files: string[];
+    scripts: Record<string, string>;
+    dependencies: Record<string, string>;
+    devDependencies: Record<string, string>;
+  } = {
     name: options.importPath,
     version: '0.0.0',
     type: 'module',
@@ -385,6 +298,7 @@ function createPackageJson(
     files: ['dist'],
     scripts: {
       build: 'tsup',
+      dev: 'tsup --watch',
       typecheck: 'tsc -p tsconfig.lib.json --noEmit',
     },
     dependencies: {
@@ -395,24 +309,39 @@ function createPackageJson(
 
   if (testRunner === 'vitest') {
     pkg.scripts.test = 'vitest run';
-    pkg.devDependencies.vitest = '^3.0.0';
-    pkg.devDependencies['@vitest/ui'] = '^3.0.0';
-    pkg.devDependencies['happy-dom'] = '^15.0.0';
+    pkg.devDependencies.vitest = getDependencyVersion(tree, 'vitest');
+    pkg.devDependencies['@vitest/ui'] = getDependencyVersion(
+      tree,
+      '@vitest/ui',
+    );
+    pkg.devDependencies['happy-dom'] = getDependencyVersion(tree, 'happy-dom');
   } else if (testRunner === 'jest') {
     pkg.scripts.test = 'jest';
-    pkg.devDependencies.jest = '^29.7.0';
-    pkg.devDependencies['ts-jest'] = '^29.1.1';
-    pkg.devDependencies['@types/jest'] = '^29.5.12';
+    pkg.devDependencies.jest = getDependencyVersion(tree, 'jest');
+    pkg.devDependencies['ts-jest'] = getDependencyVersion(tree, 'ts-jest');
+    pkg.devDependencies['@types/jest'] = getDependencyVersion(
+      tree,
+      '@types/jest',
+    );
   }
 
   if (linter === 'eslint') {
-    pkg.devDependencies.eslint = '^9.9.0';
-    pkg.devDependencies['@eslint/js'] = '^9.8.0';
+    pkg.scripts.lint = 'eslint .';
+    pkg.scripts['configure:eslint'] =
+      `${packageManagerCommand.dlx} @eslint/create-config@latest`;
+    pkg.devDependencies.eslint = getDependencyVersion(tree, 'eslint');
+    pkg.devDependencies['@eslint/js'] = getDependencyVersion(
+      tree,
+      '@eslint/js',
+    );
   } else if (linter === 'biome') {
-    pkg.devDependencies['@biomejs/biome'] = '^1.8.3';
+    pkg.scripts.lint = 'biome lint .';
+    pkg.devDependencies['@biomejs/biome'] = getDependencyVersion(
+      tree,
+      '@biomejs/biome',
+    );
   }
 
-  // Add formatter dependencies
   if (formatter === 'prettier') {
     pkg.devDependencies.prettier = '^3.0.0';
     pkg.scripts.format = 'prettier --write .';
@@ -429,18 +358,33 @@ function createPackageJson(
     pkg.scripts.format = 'biome format --write .';
   }
 
-  if (isPackageBased) {
-    pkg.devDependencies.tsup = '^8.0.1';
-  } else if (tree.exists('package.json')) {
-    const workspacePackageJson = JSON.parse(
-      tree.read('package.json', 'utf-8') || '{}',
-    );
-    workspacePackageJson.devDependencies ??= {};
-    workspacePackageJson.devDependencies.tsup ??= '^8.0.1';
-    tree.write('package.json', JSON.stringify(workspacePackageJson, null, 2));
-  }
+  pkg.devDependencies.tsup = getDependencyVersion(tree, 'tsup');
 
   tree.write(`${projectRoot}/package.json`, JSON.stringify(pkg, null, 2));
+}
+
+function getDependencyVersion(tree: Tree, name: string): string {
+  return getDependencyVersionFromPackageJson(tree, name) ?? 'latest';
+}
+
+function detectPackageManagerFromCommand() {
+  const commandSignals = [
+    process.env.npm_config_user_agent,
+    process.env.npm_execpath,
+    process.env.npm_lifecycle_script,
+  ];
+
+  for (const commandSignal of commandSignals) {
+    const command = commandSignal?.toLowerCase();
+    if (!command) continue;
+
+    if (command.includes('pnpm')) return 'pnpm';
+    if (command.includes('yarn')) return 'yarn';
+    if (command.includes('bun')) return 'bun';
+    if (command.includes('npm')) return 'npm';
+  }
+
+  return 'npm';
 }
 
 function createVitestConfig(tree: Tree, projectRoot: string) {
@@ -450,10 +394,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'happy-dom',
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-    },
+    coverage: { provider: 'v8' },
   },
 });
 `;
@@ -590,10 +531,15 @@ function createReadme(
   options: LibraryGeneratorSchema,
   testRunner: TestRunner,
 ) {
+  const packageManager = detectPackageManagerFromCommand();
+  const packageManagerCommand = getPackageManagerCommand(packageManager);
+  const installCommand = `${packageManagerCommand.add} ${options.importPath}`;
   const testingInfo =
     testRunner !== 'none' ? `**Testing**: ${testRunner}\n\n` : '';
   const testCommand =
-    testRunner !== 'none' ? `\n# Run tests\nnpx nx test ${options.name}\n` : '';
+    testRunner !== 'none'
+      ? `\n# Run tests\n${packageManagerCommand.run('test')}\n`
+      : '';
 
   const content = `# ${options.importPath}
 
@@ -602,11 +548,7 @@ ${options.description || 'A TypeScript library built with Tsup'}
 ${testingInfo}## Installation
 
 \`\`\`sh
-# Using pnpm
-pnpm add ${options.importPath}
-
-# Or using JPD if available
-jpd add ${options.importPath}
+${installCommand}
 \`\`\`
 
 ## Usage
@@ -621,29 +563,19 @@ console.log(hello());
 
 \`\`\`sh
 # Build the library
-npx nx build ${options.name}
+${packageManagerCommand.run('build')}
+
+# Watch for changes
+${packageManagerCommand.run('dev')}
 
 # Run type checking
-npx nx typecheck ${options.name}${testCommand}
+${packageManagerCommand.run('typecheck')}${testCommand}
 # Lint
-npx nx lint ${options.name}
+${packageManagerCommand.run('lint')}
 \`\`\`
 `;
 
   tree.write(`${projectRoot}/README.md`, content);
-}
-
-function detectPackageBased(tree: Tree): boolean {
-  try {
-    const rootPkg = tree.read('package.json', 'utf-8');
-    if (rootPkg) {
-      const pkg = JSON.parse(rootPkg);
-      return Boolean(pkg.workspaces);
-    }
-    return false;
-  } catch {
-    return false;
-  }
 }
 
 export default libraryGenerator;

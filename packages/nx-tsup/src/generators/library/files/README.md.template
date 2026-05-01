@@ -19,10 +19,11 @@ console.log(hello());
 
 ## Development
 
-- Build: `pnpm nx build <%= name %>`
-- Typecheck: `pnpm -w tsc -p tsconfig.lib.json --noEmit`
-<% if (testRunner === 'vitest') { %>- Test: `pnpm vitest run`<% } %>
-<% if (testRunner === 'jest') { %>- Test: `pnpm jest`<% } %>
+- Build: `pnpm build`
+- Watch: `pnpm dev`
+- Typecheck: `pnpm typecheck`
+<% if (testRunner === 'vitest') { %>- Test: `pnpm test`<% } %>
+<% if (testRunner === 'jest') { %>- Test: `pnpm test`<% } %>
 
 <% if (linter === 'eslint') { %>
 ## Linting

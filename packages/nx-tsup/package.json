@@ -1,4 +1,29 @@
 {
+  "name": "@code-fixer-23/nx-tsup",
+  "version": "1.2.2",
+  "description": "An Nx plugin for generating and building TypeScript libraries with Tsup.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "executors": "./executors.json",
+  "generators": "./generators.json",
+  "migrations": "./migrations.json",
+  "files": [
+    "dist",
+    "executors.json",
+    "generators.json",
+    "migrations.json",
+    "README.md",
+    "CHANGELOG.md"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.lib.json",
     "typecheck": "tsc -p tsconfig.lib.json --noEmit",
@@ -6,5 +31,13 @@
     "lint": "eslint .",
     "format": "biome format --write .",
     "check": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build"
+  },
+  "peerDependencies": {
+    "@nx/devkit": ">=21.0.0 <23.0.0",
+    "nx": ">=21.0.0 <23.0.0",
+    "tsup": ">=8.0.0 <9.0.0"
+  },
+  "dependencies": {
+    "tslib": "^2.6.2"
   }
 }
