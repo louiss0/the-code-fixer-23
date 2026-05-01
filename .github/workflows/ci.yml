@@ -47,8 +47,8 @@ jobs:
       - name: Set Nx SHAs
         uses: nrwl/nx-set-shas@v4
 
-      - name: Check formatting (affected)
-        run: pnpm exec nx format:check --base=${{ env.NX_BASE }} --head=${{ env.NX_HEAD }}
+      - name: Check formatting
+        run: pnpm run format:check
 
       - name: Lint/Test/Build/Typecheck (affected, excluding paused)
         run: pnpm exec nx affected -t lint test build typecheck --exclude='tag:paused' --base=${{ env.NX_BASE }} --head=${{ env.NX_HEAD }}
