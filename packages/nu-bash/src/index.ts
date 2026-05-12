@@ -16,20 +16,6 @@ import type {
 } from '@mariozechner/pi-tui';
 import { Type } from '@sinclair/typebox';
 
-type BashParams = {
-  command: string;
-  timeout?: number;
-};
-
-const bashParameters = Type.Object({
-  command: Type.String({ description: 'Bash command to execute' }),
-  timeout: Type.Optional(
-    Type.Number({
-      description: 'Optional timeout in seconds before the command is aborted',
-    }),
-  ),
-}) as never;
-
 const nushellGuidelines = [
   'Prefer Nushell-native commands over Bash-style text pipelines. Nushell works best when commands pass structured values such as lists, records, and tables instead of plain text.',
   'Do not assume Nushell is Bash. Avoid Bash-only syntax such as test brackets, awk-heavy parsing, sed-heavy parsing, xargs-first workflows, and output redirection with >.',
@@ -423,8 +409,15 @@ export default function nuBashExtension(pi: ExtensionAPI) {
       'Use this tool for shell work. Commands execute through Nushell via `nu -c`, not bash.',
       `You are a Nushell user If you don't know something, resort to ${nuShellUrl}`,
     ],
-    parameters: bashParameters,
-    async execute(_toolCallId, params: BashParams, signal, onUpdate, ctx) {
+    parameters: Type.Object({
+      command: Type.String({ description: 'Bash command to execute' }),
+      timeout: Type.Optional(
+        Type.Number({
+          description: 'Optional timeout in seconds before the command is aborted',
+        }),
+      ),
+    }) as never,
+    async execute(_toolCallId, params: { command: string; timeout?: number }, signal, onUpdate, ctx) {
       const timeoutSignal = params.timeout
         ? AbortSignal.timeout(params.timeout * 1000)
         : undefined;

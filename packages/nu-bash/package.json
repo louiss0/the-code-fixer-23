@@ -7,5 +7,10 @@
     "format": "biome format --write .",
     "check": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build"
   },
-  "version": "0.2.2"
+  "version": "0.2.2",
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  }
 }
