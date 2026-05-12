@@ -1,3 +1,14 @@
+## 1.0.2 (2026-05-12)
+
+### 🚀 Features
+
+- **nu-bash:** improve Nushell guidance and preserve truncated output ([#16](https://github.com/louiss0/the-code-fixer-23/pull/16))
+
+### ❤️ Thank You
+
+- Oz
+- shelton louis @louiss0
+
 ## 1.0.1 (2026-05-01)
 
 This was a version bump only for enums to align it with other projects, there were no code changes.
