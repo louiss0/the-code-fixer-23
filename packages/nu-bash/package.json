@@ -9,8 +9,13 @@
   },
   "version": "0.2.2",
   "type": "module",
-  "main": "./dist/index.js",
+  "main": "./dist/index",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index",
+      "default": "./dist/index"
+    }
   }
 }
