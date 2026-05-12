@@ -1,3 +1,5 @@
+import { writeFile } from 'node:fs/promises';
+import path from 'node:path';
 import { spawn } from 'node:child_process';
 import {
   type BashOperations,
@@ -365,7 +367,7 @@ async function executeNushellCommand(
       reject(error);
     });
 
-    child.on('close', (code) => {
+    child.on('close', async (code) => {
       signal?.removeEventListener('abort', abortHandler);
 
       const exitCode = code ?? 1;
@@ -379,8 +381,22 @@ async function executeNushellCommand(
 
       emitUpdate(exitCode);
 
+      let finalOutput = truncation.content || formatToolOutput('', '', exitCode);
+
+      if (truncation.truncated) {
+        const timestamp = Date.now();
+        const filename = `nu-tool-truncated-${timestamp}.txt`;
+        const filepath = path.join(cwd, filename);
+        try {
+          await writeFile(filepath, output, 'utf-8');
+          finalOutput = `${finalOutput}\n\n[Output was truncated. Full output written to: ${filepath}]`;
+        } catch {
+          // ignore file write errors
+        }
+      }
+
       resolve({
-        output: truncation.content || formatToolOutput('', '', exitCode),
+        output: finalOutput,
         exitCode,
         cancelled: Boolean(signal?.aborted),
         truncated: truncation.truncated,

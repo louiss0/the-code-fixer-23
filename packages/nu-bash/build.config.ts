@@ -10,6 +10,8 @@ const external = [
   '@mariozechner/pi-tui',
   '@sinclair/typebox',
   'node:child_process',
+  'node:fs/promises',
+  'node:path',
 ];
 
 export default defineConfig({
