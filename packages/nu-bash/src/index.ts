@@ -367,7 +367,7 @@ async function executeNushellCommand(
 
       emitUpdate(exitCode);
 
-      let finalOutput = truncation.content || formatToolOutput('', '', exitCode);
+      let finalOutput = '';
 
       if (truncation.truncated) {
         const timestamp = Date.now();
@@ -382,7 +382,7 @@ async function executeNushellCommand(
       }
 
       resolve({
-        output: finalOutput,
+        output: (truncation.content || formatToolOutput('', '', exitCode)) + finalOutput,
         exitCode,
         cancelled: Boolean(signal?.aborted),
         truncated: truncation.truncated,
@@ -408,6 +408,9 @@ export default function nuBashExtension(pi: ExtensionAPI) {
     promptGuidelines: [
       'Use this tool for shell work. Commands execute through Nushell via `nu -c`, not bash.',
       `You are a Nushell user If you don't know something, resort to ${nuShellUrl}`,
+      ...nushellGuidelines,
+      ...nushellRipgrepGuidelines,
+      ...nushellTextReplacementGuidelines,
     ],
     parameters: Type.Object({
       command: Type.String({ description: 'Bash command to execute' }),
