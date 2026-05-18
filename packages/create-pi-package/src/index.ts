@@ -81,12 +81,12 @@ export class Logger {
 
 export class Prompter {
   async askForWhatTheyWantToMake(): Promise<AllowedFolderChioceValues> {
-    const answers = await checkbox({
+    const answer = await checkbox({
       message: "What do you want to include in this PI package?",
       choices: allowedFolderChioces.map((choice) => ({ value: choice, name: choice })),
     });
 
-    return answers;
+    return answer;
   }
 
   async askForWhichTestRunner(): Promise<AllowedTestRunnerChioces> {
@@ -95,13 +95,13 @@ export class Prompter {
       choices: allowedTestRunnerChioces.map((choice) => ({ value: choice, name: choice })),
     });
 
-    return answers;
+    return answer;
   }
 
   async askForWhichPackageManager(
     packageManagers: AllowedPackageManagers[],
   ): Promise<AllowedPackageManagers> {
-    const answers = await select({
+    const answer = await select({
       message: "Which package manager do you want to use?",
       choices: packageManagers.map((manager) => ({ value: manager, name: manager })),
     });
