@@ -1,6 +1,8 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
+const tempDirectory = join(process.cwd(), "Temp");
+
 import {
   hasCreatedFile,
   listCreatedFiles,
@@ -199,15 +201,15 @@ describe("handler", () => {
       .mockResolvedValue(["prompts", "themes"]);
 
     await handler({ install: false } as never, {
-      fileCreator: createFileCreator(),
+      createFileCreator,
       installPackages: vi.fn(),
       logger,
       prompter,
     });
 
     expect(askForWhatTheyWantToMake).toBeCalled();
-    expectCreatedStarterFile("prompts");
-    expectCreatedStarterFile("themes");
+    expectCreatedStarterFile("prompts", tempDirectory);
+    expectCreatedStarterFile("themes", tempDirectory);
   });
 
   it("creates files inside the provided package directory", async () => {
@@ -218,15 +220,17 @@ describe("handler", () => {
         projectFolders: ["prompts"],
       } as never,
       {
-        fileCreator: createFileCreator(),
+        createFileCreator,
         installPackages: vi.fn(),
         logger,
         prompter,
       },
     );
 
-    expectCreatedStarterFile("prompts", "my-pi-package");
-    expect(hasCreatedFile("my-pi-package/scripts/create-prompt.ts")).toBe(true);
+    expectCreatedStarterFile("prompts", join(tempDirectory, "my-pi-package"));
+    expect(hasCreatedFile(join(tempDirectory, "my-pi-package/scripts/create-prompt.ts"))).toBe(
+      true,
+    );
   });
 
   it("translates a dot package directory to the cwd", async () => {
@@ -237,15 +241,34 @@ describe("handler", () => {
         projectFolders: ["prompts"],
       } as never,
       {
-        fileCreator: createFileCreator(),
+        createFileCreator,
         installPackages: vi.fn(),
         logger,
         prompter,
       },
     );
 
-    expect(hasCreatedFile(join(process.cwd(), "prompts/example.md"))).toBe(true);
-    expect(hasCreatedFile(join(process.cwd(), "scripts/create-prompt.ts"))).toBe(true);
+    expect(hasCreatedFile(join(tempDirectory, "prompts/example.md"))).toBe(true);
+    expect(hasCreatedFile(join(tempDirectory, "scripts/create-prompt.ts"))).toBe(true);
+  });
+
+  it("logs the development temp directory", async () => {
+    const message = vi.spyOn(logger, "message");
+
+    await handler(
+      {
+        install: false,
+        projectFolders: ["prompts"],
+      } as never,
+      {
+        createFileCreator,
+        installPackages: vi.fn(),
+        logger,
+        prompter,
+      },
+    );
+
+    expect(message).toBeCalledWith(`Development mode: generating files in ${tempDirectory}`);
   });
 
   it("creates instructions when requested", async () => {
@@ -256,15 +279,15 @@ describe("handler", () => {
         projectFolders: ["prompts"],
       } as never,
       {
-        fileCreator: createFileCreator(),
+        createFileCreator,
         installPackages: vi.fn(),
         logger,
         prompter,
       },
     );
 
-    expect(readCreatedFile("AGENTS.md")).toContain("coding agents");
-    expect(readCreatedFile("CLAUDE.md")).toContain("Claude");
+    expect(readCreatedFile(join(tempDirectory, "AGENTS.md"))).toContain("coding agents");
+    expect(readCreatedFile(join(tempDirectory, "CLAUDE.md"))).toContain("Claude");
   });
 
   it("creates extension tooling and installs with the invoked package manager", async () => {
@@ -280,7 +303,7 @@ describe("handler", () => {
         projectFolders: ["extensions"],
       } as never,
       {
-        fileCreator: createFileCreator(),
+        createFileCreator,
         installPackages,
         logger,
         prompter,
@@ -288,9 +311,9 @@ describe("handler", () => {
     );
 
     expect(askForWhichTestRunner).toBeCalled();
-    expect(readCreatedFile("jest.config.cjs")).toContain("ts-jest");
+    expect(readCreatedFile(join(tempDirectory, "jest.config.cjs"))).toContain("ts-jest");
     expect(command).toBeCalledWith("pnpm install");
-    expect(installPackages).toBeCalledWith("pnpm", undefined);
+    expect(installPackages).toBeCalledWith("pnpm", tempDirectory);
   });
 
   it("skips installing dependencies when no-install is set", async () => {
@@ -303,7 +326,7 @@ describe("handler", () => {
         runner: "vitest",
       } as never,
       {
-        fileCreator: createFileCreator(),
+        createFileCreator,
         installPackages,
         logger,
         prompter,
@@ -323,18 +346,22 @@ describe("handler", () => {
         projectFolders: ["extensions", "prompts"],
       } as never,
       {
-        fileCreator: createFileCreator(),
+        createFileCreator,
         installPackages: vi.fn(),
         logger,
         prompter,
       },
     );
 
-    expect(readCreatedFile("package.json")).toContain(
+    expect(readCreatedFile(join(tempDirectory, "package.json"))).toContain(
       '"create:extension": "tsx scripts/create-extension.ts"',
     );
-    expect(readCreatedFile("package.json")).not.toContain('"jest": "latest"');
-    expect(readCreatedFile("package.json")).not.toContain('"vitest": "latest"');
+    expect(readCreatedFile(join(tempDirectory, "package.json"))).not.toContain(
+      '"jest": "latest"',
+    );
+    expect(readCreatedFile(join(tempDirectory, "package.json"))).not.toContain(
+      '"vitest": "latest"',
+    );
     expect(warn).toBeCalledWith(
       "No test runner selected. PI package starter files were still generated.",
     );
@@ -351,7 +378,7 @@ describe("handler", () => {
           projectFolders: ["extensions"],
         } as never,
         {
-          fileCreator: createFileCreator(),
+          createFileCreator,
           installPackages,
           logger,
           prompter,
@@ -382,7 +409,7 @@ describe("setupRunCli", () => {
     const installPackages = vi.fn();
     const handlerSpy = vi.fn();
     const runCli = setupRunCli(handlerSpy, {
-      fileCreator,
+      createFileCreator,
       installPackages,
       logger,
       prompter,
@@ -421,7 +448,7 @@ describe("setupRunCli", () => {
     const installPackages = vi.fn();
     const handlerSpy = vi.fn();
     const runCli = setupRunCli(handlerSpy, {
-      fileCreator,
+      createFileCreator,
       installPackages,
       logger,
       prompter,
@@ -441,7 +468,7 @@ describe("setupRunCli", () => {
 
   it("accepts project folders without prompting", async () => {
     const runCli = setupRunCli(handler, {
-      fileCreator: createFileCreator(),
+      createFileCreator,
       installPackages: vi.fn(),
       logger,
       prompter,
@@ -451,8 +478,8 @@ describe("setupRunCli", () => {
     await runCli("--project-folders", "themes", "skills", "--no-install");
 
     expect(askForWhatTheyWantToMake).not.toBeCalled();
-    expectCreatedStarterFile("themes");
-    expectCreatedStarterFile("skills");
+    expectCreatedStarterFile("themes", tempDirectory);
+    expectCreatedStarterFile("skills", tempDirectory);
   });
 
   it("keeps the mocked filesystem isolated between tests", () => {
