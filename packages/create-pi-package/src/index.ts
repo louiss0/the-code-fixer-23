@@ -4,14 +4,18 @@ import path from "node:path";
 import { Command } from "@commander-js/extra-typings";
 import { checkbox, select } from "@inquirer/prompts";
 import signaleLogger from "signale";
+import { picklist } from "valibot";
 
-const allowedFolderChioces = ["extensions", "prompts", "skills", "themes"] as const;
+const folderChiocesSchema = picklist(["extensions", "prompts", "skills", "themes"]);
+const allowedFolderChioces = folderChiocesSchema.options;
 export type AllowedFolderChioceValues = Array<(typeof allowedFolderChioces)[number]>;
 
-const allowedTestRunnerChioces = ["jest", "vitest"] as const;
+const runnerChiocesSchema = picklist(["jest", "vitest"]);
+const allowedTestRunnerChioces = runnerChiocesSchema.options;
 export type AllowedTestRunnerChioces = (typeof allowedTestRunnerChioces)[number];
 
-export const allowedPackageManagers = ["bun", "pnpm", "yarn", "npm"] as const;
+const packageManagerChiocesSchema = picklist(["bun", "pnpm", "yarn", "npm"]);
+export const allowedPackageManagers = packageManagerChiocesSchema.options;
 export type AllowedPackageManagers = (typeof allowedPackageManagers)[number];
 type DetectedPackageManagers = Exclude<AllowedPackageManagers, "npm">;
 
