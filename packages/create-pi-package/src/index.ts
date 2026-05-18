@@ -394,7 +394,7 @@ type HandlerOptions = Record<
 interface Deps {
   prompter: Prompter;
   fileCreator: FileCreator;
-  installPackages?: InstallPackages;
+  installPackages: InstallPackages;
   logger: Logger;
 }
 
@@ -465,10 +465,7 @@ export async function handler(object: HandlerOptions, deps: Deps) {
       logger.command(`${packageManager} install`);
 
       try {
-        await (deps.installPackages ?? installPackages)(
-          packageManager,
-          process.cwd(),
-        );
+        await deps.installPackages(packageManager, process.cwd());
       } catch (error) {
         logger.error(`Failed to install dependencies with ${packageManager}.`);
         throw error;
@@ -618,6 +615,7 @@ const deps: Deps = {
   prompter: new Prompter(),
   fileCreator: new FileCreator(),
   logger: new Logger(),
+  installPackages,
 };
 
 if (import.meta.env.PROD) {
