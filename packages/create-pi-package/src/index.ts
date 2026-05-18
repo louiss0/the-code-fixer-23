@@ -90,7 +90,7 @@ export class Prompter {
   }
 
   async askForWhichTestRunner(): Promise<AllowedTestRunnerChioces> {
-    const answers = await select({
+    const answer = await select({
       message: "Which test runner do you want to use?",
       choices: allowedTestRunnerChioces.map((choice) => ({ value: choice, name: choice })),
     });
@@ -106,7 +106,7 @@ export class Prompter {
       choices: packageManagers.map((manager) => ({ value: manager, name: manager })),
     });
 
-    return parse(packageManagerChiocesSchema, answers);
+    return answer;
   }
 }
 
