@@ -70,11 +70,10 @@ const expectedStarterFiles = {
   },
 } as const;
 
-function expectCreatedStarterFile(
-  choice: keyof typeof expectedStarterFiles,
-  directory = "",
-) {
-  const file = directory ? `${directory}/${expectedStarterFiles[choice].file}` : expectedStarterFiles[choice].file;
+function expectCreatedStarterFile(choice: keyof typeof expectedStarterFiles, directory = "") {
+  const file = directory
+    ? `${directory}/${expectedStarterFiles[choice].file}`
+    : expectedStarterFiles[choice].file;
 
   expect(hasCreatedFile(file)).toBe(true);
   expect(readCreatedFile(file)).toContain(expectedStarterFiles[choice].content);
