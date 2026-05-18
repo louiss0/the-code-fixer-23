@@ -35,6 +35,11 @@
         "command": "pnpm --dir packages/create-pi-package run lint"
       }
     },
+    "activate": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "command": "pnpm --dir packages/create-pi-package exec dist/index.js"
+    },
     "format": {
       "executor": "nx:run-commands",
       "options": {
