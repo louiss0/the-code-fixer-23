@@ -1,5 +1,5 @@
-import { mkdirSync, writeFileSync } from "node:fs";
-import path, { resolve } from "node:path";
+import { writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 import type { AllowedFolderChioceValues, AllowedTestRunnerChioces } from "./options";
 
 const extensionContent = `export default function (pi:ExtensionAPI) {
