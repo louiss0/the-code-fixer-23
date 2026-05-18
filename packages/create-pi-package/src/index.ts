@@ -303,50 +303,32 @@ export class Logger {
 
 export class Prompter {
   async askForWhatTheyWantToMake(): Promise<AllowedFolderChioceValues> {
-    const answers = await inquirer.prompt<{
-      choices: AllowedFolderChioceValues;
-    }>([
-      {
-        type: 'checkbox',
-        name: 'choices',
-        message: 'What do you want to include in this PI package?',
-        choices: [...allowedFolderChioces],
-      },
-    ]);
+    const answers = await checkbox({
+      message: "What do you want to include in this PI package?",
+      choices: allowedFolderChioces.map((choice) => ({ value: choice, name: choice })),
+    });
 
-    return answers.choices;
+    return answers;
   }
 
   async askForWhichTestRunner(): Promise<AllowedTestRunnerChioces> {
-    const answers = await inquirer.prompt<{
-      testRunner: AllowedTestRunnerChioces;
-    }>([
-      {
-        type: 'list',
-        name: 'testRunner',
-        message: 'Which test runner do you want to use?',
-        choices: [...allowedTestRunnerChioces],
-      },
-    ]);
+    const answers = await select({
+      message: "Which test runner do you want to use?",
+      choices: allowedTestRunnerChioces.map((choice) => ({ value: choice, name: choice })),
+    });
 
-    return answers.testRunner;
+    return answers;
   }
 
   async askForWhichPackageManager(
     packageManagers: DetectedPackageManagers[],
   ): Promise<AllowedPackageManagers> {
-    const answers = await inquirer.prompt<{
-      packageManager: AllowedPackageManagers;
-    }>([
-      {
-        type: 'list',
-        name: 'packageManager',
-        message: 'Which package manager do you want to use?',
-        choices: packageManagers,
-      },
-    ]);
+    const answers = await select({
+      message: "Which package manager do you want to use?",
+      choices: packageManagers.map((manager) => ({ value: manager, name: manager })),
+    });
 
-    return answers.packageManager;
+    return answers;
   }
 }
 
