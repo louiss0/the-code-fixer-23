@@ -1,5 +1,11 @@
 import { mkdirSync, writeFileSync } from "node:fs";
-import { vol } from "memfs";
+
+import {
+  hasCreatedFile,
+  listCreatedFiles,
+  readCreatedFile,
+  resetCreatedFiles,
+} from "./file-creator.mock";
 import { createFileCreator, Logger, handler, setupRunCli } from "./index";
 import type {
   AllowedFolderChioceValues,
@@ -10,18 +16,15 @@ import type {
 
 vi.mock("node:fs", async () => {
   const { fs } = await import("memfs");
+  const path = await import("node:path");
 
   return {
     mkdirSync: vi.fn(fs.mkdirSync.bind(fs)),
     writeFileSync: vi.fn((file: string, content: string) => {
-      const normalizedFile = file.replaceAll("\\", "/");
-      const absoluteFile = normalizedFile.startsWith("/")
-        ? normalizedFile
-        : `/${normalizedFile}`;
-      const directory = absoluteFile.split("/").slice(0, -1).join("/") || "/";
+      const directory = path.dirname(file);
 
       fs.mkdirSync(directory, { recursive: true });
-      fs.writeFileSync(absoluteFile, content);
+      fs.writeFileSync(file, content);
     }),
   };
 });
@@ -66,11 +69,14 @@ const expectedStarterFiles = {
   },
 } as const;
 
-function expectCreatedStarterFile(choice: keyof typeof expectedStarterFiles) {
-  expect(writeFileSync).toBeCalledWith(
-    expectedStarterFiles[choice].file,
-    expect.stringContaining(expectedStarterFiles[choice].content),
-  );
+function expectCreatedStarterFile(
+  choice: keyof typeof expectedStarterFiles,
+  directory = "",
+) {
+  const file = directory ? `${directory}/${expectedStarterFiles[choice].file}` : expectedStarterFiles[choice].file;
+
+  expect(hasCreatedFile(file)).toBe(true);
+  expect(readCreatedFile(file)).toContain(expectedStarterFiles[choice].content);
 }
 
 describe("Logger", () => {
@@ -97,7 +103,7 @@ describe("Logger", () => {
 
 describe("createFileCreator", () => {
   afterEach(() => {
-    vol.reset();
+    resetCreatedFiles();
     vi.clearAllMocks();
   });
 
@@ -108,6 +114,7 @@ describe("createFileCreator", () => {
 
     expect(mkdirSync).toBeCalledWith("prompts", { recursive: true });
     expect(writeFileSync).toBeCalledWith("prompts/example.md", "Prompt content");
+    expect(readCreatedFile("prompts/example.md")).toBe("Prompt content");
   });
 
   it("creates starter files and scripts for selected PI package folders", () => {
@@ -118,13 +125,11 @@ describe("createFileCreator", () => {
 
     expectCreatedStarterFile("prompts");
     expectCreatedStarterFile("skills");
-    expect(writeFileSync).toBeCalledWith(
-      "scripts/create-prompt.ts",
-      expect.stringContaining("const fileName = process.argv[2];"),
+    expect(readCreatedFile("scripts/create-prompt.ts")).toContain(
+      "const fileName = process.argv[2];",
     );
-    expect(writeFileSync).toBeCalledWith(
-      "scripts/create-skill.ts",
-      expect.stringContaining('writeFileSync(join(directory, "SKILL.md")'),
+    expect(readCreatedFile("scripts/create-skill.ts")).toContain(
+      'writeFileSync(join(directory, "SKILL.md")',
     );
   });
 
@@ -135,18 +140,11 @@ describe("createFileCreator", () => {
     fileCreator.createTsConfig();
     fileCreator.createPackageJson("vitest", ["extensions"]);
 
-    expect(writeFileSync).toBeCalledWith(
-      "vitest.config.ts",
-      expect.stringContaining("import { defineConfig } from 'vitest/config';"),
+    expect(readCreatedFile("vitest.config.ts")).toContain(
+      "import { defineConfig } from 'vitest/config';",
     );
-    expect(writeFileSync).toBeCalledWith(
-      "tsconfig.json",
-      expect.stringContaining('"include": ['),
-    );
-    expect(writeFileSync).toBeCalledWith(
-      "package.json",
-      expect.stringContaining('"vitest": "latest"'),
-    );
+    expect(readCreatedFile("tsconfig.json")).toContain('"include": [');
+    expect(readCreatedFile("package.json")).toContain('"vitest": "latest"');
   });
 
   it("creates agent instruction files", () => {
@@ -154,8 +152,23 @@ describe("createFileCreator", () => {
 
     fileCreator.createAgentInstructions();
 
-    expect(writeFileSync).toBeCalledWith("AGENTS.md", expect.stringContaining("coding agents"));
-    expect(writeFileSync).toBeCalledWith("CLAUDE.md", expect.stringContaining("Claude"));
+    expect(readCreatedFile("AGENTS.md")).toContain("coding agents");
+    expect(readCreatedFile("CLAUDE.md")).toContain("Claude");
+  });
+
+  it("prefixes created files when a package directory is provided", () => {
+    const fileCreator = createFileCreator("my-pi-package");
+
+    fileCreator.createFile("prompts/example.md", "Prompt content");
+
+    expect(mkdirSync).toBeCalledWith(expect.stringMatching(/my-pi-package[\\/]prompts/), {
+      recursive: true,
+    });
+    expect(writeFileSync).toBeCalledWith(
+      expect.stringMatching(/my-pi-package[\\/]prompts[\\/]example\.md/),
+      "Prompt content",
+    );
+    expect(readCreatedFile("my-pi-package/prompts/example.md")).toBe("Prompt content");
   });
 });
 
@@ -175,7 +188,7 @@ describe("handler", () => {
   });
 
   afterEach(() => {
-    vol.reset();
+    resetCreatedFiles();
     vi.clearAllMocks();
     vi.unstubAllEnvs();
   });
@@ -185,10 +198,12 @@ describe("handler", () => {
       .spyOn(prompter, "askForWhatTheyWantToMake")
       .mockResolvedValue(["prompts", "themes"]);
 
-    await handler(
-      { install: false } as never,
-      { createFileCreator, installPackages: vi.fn(), logger, prompter },
-    );
+    await handler({ install: false } as never, {
+      fileCreator: createFileCreator(),
+      installPackages: vi.fn(),
+      logger,
+      prompter,
+    });
 
     expect(askForWhatTheyWantToMake).toBeCalled();
     expectCreatedStarterFile("prompts");
@@ -202,17 +217,16 @@ describe("handler", () => {
         packageName: "my-pi-package/",
         projectFolders: ["prompts"],
       } as never,
-      { createFileCreator, installPackages: vi.fn(), logger, prompter },
+      {
+        fileCreator: createFileCreator(),
+        installPackages: vi.fn(),
+        logger,
+        prompter,
+      },
     );
 
-    expect(writeFileSync).toBeCalledWith(
-      expect.stringMatching(/my-pi-package[\\/]prompts[\\/]example\.md/),
-      expect.any(String),
-    );
-    expect(writeFileSync).toBeCalledWith(
-      expect.stringMatching(/my-pi-package[\\/]scripts[\\/]create-prompt\.ts/),
-      expect.any(String),
-    );
+    expectCreatedStarterFile("prompts", "my-pi-package");
+    expect(hasCreatedFile("my-pi-package/scripts/create-prompt.ts")).toBe(true);
   });
 
   it("creates instructions when requested", async () => {
@@ -222,11 +236,16 @@ describe("handler", () => {
         install: false,
         projectFolders: ["prompts"],
       } as never,
-      { createFileCreator, installPackages: vi.fn(), logger, prompter },
+      {
+        fileCreator: createFileCreator(),
+        installPackages: vi.fn(),
+        logger,
+        prompter,
+      },
     );
 
-    expect(writeFileSync).toBeCalledWith("AGENTS.md", expect.stringContaining("coding agents"));
-    expect(writeFileSync).toBeCalledWith("CLAUDE.md", expect.stringContaining("Claude"));
+    expect(readCreatedFile("AGENTS.md")).toContain("coding agents");
+    expect(readCreatedFile("CLAUDE.md")).toContain("Claude");
   });
 
   it("creates extension tooling and installs with the invoked package manager", async () => {
@@ -241,11 +260,16 @@ describe("handler", () => {
       {
         projectFolders: ["extensions"],
       } as never,
-      { createFileCreator, installPackages, logger, prompter },
+      {
+        fileCreator: createFileCreator(),
+        installPackages,
+        logger,
+        prompter,
+      },
     );
 
     expect(askForWhichTestRunner).toBeCalled();
-    expect(writeFileSync).toBeCalledWith("jest.config.cjs", expect.stringContaining("ts-jest"));
+    expect(readCreatedFile("jest.config.cjs")).toContain("ts-jest");
     expect(command).toBeCalledWith("pnpm install");
     expect(installPackages).toBeCalledWith("pnpm", undefined);
   });
@@ -259,7 +283,12 @@ describe("handler", () => {
         projectFolders: ["extensions"],
         runner: "vitest",
       } as never,
-      { createFileCreator, installPackages, logger, prompter },
+      {
+        fileCreator: createFileCreator(),
+        installPackages,
+        logger,
+        prompter,
+      },
     );
 
     expect(installPackages).not.toBeCalled();
@@ -274,21 +303,19 @@ describe("handler", () => {
         install: false,
         projectFolders: ["extensions", "prompts"],
       } as never,
-      { createFileCreator, installPackages: vi.fn(), logger, prompter },
+      {
+        fileCreator: createFileCreator(),
+        installPackages: vi.fn(),
+        logger,
+        prompter,
+      },
     );
 
-    expect(writeFileSync).toBeCalledWith(
-      "package.json",
-      expect.stringContaining('"create:extension": "tsx scripts/create-extension.ts"'),
+    expect(readCreatedFile("package.json")).toContain(
+      '"create:extension": "tsx scripts/create-extension.ts"',
     );
-    expect(writeFileSync).toBeCalledWith(
-      "package.json",
-      expect.not.stringContaining('"jest": "latest"'),
-    );
-    expect(writeFileSync).toBeCalledWith(
-      "package.json",
-      expect.not.stringContaining('"vitest": "latest"'),
-    );
+    expect(readCreatedFile("package.json")).not.toContain('"jest": "latest"');
+    expect(readCreatedFile("package.json")).not.toContain('"vitest": "latest"');
     expect(warn).toBeCalledWith(
       "No test runner selected. PI package starter files were still generated.",
     );
@@ -304,7 +331,12 @@ describe("handler", () => {
         {
           projectFolders: ["extensions"],
         } as never,
-        { createFileCreator, installPackages, logger, prompter },
+        {
+          fileCreator: createFileCreator(),
+          installPackages,
+          logger,
+          prompter,
+        },
       ),
     ).rejects.toBe(error);
 
@@ -314,7 +346,6 @@ describe("handler", () => {
 
 describe("setupRunCli", () => {
   const prompter = new MockPrompter();
-  const installPackages = vi.fn();
   const logger = new Logger({
     start: vi.fn(),
     success: vi.fn(),
@@ -323,14 +354,16 @@ describe("setupRunCli", () => {
   });
 
   afterEach(() => {
-    vol.reset();
+    resetCreatedFiles();
     vi.clearAllMocks();
   });
 
   it("passes parsed CLI options to the handler", async () => {
+    const fileCreator = createFileCreator();
+    const installPackages = vi.fn();
     const handlerSpy = vi.fn();
     const runCli = setupRunCli(handlerSpy, {
-      createFileCreator,
+      fileCreator,
       installPackages,
       logger,
       prompter,
@@ -355,14 +388,19 @@ describe("setupRunCli", () => {
         projectFolders: ["extensions", "prompts"],
         runner: "jest",
       }),
-      expect.objectContaining({ createFileCreator, installPackages, logger, prompter }),
+      expect.objectContaining({
+        fileCreator,
+        installPackages,
+        logger,
+        prompter,
+      }),
     );
   });
 
   it("accepts project folders without prompting", async () => {
     const runCli = setupRunCli(handler, {
-      createFileCreator,
-      installPackages,
+      fileCreator: createFileCreator(),
+      installPackages: vi.fn(),
       logger,
       prompter,
     });
@@ -373,5 +411,9 @@ describe("setupRunCli", () => {
     expect(askForWhatTheyWantToMake).not.toBeCalled();
     expectCreatedStarterFile("themes");
     expectCreatedStarterFile("skills");
+  });
+
+  it("keeps the mocked filesystem isolated between tests", () => {
+    expect(listCreatedFiles()).toEqual({});
   });
 });
