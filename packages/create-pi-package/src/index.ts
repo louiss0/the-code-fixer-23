@@ -378,9 +378,8 @@ export class FileCreator {
   }
 
   createFile(file: string, content: string) {
-    const targetFile = this.directory ? path.posix.join(this.directory, file) : file;
+    const targetFile = this.directory ? join(this.directory, file) : file;
     const directory = path.dirname(targetFile);
-
     if (directory !== ".") mkdirSync(directory, { recursive: true });
     writeFileSync(targetFile, content);
   }
