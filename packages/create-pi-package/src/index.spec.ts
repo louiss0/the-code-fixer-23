@@ -1,4 +1,5 @@
 import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 
 import {
   hasCreatedFile,
@@ -229,6 +230,25 @@ describe("handler", () => {
     expect(hasCreatedFile("my-pi-package/scripts/create-prompt.ts")).toBe(true);
   });
 
+  it("translates a dot package directory to the cwd", async () => {
+    await handler(
+      {
+        install: false,
+        packageName: ".",
+        projectFolders: ["prompts"],
+      } as never,
+      {
+        fileCreator: createFileCreator(),
+        installPackages: vi.fn(),
+        logger,
+        prompter,
+      },
+    );
+
+    expect(hasCreatedFile(join(process.cwd(), "prompts/example.md"))).toBe(true);
+    expect(hasCreatedFile(join(process.cwd(), "scripts/create-prompt.ts"))).toBe(true);
+  });
+
   it("creates instructions when requested", async () => {
     await handler(
       {
@@ -394,6 +414,29 @@ describe("setupRunCli", () => {
         logger,
         prompter,
       }),
+    );
+  });
+
+  it("translates a dot package directory to the cwd before calling the handler", async () => {
+    const fileCreator = createFileCreator();
+    const installPackages = vi.fn();
+    const handlerSpy = vi.fn();
+    const runCli = setupRunCli(handlerSpy, {
+      fileCreator,
+      installPackages,
+      logger,
+      prompter,
+    });
+
+    await runCli(".", "--project-folders", "prompts", "--no-install");
+
+    expect(handlerSpy).toBeCalledWith(
+      expect.objectContaining({
+        install: false,
+        packageName: process.cwd(),
+        projectFolders: ["prompts"],
+      }),
+      expect.anything(),
     );
   });
 

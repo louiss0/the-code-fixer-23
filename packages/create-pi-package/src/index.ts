@@ -43,6 +43,10 @@ const folderPathSchema = optional(
   ),
 );
 
+function resolvePackageDirectory(packageName: string | undefined) {
+  return packageName === "." ? process.cwd() : packageName;
+}
+
 type SignaleLogger = Pick<typeof signaleLogger, "start" | "success" | "warn" | "error">;
 
 export class Logger {
@@ -132,6 +136,7 @@ export async function resolvePackageManager(
 
 const program = new Command()
   .argument("[packageName]", "Package folder to create", (value) => {
+    if (value === ".") return process.cwd();
     return parse(folderPathSchema, value);
   })
   .option(
@@ -160,10 +165,9 @@ export async function handler(object: HandlerOptions, deps: Deps) {
 
   if (!object.projectFolders) logger.warn("Asking which PI package folders to create.");
 
+  const packageDirectory = resolvePackageDirectory(object.packageName);
   const choices = object.projectFolders ?? (await prompter.askForWhatTheyWantToMake());
-  const fileCreator = object.packageName
-    ? createFileCreator(object.packageName)
-    : deps.fileCreator;
+  const fileCreator = packageDirectory ? createFileCreator(packageDirectory) : deps.fileCreator;
 
   logger.message(`Creating PI package folders: ${choices.join(", ")}`);
   fileCreator.createPiFoldersBasedOnChoices(choices);
@@ -194,7 +198,7 @@ export async function handler(object: HandlerOptions, deps: Deps) {
       logger.command(`${packageManager} install`);
 
       try {
-        await deps.installPackages(packageManager, object.packageName);
+        await deps.installPackages(packageManager, packageDirectory);
       } catch (error) {
         logger.error(`Failed to install dependencies with ${packageManager}.`);
         throw error;
@@ -210,9 +214,9 @@ export function setupRunCli(
   return async (...args: string[]) => {
     const parsedProgram = args.length > 0 ? program.parse(args, { from: "user" }) : program;
     const flags = parsedProgram.opts() as HandlerOptions;
-    const packageName = parsedProgram.args[0];
+    const packageName = resolvePackageDirectory(parsedProgram.args[0]);
 
-    await handler({ ...flags, packageName }, deps);
+    await handler({ ...flags, packageName } as HandlerOptions, deps);
   };
 }
 
