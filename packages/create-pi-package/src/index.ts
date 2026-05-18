@@ -47,6 +47,16 @@ function resolvePackageDirectory(packageName: string | undefined) {
   return packageName === "." ? process.cwd() : packageName;
 }
 
+function resolveOutputDirectory(packageDirectory: string | undefined) {
+  if (import.meta.env.PROD) return packageDirectory;
+
+  const tempDirectory = join(process.cwd(), "Temp");
+  if (!packageDirectory) return tempDirectory;
+  if (packageDirectory === process.cwd()) return tempDirectory;
+
+  return join(tempDirectory, packageDirectory);
+}
+
 type SignaleLogger = Pick<typeof signaleLogger, "start" | "success" | "warn" | "error">;
 
 export class Logger {
