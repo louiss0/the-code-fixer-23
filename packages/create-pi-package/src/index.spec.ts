@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { vol } from 'memfs';
 import {
-  FileCreator,
+  createFileCreator,
   Logger,
   handler,
   setupRunCli,
@@ -100,14 +100,14 @@ describe('Logger', () => {
   });
 });
 
-describe('FileCreator', () => {
+describe('createFileCreator', () => {
   afterEach(() => {
     vol.reset();
     vi.clearAllMocks();
   });
 
   it('creates parent directories before writing a file', () => {
-    const fileCreator = new FileCreator();
+    const fileCreator = createFileCreator();
 
     fileCreator.createFile('prompts/example.md', 'Prompt content');
 
@@ -119,7 +119,7 @@ describe('FileCreator', () => {
   });
 
   it('creates starter files and scripts for selected PI package folders', () => {
-    const fileCreator = new FileCreator();
+    const fileCreator = createFileCreator();
 
     fileCreator.createPiFoldersBasedOnChoices(['prompts', 'skills']);
     fileCreator.createScriptsBasedOnChoices(['prompts', 'skills']);
@@ -137,7 +137,7 @@ describe('FileCreator', () => {
   });
 
   it('creates extension tooling files', () => {
-    const fileCreator = new FileCreator();
+    const fileCreator = createFileCreator();
 
     fileCreator.createTestRunnerConfig('vitest');
     fileCreator.createTsConfig();
@@ -158,7 +158,7 @@ describe('FileCreator', () => {
   });
 
   it('creates agent instruction files', () => {
-    const fileCreator = new FileCreator();
+    const fileCreator = createFileCreator();
 
     fileCreator.createAgentInstructions();
 
@@ -195,7 +195,7 @@ describe('handler', () => {
   });
 
   it('asks for folder choices when projectFolders is missing', async () => {
-    const fileCreator = new FileCreator();
+    const fileCreator = createFileCreator();
     const askForWhatTheyWantToMake = vi
       .spyOn(prompter, 'askForWhatTheyWantToMake')
       .mockResolvedValue(['prompts', 'themes']);
@@ -211,7 +211,7 @@ describe('handler', () => {
   });
 
   it('creates files inside the provided package directory', async () => {
-    const fileCreator = new FileCreator();
+    const fileCreator = createFileCreator();
 
     await handler(
       {
@@ -233,7 +233,7 @@ describe('handler', () => {
   });
 
   it('creates instructions when requested', async () => {
-    const fileCreator = new FileCreator();
+    const fileCreator = createFileCreator();
 
     await handler(
       {
@@ -259,7 +259,7 @@ describe('handler', () => {
       'npm_config_user_agent',
       'pnpm/10.0.0 npm/? node/v22.0.0 win32 x64',
     );
-    const fileCreator = new FileCreator();
+    const fileCreator = createFileCreator();
     const installPackages = vi.fn();
     const askForWhichTestRunner = vi
       .spyOn(prompter, 'askForWhichTestRunner')
@@ -283,7 +283,7 @@ describe('handler', () => {
   });
 
   it('skips installing dependencies when no-install is set', async () => {
-    const fileCreator = new FileCreator();
+    const fileCreator = createFileCreator();
     const installPackages = vi.fn();
 
     await handler(
@@ -299,7 +299,7 @@ describe('handler', () => {
   });
 
   it('warns when test runner selection is cancelled and still creates package files', async () => {
-    const fileCreator = new FileCreator();
+    const fileCreator = createFileCreator();
     const warn = vi.spyOn(logger, 'warn');
     vi.spyOn(prompter, 'askForWhichTestRunner').mockResolvedValue(
       undefined as never,
@@ -332,7 +332,7 @@ describe('handler', () => {
 
   it('logs install errors before rethrowing them', async () => {
     const error = new Error('Install failed');
-    const fileCreator = new FileCreator();
+    const fileCreator = createFileCreator();
     const installPackages = vi.fn().mockRejectedValue(error);
     const errorSpy = vi.spyOn(logger, 'error');
 
@@ -351,7 +351,7 @@ describe('handler', () => {
 
 describe('setupRunCli', () => {
   const prompter = new MockPrompter();
-  const fileCreator = new FileCreator();
+  const fileCreator = createFileCreator();
   const installPackages = vi.fn();
   const logger = new Logger({
     start: vi.fn(),

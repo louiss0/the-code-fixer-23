@@ -331,7 +331,20 @@ export class Prompter {
   }
 }
 
-export class FileCreator {
+export interface FileCreator {
+  createPiFoldersBasedOnChoices(choices: AllowedFolderChioceValues): void;
+  createScriptsBasedOnChoices(choices: AllowedFolderChioceValues): void;
+  createAgentInstructions(): void;
+  createTestRunnerConfig(testRunner: AllowedTestRunnerChioces): void;
+  createTsConfig(): void;
+  createPackageJson(
+    testRunner: AllowedTestRunnerChioces | undefined,
+    choices: AllowedFolderChioceValues,
+  ): void;
+  createFile(file: string, content: string): void;
+}
+
+class FileCreatorClass implements FileCreator {
   constructor(private readonly directory = "") {}
 
   createPiFoldersBasedOnChoices(choices: AllowedFolderChioceValues) {
@@ -378,6 +391,10 @@ export class FileCreator {
     if (directory !== ".") mkdirSync(directory, { recursive: true });
     writeFileSync(targetFile, content);
   }
+}
+
+export function createFileCreator(directory = ""): FileCreator {
+  return new FileCreatorClass(directory);
 }
 
 interface Deps {
@@ -434,7 +451,7 @@ export async function handler(object: HandlerOptions, deps: Deps) {
   const promptedChoices = object.projectFolders ?? (await deps.prompter.askForWhatTheyWantToMake());
   const choices = promptedChoices.map((choice) => parse(folderChoicesSchema, choice));
   const fileCreator = object.packageName
-    ? new FileCreator(object.packageName)
+    ? createFileCreator(object.packageName)
     : deps.fileCreator;
 
   logger.message(`Creating PI package folders: ${choices.join(", ")}`);
@@ -542,7 +559,7 @@ async function installPackages(packageManager: AllowedPackageManagers, directory
 
 const deps: Deps = {
   prompter: new Prompter(),
-  fileCreator: new FileCreator(),
+  fileCreator: createFileCreator(),
   logger: new Logger(),
   installPackages,
 };
