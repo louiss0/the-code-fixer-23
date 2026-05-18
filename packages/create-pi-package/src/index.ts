@@ -4,7 +4,7 @@ import path, { join } from "node:path";
 import { Command } from "@commander-js/extra-typings";
 import { checkbox, select } from "@inquirer/prompts";
 import signaleLogger from "signale";
-import { array, optional, parse, picklist, pipe, regex, string, transform } from "valibot";
+import { optional, parse, picklist, pipe, regex, string } from "valibot";
 
 const folderChoicesSchema = picklist(["extensions", "prompts", "skills", "themes"]);
 const allowedFolderChioces = folderChoicesSchema.options;
@@ -415,19 +415,7 @@ const program = new Command()
   .argument("[packageName]", "Package folder to create", (value) => {
     return parse(folderPathSchema, value);
   })
-  .option("--project-folders <project-folders...>", "PI package folders to create", (value) => {
-    return parse(
-      pipe(
-        string(),
-        regex(
-          new RegExp(`(?:${allowedFolderChioces.join("|")})+(?:,|\\s+))+`),
-          `must be a comma-separated or space-separated list of these names: ${allowedFolderChioces.join(", ")}`,
-        ),
-        transform((value) => parse(array(folderChoicesSchema), value.split(/[,\s]+/))),
-      ),
-      value,
-    );
-  })
+  .option("--project-folders <project-folders...>", "PI package folders to create")
   .option("--runner <runner>", "Test runner to use when extensions are selected", (value) => {
     return parse(runnerChiocesSchema, value);
   })
@@ -443,7 +431,8 @@ export async function handler(object: HandlerOptions, deps: Deps) {
 
   if (!object.projectFolders) logger.warn("Asking which PI package folders to create.");
 
-  const choices = object.projectFolders ?? (await deps.prompter.askForWhatTheyWantToMake());
+  const promptedChoices = object.projectFolders ?? (await deps.prompter.askForWhatTheyWantToMake());
+  const choices = promptedChoices.map((choice) => parse(folderChoicesSchema, choice));
   const fileCreator = object.packageName
     ? new FileCreator(object.packageName)
     : deps.fileCreator;
