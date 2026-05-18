@@ -440,6 +440,7 @@ export async function handler(object: HandlerOptions, deps: Deps) {
       const packageManager = await resolvePackageManager(deps.prompter);
       logger.command(`${packageManager} install`);
 
+      logger.message(`The CWD is! ${process.cwd()}`);
       try {
         await deps.installPackages(packageManager, process.cwd());
       } catch (error) {

@@ -43,7 +43,8 @@
     "@commander-js/extra-typings": "^13.1.0",
     "@inquirer/prompts": "^8.4.3",
     "commander": "^13.1.0",
-    "signale": "^1.4.0"
+    "signale": "^1.4.0",
+    "valibot": "^1.4.0"
   },
   "devDependencies": {
     "@types/signale": "^1.4.7",
