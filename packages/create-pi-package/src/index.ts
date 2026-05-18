@@ -1,27 +1,19 @@
-import { execFile } from 'node:child_process';
-import { mkdirSync, writeFile } from 'node:fs';
-import path from 'node:path';
-import { Command } from '@commander-js/extra-typings';
-import inquirer from 'inquirer';
-import signaleLogger from 'signale';
+import { execFile } from "node:child_process";
+import { mkdirSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { Command } from "@commander-js/extra-typings";
+import { checkbox, select } from "@inquirer/prompts";
+import signaleLogger from "signale";
 
-const allowedFolderChioces = [
-  'extensions',
-  'prompts',
-  'skills',
-  'themes',
-] as const;
-export type AllowedFolderChioceValues = Array<
-  (typeof allowedFolderChioces)[number]
->;
+const allowedFolderChioces = ["extensions", "prompts", "skills", "themes"] as const;
+export type AllowedFolderChioceValues = Array<(typeof allowedFolderChioces)[number]>;
 
-const allowedTestRunnerChioces = ['jest', 'vitest'] as const;
-export type AllowedTestRunnerChioces =
-  (typeof allowedTestRunnerChioces)[number];
+const allowedTestRunnerChioces = ["jest", "vitest"] as const;
+export type AllowedTestRunnerChioces = (typeof allowedTestRunnerChioces)[number];
 
-export const allowedPackageManagers = ['bun', 'pnpm', 'yarn', 'npm'] as const;
+export const allowedPackageManagers = ["bun", "pnpm", "yarn", "npm"] as const;
 export type AllowedPackageManagers = (typeof allowedPackageManagers)[number];
-type DetectedPackageManagers = Exclude<AllowedPackageManagers, 'npm'>;
+type DetectedPackageManagers = Exclude<AllowedPackageManagers, "npm">;
 
 type FindExecutablePath = (
   packageManager: DetectedPackageManagers,
@@ -30,10 +22,7 @@ type InstallPackages = (
   packageManager: AllowedPackageManagers,
   directory: string,
 ) => Promise<void>;
-type SignaleLogger = Pick<
-  typeof signaleLogger,
-  'start' | 'success' | 'warn' | 'error'
->;
+type SignaleLogger = Pick<typeof signaleLogger, "start" | "success" | "warn" | "error">;
 
 const extensionContent = `export default function (pi:ExtensionAPI) {
 
@@ -158,10 +147,10 @@ const fileByFolderChoice: Record<
   AllowedFolderChioceValues[number],
   { file: string; content: string }
 > = {
-  extensions: { file: 'extensions/index.ts', content: extensionContent },
-  prompts: { file: 'prompts/example.md', content: promptContent },
-  skills: { file: 'skills/example/SKILL.md', content: skillContent },
-  themes: { file: 'themes/theme.json', content: themeContent },
+  extensions: { file: "extensions/index.ts", content: extensionContent },
+  prompts: { file: "prompts/example.md", content: promptContent },
+  skills: { file: "skills/example/SKILL.md", content: skillContent },
+  themes: { file: "themes/theme.json", content: themeContent },
 };
 
 const scriptByFolderChoice: Record<
@@ -169,7 +158,7 @@ const scriptByFolderChoice: Record<
   { file: string; content: string }
 > = {
   extensions: {
-    file: 'scripts/create-extension.ts',
+    file: "scripts/create-extension.ts",
     content: `import { dirname, join } from "node:path";
 import { mkdirSync, writeFileSync } from "node:fs";
 
@@ -186,7 +175,7 @@ writeFileSync(file, ${JSON.stringify(extensionContent)});
 `,
   },
   prompts: {
-    file: 'scripts/create-prompt.ts',
+    file: "scripts/create-prompt.ts",
     content: `import { join } from "node:path";
 import { mkdirSync, writeFileSync } from "node:fs";
 
@@ -201,7 +190,7 @@ writeFileSync(join("prompts", fileName), ${JSON.stringify(promptContent)});
 `,
   },
   skills: {
-    file: 'scripts/create-skill.ts',
+    file: "scripts/create-skill.ts",
     content: `import { join } from "node:path";
 import { mkdirSync, writeFileSync } from "node:fs";
 
@@ -218,7 +207,7 @@ writeFileSync(join(directory, "SKILL.md"), ${JSON.stringify(skillContent)});
 `,
   },
   themes: {
-    file: 'scripts/create-theme.ts',
+    file: "scripts/create-theme.ts",
     content: `import { join } from "node:path";
 import { mkdirSync, writeFileSync } from "node:fs";
 
@@ -239,7 +228,7 @@ const testRunnerConfigByChoice: Record<
   { file: string; content: string }
 > = {
   vitest: {
-    file: 'vitest.config.ts',
+    file: "vitest.config.ts",
     content: `// vitest.config.ts
         import { defineConfig } from 'vitest/config';
 
@@ -255,7 +244,7 @@ const testRunnerConfigByChoice: Record<
         });`,
   },
   jest: {
-    file: 'jest.config.cjs',
+    file: "jest.config.cjs",
     content: `/** @type {import('jest').Config} */
         module.exports = {
           testEnvironment: 'node',
@@ -333,7 +322,7 @@ export class Prompter {
 }
 
 export class FileCreator {
-  constructor(private readonly directory = '') {}
+  constructor(private readonly directory = "") {}
 
   createPiFoldersBasedOnChoices(choices: AllowedFolderChioceValues) {
     choices.forEach((choice) => {
@@ -350,8 +339,8 @@ export class FileCreator {
   }
 
   createAgentInstructions() {
-    this.createFile('AGENTS.md', agentsContent);
-    this.createFile('CLAUDE.md', claudeContent);
+    this.createFile("AGENTS.md", agentsContent);
+    this.createFile("CLAUDE.md", claudeContent);
   }
 
   createTestRunnerConfig(testRunner: AllowedTestRunnerChioces) {
@@ -360,7 +349,7 @@ export class FileCreator {
   }
 
   createTsConfig() {
-    this.createFile('tsconfig.json', JSON.stringify(createTsConfig(), null, 2));
+    this.createFile("tsconfig.json", JSON.stringify(createTsConfig(), null, 2));
   }
 
   createPackageJson(
@@ -368,28 +357,21 @@ export class FileCreator {
     choices: AllowedFolderChioceValues,
   ) {
     this.createFile(
-      'package.json',
+      "package.json",
       JSON.stringify(createPackageJson(testRunner, choices), null, 2),
     );
   }
 
   createFile(file: string, content: string) {
-    const targetFile = this.directory
-      ? path.posix.join(this.directory, file)
-      : file;
+    const targetFile = this.directory ? path.posix.join(this.directory, file) : file;
     const directory = path.dirname(targetFile);
 
-    if (directory !== '.') mkdirSync(directory, { recursive: true });
-    writeFile(targetFile, content, (error) => {
-      if (error) throw error;
-    });
+    if (directory !== ".") mkdirSync(directory, { recursive: true });
+    writeFileSync(targetFile, content);
   }
 }
 
-type HandlerOptions = Record<
-  string,
-  string | number | boolean | string[] | undefined
->;
+type HandlerOptions = Record<string, string | number | boolean | string[] | undefined>;
 
 interface Deps {
   prompter: Prompter;
@@ -399,17 +381,17 @@ interface Deps {
 }
 
 export async function resolvePackageManager(
-  prompter: Pick<Prompter, 'askForWhichPackageManager'>,
+  prompter: Pick<Prompter, "askForWhichPackageManager">,
   findExecutablePath: FindExecutablePath = findPackageManagerExecutablePath,
 ) {
   const detectedPackageManagers: DetectedPackageManagers[] = [];
 
-  for (const packageManager of ['bun', 'pnpm', 'yarn'] as const) {
+  for (const packageManager of ["bun", "pnpm", "yarn"] as const) {
     const executablePath = await findExecutablePath(packageManager);
     if (executablePath) detectedPackageManagers.push(packageManager);
   }
 
-  if (detectedPackageManagers.length === 0) return 'npm';
+  if (detectedPackageManagers.length === 0) return "npm";
   if (detectedPackageManagers.length === 1) return detectedPackageManagers[0];
 
   return prompter.askForWhichPackageManager(detectedPackageManagers);
@@ -419,43 +401,37 @@ export async function handler(object: HandlerOptions, deps: Deps) {
   const logger = deps.logger;
   const flaggedChoices = getFolderChoices(object);
 
-  if (!flaggedChoices)
-    logger.warn('Asking which PI package folders to create.');
+  if (!flaggedChoices) logger.warn("Asking which PI package folders to create.");
 
-  const choices =
-    flaggedChoices ?? (await deps.prompter.askForWhatTheyWantToMake());
+  const choices = flaggedChoices ?? (await deps.prompter.askForWhatTheyWantToMake());
   const fileCreator = getPackageName(object)
     ? new FileCreator(getPackageName(object))
     : deps.fileCreator;
 
-  logger.message(`Creating PI package folders: ${choices.join(', ')}`);
+  logger.message(`Creating PI package folders: ${choices.join(", ")}`);
   fileCreator.createPiFoldersBasedOnChoices(choices);
   fileCreator.createScriptsBasedOnChoices(choices);
-  logger.message('Created PI package starter files.');
+  logger.message("Created PI package starter files.");
 
   if (object.instructions === true) {
-    logger.message('Creating agent instruction files.');
+    logger.message("Creating agent instruction files.");
     fileCreator.createAgentInstructions();
   }
 
-  if (choices.includes('extensions')) {
+  if (choices.includes("extensions")) {
     const flaggedTestRunner = getTestRunner(object);
 
     if (!flaggedTestRunner)
-      logger.warn('Asking which test runner to use for extension tooling.');
+      logger.warn("Asking which test runner to use for extension tooling.");
 
-    const testRunner =
-      flaggedTestRunner ?? (await deps.prompter.askForWhichTestRunner());
+    const testRunner = flaggedTestRunner ?? (await deps.prompter.askForWhichTestRunner());
 
     if (!testRunner) {
-      const message =
-        'No test runner selected. PI package starter files were still generated.';
+      const message = "No test runner selected. PI package starter files were still generated.";
       logger.warn(message);
     }
 
-    logger.message(
-      `Creating extension tooling${testRunner ? ` with ${testRunner}` : ''}.`,
-    );
+    logger.message(`Creating extension tooling${testRunner ? ` with ${testRunner}` : ""}.`);
     if (testRunner) fileCreator.createTestRunnerConfig(testRunner);
     fileCreator.createTsConfig();
     fileCreator.createPackageJson(testRunner, choices);
@@ -480,28 +456,16 @@ export function setupRunCli(
 ) {
   return async (...args: string[]) => {
     const program = new Command()
-      .argument('[packageName]', 'Package folder to create')
-      .option(
-        '--folder <folder>',
-        'PI package folder to create',
-        collectValues,
-        [],
-      )
-      .option(
-        '--runner <runner>',
-        'Test runner to use when extensions are selected',
-      )
-      .option('--instructions', 'Generate AGENTS.md and CLAUDE.md files')
-      .option('--no-install', 'Skip installing generated package dependencies');
-    const parsedProgram =
-      args.length > 0 ? program.parse(args, { from: 'user' }) : program;
+      .argument("[packageName]", "Package folder to create")
+      .option("--folder <folder>", "PI package folder to create", collectValues, [])
+      .option("--runner <runner>", "Test runner to use when extensions are selected")
+      .option("--instructions", "Generate AGENTS.md and CLAUDE.md files")
+      .option("--no-install", "Skip installing generated package dependencies");
+    const parsedProgram = args.length > 0 ? program.parse(args, { from: "user" }) : program;
     const flags = parsedProgram.opts() as HandlerOptions;
     const packageName = parsedProgram.args[0];
 
-    await handler(
-      packageName ? { ...flags, args: [packageName] } : flags,
-      deps,
-    );
+    await handler(packageName ? { ...flags, args: [packageName] } : flags, deps);
   };
 }
 
@@ -513,19 +477,14 @@ function getFolderChoices(object: HandlerOptions) {
   const folders = object.folder;
 
   if (Array.isArray(folders))
-    return folders.length > 0
-      ? (folders as AllowedFolderChioceValues)
-      : undefined;
-  if (typeof folders === 'string')
-    return [folders] as AllowedFolderChioceValues;
+    return folders.length > 0 ? (folders as AllowedFolderChioceValues) : undefined;
+  if (typeof folders === "string") return [folders] as AllowedFolderChioceValues;
 
   return undefined;
 }
 
 function getTestRunner(object: HandlerOptions) {
-  return allowedTestRunnerChioces.find(
-    (testRunner) => testRunner === object.runner,
-  );
+  return allowedTestRunnerChioces.find((testRunner) => testRunner === object.runner);
 }
 
 function getPackageName(object: HandlerOptions) {
@@ -537,16 +496,16 @@ function getPackageName(object: HandlerOptions) {
 function createTsConfig() {
   return {
     compilerOptions: {
-      target: 'ES2022',
-      module: 'ESNext',
-      moduleResolution: 'Bundler',
+      target: "ES2022",
+      module: "ESNext",
+      moduleResolution: "Bundler",
       strict: true,
       esModuleInterop: true,
       skipLibCheck: true,
       declaration: true,
-      outDir: 'dist',
+      outDir: "dist",
     },
-    include: ['extensions/**/*.ts'],
+    include: ["extensions/**/*.ts"],
   };
 }
 
@@ -557,34 +516,29 @@ function createPackageJson(
   const scripts: Record<string, string> = {};
 
   choices.forEach((choice) => {
-    scripts[`create:${choice.slice(0, -1)}`] =
-      `tsx scripts/create-${choice.slice(0, -1)}.ts`;
+    scripts[`create:${choice.slice(0, -1)}`] = `tsx scripts/create-${choice.slice(0, -1)}.ts`;
   });
 
-  if (testRunner)
-    scripts.test = testRunner === 'vitest' ? 'vitest run' : 'jest';
+  if (testRunner) scripts.test = testRunner === "vitest" ? "vitest run" : "jest";
 
   return {
-    type: 'module',
+    type: "module",
     scripts,
     devDependencies: {
-      typescript: 'latest',
-      tsx: 'latest',
-      ...(testRunner === 'vitest' ? { vitest: 'latest' } : {}),
-      ...(testRunner === 'jest' ? { jest: 'latest', 'ts-jest': 'latest' } : {}),
+      typescript: "latest",
+      tsx: "latest",
+      ...(testRunner === "vitest" ? { vitest: "latest" } : {}),
+      ...(testRunner === "jest" ? { jest: "latest", "ts-jest": "latest" } : {}),
     },
   };
 }
 
-async function installPackages(
-  packageManager: AllowedPackageManagers,
-  directory: string,
-) {
+async function installPackages(packageManager: AllowedPackageManagers, directory: string) {
   const argsByPackageManager: Record<AllowedPackageManagers, string[]> = {
-    bun: ['install'],
-    pnpm: ['install'],
-    yarn: ['install'],
-    npm: ['install'],
+    bun: ["install"],
+    pnpm: ["install"],
+    yarn: ["install"],
+    npm: ["install"],
   };
 
   await new Promise<void>((resolve, reject) => {
@@ -600,11 +554,9 @@ async function installPackages(
   });
 }
 
-async function findPackageManagerExecutablePath(
-  packageManager: DetectedPackageManagers,
-) {
+async function findPackageManagerExecutablePath(packageManager: DetectedPackageManagers) {
   return new Promise<string | undefined>((resolve) => {
-    execFile('which', [packageManager], (error, stdout) => {
+    execFile("which", [packageManager], (error, stdout) => {
       if (error) resolve(undefined);
       else resolve(stdout.trim() || undefined);
     });
