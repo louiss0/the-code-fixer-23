@@ -28,10 +28,6 @@ const folderPathSchema = optional(
   ),
 );
 
-type InstallPackages = (
-  packageManager: AllowedPackageManagers,
-  directory?: string,
-) => Promise<void>;
 type SignaleLogger = Pick<typeof signaleLogger, "start" | "success" | "warn" | "error">;
 
 const extensionContent = `export default function (pi:ExtensionAPI) {
@@ -331,20 +327,7 @@ export class Prompter {
   }
 }
 
-export interface FileCreator {
-  createPiFoldersBasedOnChoices(choices: AllowedFolderChioceValues): void;
-  createScriptsBasedOnChoices(choices: AllowedFolderChioceValues): void;
-  createAgentInstructions(): void;
-  createTestRunnerConfig(testRunner: AllowedTestRunnerChioces): void;
-  createTsConfig(): void;
-  createPackageJson(
-    testRunner: AllowedTestRunnerChioces | undefined,
-    choices: AllowedFolderChioceValues,
-  ): void;
-  createFile(file: string, content: string): void;
-}
-
-class FileCreatorClass implements FileCreator {
+class FileCreator {
   constructor(private readonly directory = "") {}
 
   createPiFoldersBasedOnChoices(choices: AllowedFolderChioceValues) {
@@ -394,13 +377,16 @@ class FileCreatorClass implements FileCreator {
 }
 
 export function createFileCreator(directory = ""): FileCreator {
-  return new FileCreatorClass(directory);
+  return new FileCreator(directory);
 }
 
 interface Deps {
   prompter: Prompter;
-  fileCreator: FileCreator;
-  installPackages: InstallPackages;
+  createFileCreator: (directory: string) => FileCreator;
+  installPackages: (
+    packageManager: AllowedPackageManagers,
+    directory?: string,
+  ) => Promise<void>;
   logger: Logger;
 }
 
@@ -459,10 +445,7 @@ export async function handler(object: HandlerOptions, deps: Deps) {
   if (!object.projectFolders) logger.warn("Asking which PI package folders to create.");
 
   const choices = object.projectFolders ?? (await deps.prompter.askForWhatTheyWantToMake());
-  const fileCreator = object.packageName
-    ? createFileCreator(object.packageName)
-    : deps.fileCreator;
-
+  const fileCreator = createFileCreator(object.packageName);
   logger.message(`Creating PI package folders: ${choices.join(", ")}`);
   fileCreator.createPiFoldersBasedOnChoices(choices);
   fileCreator.createScriptsBasedOnChoices(choices);
@@ -568,7 +551,7 @@ async function installPackages(packageManager: AllowedPackageManagers, directory
 
 const deps: Deps = {
   prompter: new Prompter(),
-  fileCreator: createFileCreator(),
+  createFileCreator,
   logger: new Logger(),
   installPackages,
 };
