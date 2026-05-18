@@ -28,16 +28,6 @@ const folderPathSchema = optional(
   ),
 );
 
-export function parseProjectFolders(
-  value: string,
-  previous: AllowedFolderChioceValues | undefined,
-): AllowedFolderChioceValues {
-  // Commander calls variadic option parsers once per option-argument and passes the
-  // previous parsed result back in, so we accumulate the validated folder choices
-  // until the final call returns the complete project folder list.
-  return [...(previous ?? []), parse(folderChoicesSchema, value)];
-}
-
 type InstallPackages = (
   packageManager: AllowedPackageManagers,
   directory?: string,
@@ -445,7 +435,13 @@ const program = new Command()
   .option(
     "--project-folders <project-folders...>",
     "PI package folders to create",
-    parseProjectFolders,
+    (value: string, previous: AllowedFolderChioceValues) => {
+      // Commander calls variadic option parsers once per option-argument and passes the
+      // previous parsed result back in, so we accumulate the validated folder choices
+      // until the final call returns the complete project folder list.
+      return previous.concat(parse(folderChoicesSchema, value));
+    },
+    [],
   )
   .option("--runner <runner>", "Test runner to use when extensions are selected", (value) => {
     return parse(runnerChiocesSchema, value);
