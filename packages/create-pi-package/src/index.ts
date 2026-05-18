@@ -195,9 +195,9 @@ export async function handler(object: HandlerOptions, deps: Deps) {
 
     if (object.install !== false) {
       const packageManager = await resolvePackageManager(prompter);
-      logger.command(`${packageManager} install`);
 
       try {
+        logger.command(`${packageManager} install`);
         await deps.installPackages(packageManager, object.packageFolder);
       } catch (error) {
         logger.error(`Failed to install dependencies with ${packageManager}.`);
