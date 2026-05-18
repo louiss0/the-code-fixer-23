@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
-import path from "node:path";
+import path, { join } from "node:path";
 import { Command } from "@commander-js/extra-typings";
 import { checkbox, select } from "@inquirer/prompts";
 import signaleLogger from "signale";
@@ -541,15 +541,10 @@ function createPackageJson(
 
 async function installPackages(packageManager: AllowedPackageManagers, directory: string) {
   await new Promise<void>((resolve, reject) => {
-    execFile(
-      packageManager,
-      argsByPackageManager[packageManager],
-      { cwd: directory },
-      (error) => {
-        if (error) reject(error);
-        else resolve();
-      },
-    );
+    execFile(packageManager, ["install"], { cwd: join(process.cwd(), directory) }, (error) => {
+      if (error) reject(error);
+      else resolve();
+    });
   });
 }
 
