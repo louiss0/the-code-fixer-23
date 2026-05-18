@@ -28,14 +28,9 @@ const folderPathSchema = optional(
   ),
 );
 
-type DetectedPackageManagers = Exclude<AllowedPackageManagers, "npm">;
-
-type FindExecutablePath = (
-  packageManager: DetectedPackageManagers,
-) => Promise<string | undefined>;
 type InstallPackages = (
   packageManager: AllowedPackageManagers,
-  directory: string,
+  directory?: string,
 ) => Promise<void>;
 type SignaleLogger = Pick<typeof signaleLogger, "start" | "success" | "warn" | "error">;
 
@@ -325,7 +320,7 @@ export class Prompter {
   }
 
   async askForWhichPackageManager(
-    packageManagers: DetectedPackageManagers[],
+    packageManagers: AllowedPackageManagers[],
   ): Promise<AllowedPackageManagers> {
     const answers = await select({
       message: "Which package manager do you want to use?",
@@ -392,21 +387,28 @@ interface Deps {
   logger: Logger;
 }
 
+export function detectInvokedPackageManager(
+  commandSignal = [
+    process.env.npm_config_user_agent,
+    process.env.npm_execpath,
+    process.env.npm_lifecycle_script,
+  ].find(Boolean),
+): AllowedPackageManagers | undefined {
+  const command = commandSignal?.toLowerCase();
+
+  if (!command) return undefined;
+  if (command.includes("pnpm")) return "pnpm";
+  if (command.includes("yarn")) return "yarn";
+  if (command.includes("bun")) return "bun";
+  if (command.includes("npm")) return "npm";
+
+  return undefined;
+}
+
 export async function resolvePackageManager(
-  prompter: Pick<Prompter, "askForWhichPackageManager">,
-  findExecutablePath: FindExecutablePath = findPackageManagerExecutablePath,
+  _prompter: Pick<Prompter, "askForWhichPackageManager">,
 ) {
-  const detectedPackageManagers: DetectedPackageManagers[] = [];
-
-  for (const packageManager of ["bun", "pnpm", "yarn"] as const) {
-    const executablePath = await findExecutablePath(packageManager);
-    if (executablePath) detectedPackageManagers.push(packageManager);
-  }
-
-  if (detectedPackageManagers.length === 0) return "npm";
-  if (detectedPackageManagers.length === 1) return detectedPackageManagers[0];
-
-  return prompter.askForWhichPackageManager(detectedPackageManagers);
+  return detectInvokedPackageManager() ?? "npm";
 }
 
 const program = new Command()
@@ -538,20 +540,13 @@ function createPackageJson(
   };
 }
 
-async function installPackages(packageManager: AllowedPackageManagers, directory: string) {
+async function installPackages(packageManager: AllowedPackageManagers, directory?: string) {
+  const cwd = directory ? join(process.cwd(), directory) : process.cwd();
+
   await new Promise<void>((resolve, reject) => {
-    execFile(packageManager, ["install"], { cwd: join(process.cwd(), directory) }, (error) => {
+    execFile(packageManager, ["install"], { cwd }, (error) => {
       if (error) reject(error);
       else resolve();
-    });
-  });
-}
-
-async function findPackageManagerExecutablePath(packageManager: DetectedPackageManagers) {
-  return new Promise<string | undefined>((resolve) => {
-    execFile("which", [packageManager], (error, stdout) => {
-      if (error) resolve(undefined);
-      else resolve(stdout.trim() || undefined);
     });
   });
 }
