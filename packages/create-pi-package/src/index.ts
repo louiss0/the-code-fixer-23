@@ -162,10 +162,10 @@ export async function handler(object: HandlerOptions, deps: Deps) {
   const choices = object.projectFolders ?? (await prompter.askForWhatTheyWantToMake());
 
   const fileCreator = createFileCreator(
-    !import.meta.env.PROD ? `${tmpdir()}/${object.packageFolder}` : object.packageFolder,
+    import.meta.env.DEV ? `${tmpdir()}/${object.packageFolder}` : object.packageFolder,
   );
 
-  if (!import.meta.env.PROD) {
+  if (import.meta.env.DEV) {
     logger.message("Development mode: generating files in a temp dir");
   }
 
@@ -221,7 +221,8 @@ export function setupRunCli(
 }
 
 async function installPackages(packageManager: AllowedPackageManagers, directory?: string) {
-  const cwd = directory ? join(process.cwd(), directory) : process.cwd();
+  const rootDir = import.meta.env.DEV ? `${tmpdir()}` : process.cwd();
+  const cwd = directory ? join(rootDir, directory) : rootDir;
 
   await new Promise<void>((resolve, reject) => {
     execFile(packageManager, ["install"], { cwd }, (error) => {
