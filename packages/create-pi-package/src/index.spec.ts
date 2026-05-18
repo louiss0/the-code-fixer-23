@@ -4,6 +4,7 @@ import {
   createFileCreator,
   Logger,
   handler,
+  parseProjectFolders,
   setupRunCli,
 } from './index';
 import type {
@@ -77,6 +78,16 @@ function expectCreatedStarterFile(choice: keyof typeof expectedStarterFiles) {
     expect.stringContaining(expectedStarterFiles[choice].content),
   );
 }
+
+describe('parseProjectFolders', () => {
+  it('accumulates validated folder choices across parser calls', () => {
+    const initialChoices = parseProjectFolders('extensions', undefined);
+    const fullChoices = parseProjectFolders('prompts', initialChoices);
+
+    expect(initialChoices).toEqual(['extensions']);
+    expect(fullChoices).toEqual(['extensions', 'prompts']);
+  });
+});
 
 describe('Logger', () => {
   it('wraps Signale methods behind semantic logging methods', () => {

@@ -28,6 +28,16 @@ const folderPathSchema = optional(
   ),
 );
 
+export function parseProjectFolders(
+  value: string,
+  previous: AllowedFolderChioceValues | undefined,
+): AllowedFolderChioceValues {
+  // Commander calls variadic option parsers once per option-argument and passes the
+  // previous parsed result back in, so we accumulate the validated folder choices
+  // until the final call returns the complete project folder list.
+  return [...(previous ?? []), parse(folderChoicesSchema, value)];
+}
+
 type InstallPackages = (
   packageManager: AllowedPackageManagers,
   directory?: string,
@@ -432,7 +442,11 @@ const program = new Command()
   .argument("[packageName]", "Package folder to create", (value) => {
     return parse(folderPathSchema, value);
   })
-  .option("--project-folders <project-folders...>", "PI package folders to create")
+  .option(
+    "--project-folders <project-folders...>",
+    "PI package folders to create",
+    parseProjectFolders,
+  )
   .option("--runner <runner>", "Test runner to use when extensions are selected", (value) => {
     return parse(runnerChiocesSchema, value);
   })
@@ -448,8 +462,7 @@ export async function handler(object: HandlerOptions, deps: Deps) {
 
   if (!object.projectFolders) logger.warn("Asking which PI package folders to create.");
 
-  const promptedChoices = object.projectFolders ?? (await deps.prompter.askForWhatTheyWantToMake());
-  const choices = promptedChoices.map((choice) => parse(folderChoicesSchema, choice));
+  const choices = object.projectFolders ?? (await deps.prompter.askForWhatTheyWantToMake());
   const fileCreator = object.packageName
     ? createFileCreator(object.packageName)
     : deps.fileCreator;
