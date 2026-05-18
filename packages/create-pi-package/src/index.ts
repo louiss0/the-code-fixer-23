@@ -4,10 +4,10 @@ import path from "node:path";
 import { Command } from "@commander-js/extra-typings";
 import { checkbox, select } from "@inquirer/prompts";
 import signaleLogger from "signale";
-import { picklist } from "valibot";
+import { optional, parse, picklist, pipe, regex, string } from "valibot";
 
-const folderChiocesSchema = picklist(["extensions", "prompts", "skills", "themes"]);
-const allowedFolderChioces = folderChiocesSchema.options;
+const folderChoicesSchema = picklist(["extensions", "prompts", "skills", "themes"]);
+const allowedFolderChioces = folderChoicesSchema.options;
 export type AllowedFolderChioceValues = Array<(typeof allowedFolderChioces)[number]>;
 
 const runnerChiocesSchema = picklist(["jest", "vitest"]);
@@ -17,6 +17,17 @@ export type AllowedTestRunnerChioces = (typeof allowedTestRunnerChioces)[number]
 const packageManagerChiocesSchema = picklist(["bun", "pnpm", "yarn", "npm"]);
 export const allowedPackageManagers = packageManagerChiocesSchema.options;
 export type AllowedPackageManagers = (typeof allowedPackageManagers)[number];
+
+const folderPathSchema = optional(
+  pipe(
+    string(),
+    regex(
+      /(?:[\w\s]+\/)+/,
+      "A folder path must be a sequence of folder names separated by slashes and end with a slash",
+    ),
+  ),
+);
+
 type DetectedPackageManagers = Exclude<AllowedPackageManagers, "npm">;
 
 type FindExecutablePath = (
@@ -461,8 +472,10 @@ export function setupRunCli(
 ) {
   return async (...args: string[]) => {
     const program = new Command()
-      .argument("[packageName]", "Package folder to create")
-      .option("--folder <folder>", "PI package folder to create", collectValues, [])
+      .argument("[packageName]", "Package folder to create", (value) => {
+        return parse(folderPathSchema, value);
+      })
+      .option("--folder <folder>", "PI package folder to create")
       .option("--runner <runner>", "Test runner to use when extensions are selected")
       .option("--instructions", "Generate AGENTS.md and CLAUDE.md files")
       .option("--no-install", "Skip installing generated package dependencies");
@@ -472,10 +485,6 @@ export function setupRunCli(
 
     await handler(packageName ? { ...flags, args: [packageName] } : flags, deps);
   };
-}
-
-function collectValues(value: string, values: string[]) {
-  return [...values, value];
 }
 
 function getFolderChoices(object: HandlerOptions) {
