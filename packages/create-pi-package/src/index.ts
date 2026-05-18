@@ -11,7 +11,6 @@ import {
   allowedFolderChioces,
   allowedTestRunnerChioces,
   folderChoicesSchema,
-  packageManagerChiocesSchema,
   runnerChiocesSchema,
 } from "./options";
 import type {
@@ -19,6 +18,7 @@ import type {
   AllowedPackageManagers,
   AllowedTestRunnerChioces,
 } from "./options";
+import { tmpdir } from "node:os";
 
 export { createFileCreator } from "./file-creator";
 export type { FileCreator } from "./file-creator";
@@ -42,20 +42,6 @@ const folderPathSchema = optional(
     ),
   ),
 );
-
-function resolvePackageDirectory(packageName: string | undefined) {
-  return packageName === "." ? process.cwd() : packageName;
-}
-
-function resolveOutputDirectory(packageDirectory: string | undefined) {
-  if (import.meta.env.PROD) return packageDirectory;
-
-  const tempDirectory = join(process.cwd(), "Temp");
-  if (!packageDirectory) return tempDirectory;
-  if (packageDirectory === process.cwd()) return tempDirectory;
-
-  return join(tempDirectory, packageDirectory);
-}
 
 type SignaleLogger = Pick<typeof signaleLogger, "start" | "success" | "warn" | "error">;
 
@@ -112,7 +98,7 @@ export class Prompter {
 
 interface Deps {
   prompter: Prompter;
-  fileCreator: FileCreator;
+  createFileCreator: (directory?: string) => FileCreator;
   installPackages: (
     packageManager: AllowedPackageManagers,
     directory?: string,
@@ -145,20 +131,19 @@ export async function resolvePackageManager(
 }
 
 const program = new Command()
-  .argument("[packageName]", "Package folder to create", (value) => {
+  .argument("[packageFolder]", "Package folder to create", (value) => {
     if (value === ".") return process.cwd();
     return parse(folderPathSchema, value);
   })
   .option(
     "--project-folders <project-folders...>",
     "PI package folders to create",
-    (value: string, previous: AllowedFolderChioceValues) => {
+    (value: string, previous: AllowedFolderChioceValues | undefined) => {
       // Commander calls variadic option parsers once per option-argument and passes the
       // previous parsed result back in, so we accumulate the validated folder choices
       // until the final call returns the complete project folder list.
-      return previous.concat(parse(folderChoicesSchema, value));
+      return previous?.concat(parse(folderChoicesSchema, value));
     },
-    [],
   )
   .option("--runner <runner>", "Test runner to use when extensions are selected", (value) => {
     return parse(runnerChiocesSchema, value);
@@ -167,17 +152,22 @@ const program = new Command()
   .option("--no-install", "Skip installing generated package dependencies");
 
 type HandlerOptions = ReturnType<typeof program.opts> & {
-  packageName: (typeof program.args)[0];
+  packageFolder: (typeof program.args)[0];
 };
 
 export async function handler(object: HandlerOptions, deps: Deps) {
   const { logger, prompter } = deps;
-
   if (!object.projectFolders) logger.warn("Asking which PI package folders to create.");
 
-  const packageDirectory = resolvePackageDirectory(object.packageName);
   const choices = object.projectFolders ?? (await prompter.askForWhatTheyWantToMake());
-  const fileCreator = packageDirectory ? createFileCreator(packageDirectory) : deps.fileCreator;
+
+  const fileCreator = createFileCreator(
+    !import.meta.env.PROD ? `${tmpdir()}/${object.packageFolder}` : object.packageFolder,
+  );
+
+  if (!import.meta.env.PROD) {
+    logger.message("Development mode: generating files in a temp dir");
+  }
 
   logger.message(`Creating PI package folders: ${choices.join(", ")}`);
   fileCreator.createPiFoldersBasedOnChoices(choices);
@@ -208,7 +198,7 @@ export async function handler(object: HandlerOptions, deps: Deps) {
       logger.command(`${packageManager} install`);
 
       try {
-        await deps.installPackages(packageManager, packageDirectory);
+        await deps.installPackages(packageManager, object.packageFolder);
       } catch (error) {
         logger.error(`Failed to install dependencies with ${packageManager}.`);
         throw error;
@@ -223,10 +213,10 @@ export function setupRunCli(
 ) {
   return async (...args: string[]) => {
     const parsedProgram = args.length > 0 ? program.parse(args, { from: "user" }) : program;
-    const flags = parsedProgram.opts() as HandlerOptions;
-    const packageName = resolvePackageDirectory(parsedProgram.args[0]);
+    const flags = parsedProgram.opts();
+    const packageName = parsedProgram.args[0];
 
-    await handler({ ...flags, packageName } as HandlerOptions, deps);
+    await handler({ ...flags, packageFolder: packageName }, deps);
   };
 }
 
@@ -243,7 +233,7 @@ async function installPackages(packageManager: AllowedPackageManagers, directory
 
 const deps: Deps = {
   prompter: new Prompter(),
-  fileCreator: createFileCreator(),
+  createFileCreator,
   logger: new Logger(),
   installPackages,
 };

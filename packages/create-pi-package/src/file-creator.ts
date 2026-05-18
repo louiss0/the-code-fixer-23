@@ -1,10 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
-import path, { join } from "node:path";
-
-import type {
-  AllowedFolderChioceValues,
-  AllowedTestRunnerChioces,
-} from "./options";
+import path, { resolve } from "node:path";
+import type { AllowedFolderChioceValues, AllowedTestRunnerChioces } from "./options";
 
 const extensionContent = `export default function (pi:ExtensionAPI) {
 
@@ -307,10 +303,8 @@ class DefaultFileCreator implements FileCreator {
   }
 
   createFile(file: string, content: string) {
-    const targetFile = this.directory ? join(this.directory, file) : file;
-    const targetDirectory = path.dirname(targetFile);
+    const targetFile = this.directory ? resolve(this.directory, file) : file;
 
-    if (targetDirectory !== ".") mkdirSync(targetDirectory, { recursive: true });
     writeFileSync(targetFile, content);
   }
 }
