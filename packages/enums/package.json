@@ -3,7 +3,12 @@
   "version": "1.0.1",
   "type": "module",
   "description": "Typed enum factories for immutable string, number, symbol, and labeled enums.",
-  "keywords": ["enum", "typescript", "labeled-enum", "factory"],
+  "keywords": [
+    "enum",
+    "typescript",
+    "labeled-enum",
+    "factory"
+  ],
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -15,7 +20,10 @@
     },
     "./package.json": "./package.json"
   },
-  "files": ["dist", "!**/*.tsbuildinfo"],
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
   "publishConfig": {
     "access": "public"
   },
