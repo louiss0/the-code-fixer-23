@@ -1,8 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const tempDirectory = join(process.cwd(), "Temp");
-
 import {
   hasCreatedFile,
   listCreatedFiles,
@@ -55,30 +53,37 @@ class MockPrompter implements Prompter {
 
 const expectedStarterFiles = {
   extensions: {
-    file: "extensions/index.ts",
+    file: ["extensions", "index.ts"],
     content: "export default function (pi:ExtensionAPI) {",
   },
   prompts: {
-    file: "prompts/example.md",
+    file: ["prompts", "example.md"],
     content: "Summarize the following text.",
   },
   skills: {
-    file: "skills/example/SKILL.md",
+    file: ["skills", "example", "SKILL.md"],
     content: "## Purpose",
   },
   themes: {
-    file: "themes/theme.json",
+    file: ["themes", "theme.json"],
     content: '"$schema":',
   },
 } as const;
 
+function getExpectedFilePath(
+  choice: keyof typeof expectedStarterFiles,
+  directory?: string,
+) {
+  return directory
+    ? join(directory, ...expectedStarterFiles[choice].file)
+    : join(...expectedStarterFiles[choice].file);
+}
+
 function expectCreatedStarterFile(
   choice: keyof typeof expectedStarterFiles,
-  directory = "",
+  directory?: string,
 ) {
-  const file = directory
-    ? `${directory}/${expectedStarterFiles[choice].file}`
-    : expectedStarterFiles[choice].file;
+  const file = getExpectedFilePath(choice, directory);
 
   expect(hasCreatedFile(file)).toBe(true);
   expect(readCreatedFile(file)).toContain(expectedStarterFiles[choice].content);
@@ -119,10 +124,12 @@ describe("createFileCreator", () => {
 
     expect(mkdirSync).toBeCalledWith("prompts", { recursive: true });
     expect(writeFileSync).toBeCalledWith(
-      "prompts/example.md",
+      join("prompts", "example.md"),
       "Prompt content",
     );
-    expect(readCreatedFile("prompts/example.md")).toBe("Prompt content");
+    expect(readCreatedFile(join("prompts", "example.md"))).toBe(
+      "Prompt content",
+    );
   });
 
   it("creates starter files and scripts for selected PI package folders", () => {
@@ -133,10 +140,10 @@ describe("createFileCreator", () => {
 
     expectCreatedStarterFile("prompts");
     expectCreatedStarterFile("skills");
-    expect(readCreatedFile("scripts/create-prompt.ts")).toContain(
+    expect(readCreatedFile(join("scripts", "create-prompt.ts"))).toContain(
       "const fileName = process.argv[2];",
     );
-    expect(readCreatedFile("scripts/create-skill.ts")).toContain(
+    expect(readCreatedFile(join("scripts", "create-skill.ts"))).toContain(
       'writeFileSync(join(directory, "SKILL.md")',
     );
   });
@@ -219,15 +226,15 @@ describe("handler", () => {
     });
 
     expect(askForWhatTheyWantToMake).toBeCalled();
-    expectCreatedStarterFile("prompts", tempDirectory);
-    expectCreatedStarterFile("themes", tempDirectory);
+    expectCreatedStarterFile("prompts");
+    expectCreatedStarterFile("themes");
   });
 
   it("creates files inside the provided package directory", async () => {
     await handler(
       {
         install: false,
-        packageName: "my-pi-package/",
+        packageFolder: "my-pi-package/",
         projectFolders: ["prompts"],
       } as never,
       {
@@ -238,11 +245,9 @@ describe("handler", () => {
       },
     );
 
-    expectCreatedStarterFile("prompts", join(tempDirectory, "my-pi-package"));
+    expectCreatedStarterFile("prompts", "my-pi-package");
     expect(
-      hasCreatedFile(
-        join(tempDirectory, "my-pi-package/scripts/create-prompt.ts"),
-      ),
+      hasCreatedFile(join("my-pi-package", "scripts", "create-prompt.ts")),
     ).toBe(true);
   });
 
@@ -250,7 +255,7 @@ describe("handler", () => {
     await handler(
       {
         install: false,
-        packageName: ".",
+        packageFolder: ".",
         projectFolders: ["prompts"],
       } as never,
       {
@@ -261,33 +266,8 @@ describe("handler", () => {
       },
     );
 
-    expect(hasCreatedFile(join(tempDirectory, "prompts/example.md"))).toBe(
-      true,
-    );
-    expect(
-      hasCreatedFile(join(tempDirectory, "scripts/create-prompt.ts")),
-    ).toBe(true);
-  });
-
-  it("logs the development temp directory", async () => {
-    const message = vi.spyOn(logger, "message");
-
-    await handler(
-      {
-        install: false,
-        projectFolders: ["prompts"],
-      } as never,
-      {
-        createFileCreator,
-        installPackages: vi.fn(),
-        logger,
-        prompter,
-      },
-    );
-
-    expect(message).toBeCalledWith(
-      `Development mode: generating files in ${tempDirectory}`,
-    );
+    expect(hasCreatedFile(join("prompts", "example.md"))).toBe(true);
+    expect(hasCreatedFile(join("scripts", "create-prompt.ts"))).toBe(true);
   });
 
   it("creates instructions when requested", async () => {
@@ -305,12 +285,8 @@ describe("handler", () => {
       },
     );
 
-    expect(readCreatedFile(join(tempDirectory, "AGENTS.md"))).toContain(
-      "coding agents",
-    );
-    expect(readCreatedFile(join(tempDirectory, "CLAUDE.md"))).toContain(
-      "Claude",
-    );
+    expect(readCreatedFile("AGENTS.md")).toContain("coding agents");
+    expect(readCreatedFile("CLAUDE.md")).toContain("Claude");
   });
 
   it("creates extension tooling and installs with the invoked package manager", async () => {
@@ -337,11 +313,11 @@ describe("handler", () => {
     );
 
     expect(askForWhichTestRunner).toBeCalled();
-    expect(readCreatedFile(join(tempDirectory, "jest.config.cjs"))).toContain(
-      "ts-jest",
+    expect(readCreatedFile("jest.config.cjs")).toContain("ts-jest");
+    expect(command).toBeCalledWith(
+      "pnpm install --ignore-workspace --config.strictDepBuilds=false",
     );
-    expect(command).toBeCalledWith("pnpm install");
-    expect(installPackages).toBeCalledWith("pnpm", tempDirectory);
+    expect(installPackages).toBeCalledWith("pnpm", undefined);
   });
 
   it("skips installing dependencies when no-install is set", async () => {
@@ -383,13 +359,13 @@ describe("handler", () => {
       },
     );
 
-    expect(readCreatedFile(join(tempDirectory, "package.json"))).toContain(
+    expect(readCreatedFile("package.json")).toContain(
       '"create:extension": "tsx scripts/create-extension.ts"',
     );
-    expect(readCreatedFile(join(tempDirectory, "package.json"))).not.toContain(
+    expect(readCreatedFile("package.json")).not.toContain(
       '"jest": "latest"',
     );
-    expect(readCreatedFile(join(tempDirectory, "package.json"))).not.toContain(
+    expect(readCreatedFile("package.json")).not.toContain(
       '"vitest": "latest"',
     );
     expect(warn).toBeCalledWith(
@@ -460,12 +436,12 @@ describe("setupRunCli", () => {
       expect.objectContaining({
         instructions: true,
         install: false,
-        packageName: "my-pi-package/",
+        packageFolder: "my-pi-package/",
         projectFolders: ["extensions", "prompts"],
         runner: "jest",
       }),
       expect.objectContaining({
-        fileCreator,
+        createFileCreator,
         installPackages,
         logger,
         prompter,
@@ -473,7 +449,7 @@ describe("setupRunCli", () => {
     );
   });
 
-  it("translates a dot package directory to the cwd before calling the handler", async () => {
+  it("passes a dot package directory through to the handler", async () => {
     const fileCreator = createFileCreator();
     const installPackages = vi.fn();
     const handlerSpy = vi.fn();
@@ -489,7 +465,7 @@ describe("setupRunCli", () => {
     expect(handlerSpy).toBeCalledWith(
       expect.objectContaining({
         install: false,
-        packageName: process.cwd(),
+        packageFolder: ".",
         projectFolders: ["prompts"],
       }),
       expect.anything(),
@@ -511,8 +487,8 @@ describe("setupRunCli", () => {
     await runCli("--project-folders", "themes", "skills", "--no-install");
 
     expect(askForWhatTheyWantToMake).not.toBeCalled();
-    expectCreatedStarterFile("themes", tempDirectory);
-    expectCreatedStarterFile("skills", tempDirectory);
+    expectCreatedStarterFile("themes");
+    expectCreatedStarterFile("skills");
   });
 
   it("keeps the mocked filesystem isolated between tests", () => {

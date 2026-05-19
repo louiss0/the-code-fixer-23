@@ -306,4 +306,6 @@ const deps: Deps = {
   installPackages,
 };
 
-setupRunCli(handler, deps)(...process.argv.slice(2));
+if (!import.meta.vitest && import.meta.env.MODE !== 'test') {
+  setupRunCli(handler, deps)(...process.argv.slice(2));
+}
