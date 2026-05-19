@@ -2,7 +2,9 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import type { AllowedFolderChioceValues, AllowedTestRunnerChioces } from "./options";
 
-const extensionContent = `export default function (pi:ExtensionAPI) {
+const extensionContent = `
+  import { type ExtensionAPI  } from "@earndil-works/pi-coding-agent";
+  export default function (pi:ExtensionAPI) {
 
       }`;
 
