@@ -355,19 +355,35 @@ function createPackageJson(
   testRunner: AllowedTestRunnerChioces | undefined,
   choices: AllowedFolderChioceValues,
 ) {
-  const scripts: Record<string, string> = {};
+  const scripts = new Map<string, string>();
 
   choices.forEach((choice) => {
-    scripts[`create:${choice.slice(0, -1)}`] =
-      `tsx scripts/create-${choice.slice(0, -1)}.ts`;
+    scripts.set(
+      `create:${choice.slice(0, -1)}`,
+      `tsx scripts/create-${choice.slice(0, -1)}.ts`,
+    );
   });
 
-  if (testRunner)
-    scripts.test = testRunner === "vitest" ? "vitest run" : "jest";
+  switch (testRunner) {
+    case "vitest":
+      scripts
+        .set("test", "vitest run")
+        .set("test:watch", "vitest watch")
+        .set("test:coverage", "vitest run --coverage")
+        .set("test:ui", "vitest ui");
+      break;
+    case "jest":
+      scripts
+        .set("test", "jest")
+        .set("test:watch", "jest --watch")
+        .set("test:coverage", "jest --coverage")
+        .set("test:ui", "jest --watch");
+      break;
+  }
 
   return {
     type: "module",
-    scripts,
+    scripts: Object.fromEntries(scripts),
     devDependencies: {
       typescript: "latest",
       tsx: "latest",
