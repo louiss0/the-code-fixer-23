@@ -1,7 +1,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
-import type { ExecutorContext } from "@nx/devkit";
+import { logger, type ExecutorContext } from "@nx/devkit";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock child_process.execSync globally to avoid invoking external commands
@@ -33,6 +33,9 @@ describe("Validate Executor", () => {
   beforeEach(() => {
     tempDir = join(tmpdir(), `nx-jsr-validate-test-${Date.now()}`);
     packageRoot = "test-package";
+    vi.spyOn(logger, "error").mockImplementation(() => undefined);
+    vi.spyOn(logger, "info").mockImplementation(() => undefined);
+    vi.spyOn(logger, "warn").mockImplementation(() => undefined);
   });
 
   afterEach(() => {

@@ -1,5 +1,6 @@
-import { type Tree, readProjectConfiguration } from "@nx/devkit";
+import { logger, type Tree, readProjectConfiguration } from "@nx/devkit";
 import { createTreeWithEmptyWorkspace } from "@nx/devkit/testing";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { libraryGenerator } from "./library";
 import type { LibraryGeneratorSchema } from "./schema";
@@ -12,6 +13,9 @@ describe("library generator", () => {
   };
 
   beforeEach(() => {
+    vi.spyOn(logger, "error").mockImplementation(() => undefined);
+    vi.spyOn(logger, "info").mockImplementation(() => undefined);
+    vi.spyOn(logger, "warn").mockImplementation(() => undefined);
     tree = createTreeWithEmptyWorkspace();
   });
 

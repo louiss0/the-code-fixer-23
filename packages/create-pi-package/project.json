@@ -23,7 +23,7 @@
       }
     },
     "test": {
-      "executor": "@nx/vite:test",
+      "executor": "@nx/vitest:test",
       "options": {
         "configFile": "packages/create-pi-package/vite.config.ts",
         "reportsDirectory": "packages/create-pi-package/test-output/vitest/coverage"

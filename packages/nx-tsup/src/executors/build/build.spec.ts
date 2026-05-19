@@ -1,4 +1,4 @@
-import type { ExecutorContext } from "@nx/devkit";
+import { logger, type ExecutorContext } from "@nx/devkit";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import executor from "./build";
 import type { BuildExecutorSchema } from "./schema";
@@ -56,6 +56,9 @@ describe("Build Executor", () => {
     mockFs.existsSync.mockReturnValue(true);
     mockFs.readdirSync.mockReturnValue([]);
     mockTsupBuild.mockClear();
+    vi.spyOn(logger, "error").mockImplementation(() => undefined);
+    vi.spyOn(logger, "info").mockImplementation(() => undefined);
+    vi.spyOn(logger, "warn").mockImplementation(() => undefined);
   });
 
   afterEach(() => {

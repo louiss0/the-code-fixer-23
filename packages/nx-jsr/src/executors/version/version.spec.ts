@@ -1,7 +1,7 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
-import type { ExecutorContext } from "@nx/devkit";
+import { logger, type ExecutorContext } from "@nx/devkit";
 
 import type { VersionExecutorSchema } from "./schema";
 import executor from "./version";
@@ -29,6 +29,10 @@ describe("Version Executor", () => {
       join(absolutePackageRoot, "jsr.json"),
       JSON.stringify(jsrJson, null, 2),
     );
+
+    vi.spyOn(logger, "error").mockImplementation(() => undefined);
+    vi.spyOn(logger, "info").mockImplementation(() => undefined);
+    vi.spyOn(logger, "warn").mockImplementation(() => undefined);
   });
 
   afterEach(() => {
