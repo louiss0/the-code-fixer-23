@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { isAbsolute, join } from "node:path";
+import { resolve } from "node:path";
 
 import { Command } from "@commander-js/extra-typings";
 import { checkbox, select } from "@inquirer/prompts";
@@ -249,7 +249,7 @@ export async function installPackages(
   directory?: string,
 ) {
   const rootDir = process.cwd();
-  const cwd = !directory ? rootDir : isAbsolute(directory) ? directory : join(rootDir, directory);
+  const cwd = directory ? resolve(rootDir, directory) : rootDir;
   const [command, args] = getInstallCommand(packageManager);
 
   console.log(`Installing dependencies in ${cwd} (root: ${rootDir})`);
