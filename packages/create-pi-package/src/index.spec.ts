@@ -156,7 +156,7 @@ describe("createFileCreator", () => {
     fileCreator.createPackageJson("vitest", ["extensions"]);
 
     expect(readCreatedFile("vitest.config.ts")).toContain(
-      "import { defineConfig } from 'vitest/config';",
+      'import { defineConfig } from "vitest/config";',
     );
     expect(readCreatedFile("tsconfig.json")).toContain('"include": [');
     expect(readCreatedFile("package.json")).toContain('"vitest": "latest"');
