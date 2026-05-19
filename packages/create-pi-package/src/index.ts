@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
 
 import { Command } from "@commander-js/extra-typings";
 import { checkbox, select } from "@inquirer/prompts";
@@ -18,7 +18,6 @@ import type {
   AllowedPackageManagers,
   AllowedTestRunnerChioces,
 } from "./options";
-import { tmpdir } from "node:os";
 
 export { createFileCreator } from "./file-creator";
 export type { FileCreator } from "./file-creator";
@@ -106,6 +105,7 @@ interface Deps {
   logger: Logger;
 }
 
+
 export function detectInvokedPackageManager(
   commandSignal = [
     process.env.npm_config_user_agent,
@@ -132,17 +132,19 @@ export async function resolvePackageManager(
 
 const program = new Command()
   .argument("[packageFolder]", "Package folder to create", (value) => {
-    if (value === ".") return process.cwd();
     return parse(folderPathSchema, value);
   })
   .option(
     "--project-folders <project-folders...>",
     "PI package folders to create",
-    (value: string, previous: AllowedFolderChioceValues | undefined) => {
-      // Commander calls variadic option parsers once per option-argument and passes the
-      // previous parsed result back in, so we accumulate the validated folder choices
-      // until the final call returns the complete project folder list.
-      return previous?.concat(parse(folderChoicesSchema, value));
+    (value: string, previous: AllowedFolderChioceValues | string | undefined) => {
+      const choices = Array.isArray(previous)
+        ? previous
+        : previous
+          ? [parse(folderChoicesSchema, previous)]
+          : [];
+
+      return [...choices, parse(folderChoicesSchema, value)] as AllowedFolderChioceValues;
     },
   )
   .option("--runner <runner>", "Test runner to use when extensions are selected", (value) => {
@@ -151,23 +153,22 @@ const program = new Command()
   .option("--instructions", "Generate AGENTS.md and CLAUDE.md files")
   .option("--no-install", "Skip installing generated package dependencies");
 
-type HandlerOptions = ReturnType<typeof program.opts> & {
-  packageFolder: (typeof program.args)[0];
-};
+interface HandlerOptions {
+  install?: boolean;
+  instructions?: boolean;
+  packageFolder?: string;
+  projectFolders?: AllowedFolderChioceValues;
+  runner?: AllowedTestRunnerChioces;
+}
 
 export async function handler(object: HandlerOptions, deps: Deps) {
   const { logger, prompter } = deps;
   if (!object.projectFolders) logger.warn("Asking which PI package folders to create.");
 
-  const choices = object.projectFolders ?? (await prompter.askForWhatTheyWantToMake());
+  const choices: AllowedFolderChioceValues =
+    object.projectFolders ?? (await prompter.askForWhatTheyWantToMake());
 
-  const fileCreator = createFileCreator(
-    import.meta.env.DEV ? `${tmpdir()}/${object.packageFolder}` : object.packageFolder,
-  );
-
-  if (import.meta.env.DEV) {
-    logger.message("Development mode: generating files in a temp dir");
-  }
+  const fileCreator = deps.createFileCreator(object.packageFolder);
 
   logger.message(`Creating PI package folders: ${choices.join(", ")}`);
   fileCreator.createPiFoldersBasedOnChoices(choices);
@@ -197,7 +198,8 @@ export async function handler(object: HandlerOptions, deps: Deps) {
       const packageManager = await resolvePackageManager(prompter);
 
       try {
-        logger.command(`${packageManager} install`);
+        const [command, args] = getInstallCommand(packageManager);
+        logger.command(`${command} ${args.join(" ")}`);
         await deps.installPackages(packageManager, object.packageFolder);
       } catch (error) {
         logger.error(`Failed to install dependencies with ${packageManager}.`);
@@ -212,24 +214,46 @@ export function setupRunCli(
   deps: Deps,
 ) {
   return async (...args: string[]) => {
-    const parsedProgram = args.length > 0 ? program.parse(args, { from: "user" }) : program;
+    const parsedProgram = program.parse(args, { from: "user" });
     const flags = parsedProgram.opts();
-    const packageName = parsedProgram.args[0];
+    const packageFolder = parsedProgram.args[0];
 
-    await handler({ ...flags, packageFolder: packageName }, deps);
+    await handler({ ...flags, packageFolder }, deps);
   };
 }
 
-async function installPackages(packageManager: AllowedPackageManagers, directory?: string) {
-  const rootDir = import.meta.env.DEV ? `${tmpdir()}` : process.cwd();
-  const cwd = directory ? join(rootDir, directory) : rootDir;
+function getInstallCommand(packageManager: AllowedPackageManagers) {
+  if (packageManager === "pnpm") {
+    return [packageManager, ["install", "--ignore-workspace", "--config.strictDepBuilds=false"]] as const;
+  }
 
+  return [packageManager, ["install"]] as const;
+}
+
+async function runCommand(command: string, args: readonly string[], cwd: string) {
   await new Promise<void>((resolve, reject) => {
-    execFile(packageManager, ["install"], { cwd }, (error) => {
-      if (error) reject(error);
-      else resolve();
+    execFile(command, args, { cwd }, (error, stdout, stderr) => {
+      if (!error) {
+        resolve();
+        return;
+      }
+
+      const message = `${stdout}\n${stderr}`.trim();
+      reject(message ? new Error(message, { cause: error }) : error);
     });
   });
+}
+
+export async function installPackages(
+  packageManager: AllowedPackageManagers,
+  directory?: string,
+) {
+  const rootDir = process.cwd();
+  const cwd = !directory ? rootDir : isAbsolute(directory) ? directory : join(rootDir, directory);
+  const [command, args] = getInstallCommand(packageManager);
+
+  console.log(`Installing dependencies in ${cwd} (root: ${rootDir})`);
+  await runCommand(command, args, cwd);
 }
 
 const deps: Deps = {
@@ -239,6 +263,6 @@ const deps: Deps = {
   installPackages,
 };
 
-if (import.meta.env.PROD) {
+if (!import.meta.env.DEV) {
   setupRunCli(handler, deps)(...process.argv.slice(2));
 }

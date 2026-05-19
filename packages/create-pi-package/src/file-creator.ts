@@ -1,5 +1,5 @@
-import { writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import type { AllowedFolderChioceValues, AllowedTestRunnerChioces } from "./options";
 
 const extensionContent = `export default function (pi:ExtensionAPI) {
@@ -123,20 +123,21 @@ Use this file to document repository-specific instructions for Claude.
 
 const fileByFolderChoice: Record<
   AllowedFolderChioceValues[number],
-  { file: string; content: string }
+  { file: string; folder: `${string}/`; content: string }
 > = {
-  extensions: { file: "extensions/index.ts", content: extensionContent },
-  prompts: { file: "prompts/example.md", content: promptContent },
-  skills: { file: "skills/example/SKILL.md", content: skillContent },
-  themes: { file: "themes/theme.json", content: themeContent },
+  extensions: { file: "index.ts", folder: "extensions/", content: extensionContent },
+  prompts: { file: "example.md", folder: "prompts/", content: promptContent },
+  skills: { file: "SKILL.md", folder: "skills/example/", content: skillContent },
+  themes: { file: "theme.json", folder: "themes/", content: themeContent },
 };
 
 const scriptByFolderChoice: Record<
   AllowedFolderChioceValues[number],
-  { file: string; content: string }
+  { file: string; folder: `${string}/`; content: string }
 > = {
   extensions: {
-    file: "scripts/create-extension.ts",
+    file: "create-extension.ts",
+    folder: "scripts/",
     content: `import { dirname, join } from "node:path";
 import { mkdirSync, writeFileSync } from "node:fs";
 
@@ -154,6 +155,7 @@ writeFileSync(file, ${JSON.stringify(extensionContent)});
   },
   prompts: {
     file: "scripts/create-prompt.ts",
+    folder: "scripts/",
     content: `import { join } from "node:path";
 import { mkdirSync, writeFileSync } from "node:fs";
 
@@ -168,7 +170,8 @@ writeFileSync(join("prompts", fileName), ${JSON.stringify(promptContent)});
 `,
   },
   skills: {
-    file: "scripts/create-skill.ts",
+    file: "create-skill.ts",
+    folder: "scripts/",
     content: `import { join } from "node:path";
 import { mkdirSync, writeFileSync } from "node:fs";
 
@@ -185,7 +188,8 @@ writeFileSync(join(directory, "SKILL.md"), ${JSON.stringify(skillContent)});
 `,
   },
   themes: {
-    file: "scripts/create-theme.ts",
+    file: "create-theme.ts",
+    folder: "scripts/",
     content: `import { join } from "node:path";
 import { mkdirSync, writeFileSync } from "node:fs";
 
@@ -267,14 +271,14 @@ class DefaultFileCreator implements FileCreator {
   createPiFoldersBasedOnChoices(choices: AllowedFolderChioceValues) {
     choices.forEach((choice) => {
       const file = fileByFolderChoice[choice];
-      this.createFile(file.file, file.content);
+      this.createFile(file.file, file.content, file.folder);
     });
   }
 
   createScriptsBasedOnChoices(choices: AllowedFolderChioceValues) {
     choices.forEach((choice) => {
       const file = scriptByFolderChoice[choice];
-      this.createFile(file.file, file.content);
+      this.createFile(file.file, file.content, file.folder);
     });
   }
 
@@ -302,9 +306,11 @@ class DefaultFileCreator implements FileCreator {
     );
   }
 
-  createFile(file: string, content: string) {
-    const targetFile = this.directory ? resolve(this.directory, file) : file;
+  createFile(file: string, content: string, folder?: `${string}/`) {
+    const generatedFolderPath = folder ? `${this.directory}/${folder}` : this.directory;
+    const targetFile = generatedFolderPath ? join(generatedFolderPath, file) : file;
 
+    mkdirSync(dirname(targetFile), { recursive: true });
     writeFileSync(targetFile, content);
   }
 }

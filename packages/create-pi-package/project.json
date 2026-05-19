@@ -33,8 +33,7 @@
       "command": "pnpm --dir packages/create-pi-package run lint"
     },
     "activate": {
-      "dependsOn": ["build"],
-      "command": "pnpm --dir packages/create-pi-package exec dist/index.js"
+      "command": "pnpm --dir packages/create-pi-package run build --mode=development && pnpm --dir packages/create-pi-package exec dist/index"
     },
     "format": {
       "command": "pnpm --dir packages/create-pi-package run format"
