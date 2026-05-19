@@ -1,6 +1,6 @@
-export type TestRunner = 'vitest' | 'jest' | 'none';
-export type Linter = 'eslint' | 'biome' | 'none';
-export type Formatter = 'prettier' | 'biome' | 'eslint-stylistic' | 'none';
+export type TestRunner = "vitest" | "jest" | "none";
+export type Linter = "eslint" | "biome" | "none";
+export type Formatter = "prettier" | "biome" | "eslint-stylistic" | "none";
 
 export interface LibraryGeneratorSchema {
   name: string;

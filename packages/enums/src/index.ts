@@ -1,8 +1,8 @@
-export type EnumKind = 'string' | 'number' | 'symbol';
+export type EnumKind = "string" | "number" | "symbol";
 
-export type EnumValue<TKind extends EnumKind> = TKind extends 'string'
+export type EnumValue<TKind extends EnumKind> = TKind extends "string"
   ? string
-  : TKind extends 'number'
+  : TKind extends "number"
     ? number
     : symbol;
 
@@ -28,15 +28,15 @@ type TupleIndexNumber<TValue> = TValue extends `${infer TNumber extends number}`
   : never;
 
 type IsTuple<TValue extends readonly unknown[]> =
-  number extends TValue['length'] ? false : true;
+  number extends TValue["length"] ? false : true;
 
 type EnumMemberValue<
   TKind extends EnumKind,
   TNames extends readonly string[],
   TIndex extends TupleIndexKey<TNames>,
-> = TKind extends 'string'
+> = TKind extends "string"
   ? TNames[TIndex]
-  : TKind extends 'number'
+  : TKind extends "number"
     ? TupleIndexNumber<TIndex>
     : EnumSymbol<TNames, Extract<TNames[TIndex], string>>;
 
@@ -97,10 +97,10 @@ type ParseValueResult<
 export class ParseError extends Error {
   readonly input: string;
 
-  constructor(input: string, message = 'Could not parse enum label.') {
+  constructor(input: string, message = "Could not parse enum label.") {
     super(message);
     this.input = input;
-    this.name = 'ParseError';
+    this.name = "ParseError";
   }
 }
 
@@ -136,7 +136,7 @@ export function createEnum<
   TKind extends EnumKind,
   const TNames extends readonly string[],
 >(kind: TKind, ...names: TNames): EnumShapeFromNames<TKind, TNames> {
-  assertUniqueValues(names, 'Enum names must be unique.');
+  assertUniqueValues(names, "Enum names must be unique.");
 
   const values = Object.freeze(
     Object.fromEntries(
@@ -156,7 +156,7 @@ export function createLabeledEnum<const TLabels extends Record<string, string>>(
   const labelValues = Object.values(labels) as string[];
 
   assertNoReservedEnumKeys(names);
-  assertUniqueValues(labelValues, 'Enum labels must be unique.');
+  assertUniqueValues(labelValues, "Enum labels must be unique.");
 
   const values = Object.freeze(
     Object.fromEntries(names.map((name) => [name, name] as const)),
@@ -232,23 +232,23 @@ function createImmutableEnumProxy<
 
   return new Proxy(target, {
     set(_target, property) {
-      if (typeof property === 'string' && property in immutableValues) {
+      if (typeof property === "string" && property in immutableValues) {
         throw new Error(`Cannot assign to immutable enum key "${property}".`);
       }
 
       throw new Error(
-        otherPropertyMessage.replace('{property}', String(property)),
+        otherPropertyMessage.replace("{property}", String(property)),
       );
     },
   });
 }
 
 function createEnumValue(kind: EnumKind, name: string, index: number) {
-  if (kind === 'string') {
+  if (kind === "string") {
     return name;
   }
 
-  if (kind === 'number') {
+  if (kind === "number") {
     return index;
   }
 
@@ -256,19 +256,19 @@ function createEnumValue(kind: EnumKind, name: string, index: number) {
 }
 
 const reservedLabeledEnumKeys = new Set([
-  'entries',
-  'hasLabel',
-  'labelOf',
-  'labels',
-  'names',
-  'parse',
-  'validate',
-  'values',
+  "entries",
+  "hasLabel",
+  "labelOf",
+  "labels",
+  "names",
+  "parse",
+  "validate",
+  "values",
 ]);
 
 function assertNoReservedEnumKeys(keys: readonly string[]) {
   if (keys.some((key) => reservedLabeledEnumKeys.has(key))) {
-    throw new Error('Enum keys cannot use reserved helper names.');
+    throw new Error("Enum keys cannot use reserved helper names.");
   }
 }
 

@@ -3,16 +3,16 @@ export interface BuildExecutorSchema {
   main: string;
   tsConfig: string;
   assets?: string[];
-  format?: ('esm' | 'cjs' | 'iife')[];
+  format?: ("esm" | "cjs" | "iife")[];
   dts?: boolean;
   clean?: boolean;
   watch?: boolean;
   minify?: boolean;
-  sourcemap?: boolean | 'inline';
+  sourcemap?: boolean | "inline";
   splitting?: boolean;
-  treeshake?: boolean | 'smallest' | 'recommended';
+  treeshake?: boolean | "smallest" | "recommended";
   target?: string;
-  platform?: 'node' | 'browser' | 'neutral';
+  platform?: "node" | "browser" | "neutral";
   external?: string[];
   noExternal?: string[];
   banner?: {
