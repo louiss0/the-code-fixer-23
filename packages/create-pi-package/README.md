@@ -20,10 +20,10 @@ Scaffold PI packages with the familiar `create-*` flow.
 ## Usage
 
 ```sh
-pnpm create pi-package
-pnpm create pi-package my-pi-package
-pnpm create pi-package .
-pnpm create pi-package my-pi-package --project-folders extensions prompts --runner vitest
+npm create pi-package
+npm create pi-package my-pi-package
+npm create pi-package .
+npm create pi-package my-pi-package --project-folders extensions prompts --runner vitest
 ```
 
 - Omit the folder argument to scaffold in the current working directory
@@ -98,7 +98,7 @@ You can select one or many. For every selected folder, `create-pi-package` creat
 Example:
 
 ```sh
-pnpm create-pi-package my-pi-package --project-folders extensions prompts skills
+npm create pi-package my-pi-package --project-folders extensions prompts skills
 ```
 
 ### Step 2 — Choose a test runner
@@ -126,7 +126,7 @@ A strict `tsconfig.json` is also generated for extension packages.
 Example:
 
 ```sh
-pnpm create-pi-package my-pi-package --project-folders extensions --runner vitest
+npm create pi-package my-pi-package --project-folders extensions --runner vitest
 ```
 
 ## Non-interactive examples
@@ -134,37 +134,37 @@ pnpm create-pi-package my-pi-package --project-folders extensions --runner vites
 Bypass the folder selection step:
 
 ```sh
-pnpm create pi-package my-pi-package --project-folders prompts themes
+npm create pi-package my-pi-package --project-folders prompts themes
 ```
 
 Bypass the test runner step for an extension package:
 
 ```sh
-pnpm create pi-package my-pi-package --project-folders extensions --runner jest
+npm create pi-package my-pi-package --project-folders extensions --runner jest
 ```
 
 Bypass both interactive steps at once:
 
 ```sh
-pnpm create pi-package my-pi-package --project-folders extensions prompts skills themes --runner vitest
+npm create pi-package my-pi-package --project-folders extensions prompts skills themes --runner vitest
 ```
 
 Scaffold directly into the current directory:
 
 ```sh
-pnpm create pi-package . --project-folders prompts themes
+npm create pi-package . --project-folders prompts themes
 ```
 
 Add agent instruction files without prompts:
 
 ```sh
-pnpm create pi-package my-pi-package --project-folders prompts --instructions
+npm create pi-package my-pi-package --project-folders prompts --instructions
 ```
 
 Skip dependency installation for extension scaffolds:
 
 ```sh
-pnpm create pi-package my-pi-package --project-folders extensions --runner vitest --no-install
+npm create pi-package my-pi-package --project-folders extensions --runner vitest --no-install
 ```
 
 ## CLI options
