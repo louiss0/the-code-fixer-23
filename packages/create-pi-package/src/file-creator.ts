@@ -1,9 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import type {
-  AllowedFolderChioceValues,
-  AllowedTestRunnerChioces,
-} from "./options";
+import type { AllowedFolderChioceValues, AllowedTestRunnerChioces } from "./options";
 
 const extensionContent = `export default function (pi:ExtensionAPI) {
 
@@ -343,9 +340,22 @@ function createTsConfig() {
       moduleResolution: "Bundler",
       strict: true,
       esModuleInterop: true,
-      skipLibCheck: true,
       declaration: true,
-      outDir: "dist",
+      declarationMap: true,
+      sourceMap: true,
+      verbatimModuleSyntax: true,
+      isolatedModules: true,
+      skipLibCheck: true,
+      noUncheckedIndexedAccess: true,
+      exactOptionalPropertyTypes: true,
+      resolveJsonModule: true,
+      forceConsistentCasingInFileNames: true,
+      noImplicitOverride: true,
+      noPropertyAccessFromIndexSignature: true,
+      useUnknownInCatchVariables: true,
+      noFallthroughCasesInSwitch: true,
+      noImplicitReturns: true,
+      noImplicitThis: true,
     },
     include: ["extensions/**/*.ts"],
   };
