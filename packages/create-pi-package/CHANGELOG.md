@@ -1,3 +1,19 @@
+## 1.2.0 (2026-05-19)
+
+### 🚀 Features
+
+- **create-pi-package:** improve extension test scaffolding and docs ([#18](https://github.com/louiss0/the-code-fixer-23/pull/18))
+
+### 🩹 Fixes
+
+- **testing:** reduce nx test log noise ([8b39b6a](https://github.com/louiss0/the-code-fixer-23/commit/8b39b6a))
+- **create-pi-package:** Correct pi-coding-agent import path ([9563491](https://github.com/louiss0/the-code-fixer-23/commit/9563491))
+
+### ❤️ Thank You
+
+- louiss0 @louiss0
+- shelton louis @louiss0
+
 ## 1.1.0 (2026-05-19)
 
 ### 🚀 Features
