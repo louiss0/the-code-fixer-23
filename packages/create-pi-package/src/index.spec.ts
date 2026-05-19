@@ -362,12 +362,8 @@ describe("handler", () => {
     expect(readCreatedFile("package.json")).toContain(
       '"create:extension": "tsx scripts/create-extension.ts"',
     );
-    expect(readCreatedFile("package.json")).not.toContain(
-      '"jest": "latest"',
-    );
-    expect(readCreatedFile("package.json")).not.toContain(
-      '"vitest": "latest"',
-    );
+    expect(readCreatedFile("package.json")).not.toContain('"jest": "latest"');
+    expect(readCreatedFile("package.json")).not.toContain('"vitest": "latest"');
     expect(warn).toBeCalledWith(
       "No test runner selected. PI package starter files were still generated.",
     );

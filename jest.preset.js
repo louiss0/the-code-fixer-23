@@ -1,8 +1,8 @@
 module.exports = {
-  testMatch: ['**/?(*.)+(spec|test).[tj]s?(x)'],
+  testMatch: ["**/?(*.)+(spec|test).[tj]s?(x)"],
   transform: {
-    '^.+\\.[tj]sx?$': 'ts-jest',
+    "^.+\\.[tj]sx?$": "ts-jest",
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageReporters: ['html'],
+  moduleFileExtensions: ["ts", "tsx", "js", "jsx"],
+  coverageReporters: ["html"],
 };

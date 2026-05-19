@@ -1,10 +1,7 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "namedInputs": {
-    "default": [
-      "{projectRoot}/**/*",
-      "sharedGlobals"
-    ],
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
       "default",
       "!{projectRoot}/biome.json",
@@ -12,9 +9,7 @@
       "!{projectRoot}/tsconfig.spec.json",
       "!{projectRoot}/src/test-setup.[jt]s"
     ],
-    "sharedGlobals": [
-      "{workspaceRoot}/.github/workflows/*.yml"
-    ]
+    "sharedGlobals": ["{workspaceRoot}/.github/workflows/*.yml"]
   },
   "plugins": [
     {
@@ -49,32 +44,19 @@
   "targetDefaults": {
     "@nx/js:tsc": {
       "cache": true,
-      "dependsOn": [
-        "^build"
-      ],
-      "inputs": [
-        "production",
-        "^production"
-      ]
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"]
     },
     "test": {
-      "dependsOn": [
-        "^build"
-      ]
+      "dependsOn": ["^build"]
     },
     "lint": {
       "cache": true,
-      "inputs": [
-        "default",
-        "{workspaceRoot}/eslint.config.mjs"
-      ]
+      "inputs": ["default", "{workspaceRoot}/eslint.config.mjs"]
     }
   },
   "release": {
-    "projects": [
-      "packages/*",
-      "!tag:paused"
-    ],
+    "projects": ["packages/*", "!tag:paused"],
     "projectsRelationship": "independent",
     "version": {
       "preVersionCommand": "pnpm dlx nx run-many -t build --projects=packages/* --exclude='tag:paused'",
