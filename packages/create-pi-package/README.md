@@ -10,9 +10,11 @@ Scaffold PI packages with the familiar `create-*` flow.
 - Lets you choose one or many resource folders in a single run
 - Generates starter files for `extensions`, `prompts`, `skills`, and `themes`
 - Adds matching `scripts/create-*` helpers for every selected resource
+- Supports creating files in a new folder, an existing folder, or directly in `.`
 - Sets up extension testing with either `jest` or `vitest`
 - Generates a strict `tsconfig.json` when extension tooling is needed
 - Creates a ready-to-edit `package.json` for extension packages
+- Auto-detects the invoking package manager for dependency installation
 - Can also create `AGENTS.md` and `CLAUDE.md`
 
 ## Usage
@@ -20,8 +22,13 @@ Scaffold PI packages with the familiar `create-*` flow.
 ```sh
 pnpm create pi-package
 pnpm create pi-package my-pi-package
+pnpm create pi-package .
 pnpm create pi-package my-pi-package --project-folders extensions prompts --runner vitest
 ```
+
+- Omit the folder argument to scaffold in the current working directory
+- Pass `.` to explicitly scaffold in the current working directory
+- Pass a folder name like `my-pi-package` to create or target that folder
 
 ## What it generates
 
@@ -40,6 +47,7 @@ If `extensions` is selected, it also generates:
 - either `vitest.config.ts` or `jest.config.cjs`
 - a `package.json` with test scripts and dev dependencies
 - dependency installation by default
+- install commands based on the invoking package manager (`pnpm`, `npm`, `yarn`, or `bun`)
 
 ## Example generated tree
 
@@ -90,7 +98,7 @@ You can select one or many. For every selected folder, `create-pi-package` creat
 Example:
 
 ```sh
-pnpm create pi-package my-pi-package --project-folders extensions prompts skills
+pnpm create-pi-package my-pi-package --project-folders extensions prompts skills
 ```
 
 ### Step 2 — Choose a test runner
@@ -118,7 +126,7 @@ A strict `tsconfig.json` is also generated for extension packages.
 Example:
 
 ```sh
-pnpm create pi-package my-pi-package --project-folders extensions --runner vitest
+pnpm create-pi-package my-pi-package --project-folders extensions --runner vitest
 ```
 
 ## Non-interactive examples
@@ -139,6 +147,12 @@ Bypass both interactive steps at once:
 
 ```sh
 pnpm create pi-package my-pi-package --project-folders extensions prompts skills themes --runner vitest
+```
+
+Scaffold directly into the current directory:
+
+```sh
+pnpm create pi-package . --project-folders prompts themes
 ```
 
 Add agent instruction files without prompts:
