@@ -50,7 +50,7 @@ const skillContent = `---
     - No extra commentary`;
 
 const themeContent = `{
-      "$schema": "https://raw.githubusercontent.com/badlogic/pi-mono/main/packages/coding-agent/src/modes/interactive/theme/theme-schema.json",
+      "$schema": "https://raw.githubusercontent.com/badlogic/pi-mono/main/packages/coding-agent/extensions/modes/interactive/theme/theme-schema.json",
       "name": "my-theme",
       "vars": {
         "primary": "#00aaff",
@@ -220,43 +220,87 @@ const testRunnerConfigByChoice: Record<
   vitest: {
     file: "vitest.config.ts",
     content: `// vitest.config.ts
-        import { defineConfig } from 'vitest/config';
+    import { defineConfig } from "vitest/config";
 
-        export default defineConfig({
-          test: {
-            environment: 'node',
-            include: ['src/**/*.test.ts'],
-            coverage: {
-              provider: 'v8',
-              reporter: ['text', 'html']
-            }
-          }
-        });`,
+    export default defineConfig({
+      test: {
+        environment: "node",
+
+        include: ["extensions/**/*.test.ts"],
+
+        exclude: [
+          "node_modules",
+          "dist",
+          ".idea",
+          ".git"
+        ],
+
+        globals: true,
+
+        clearMocks: true,
+        restoreMocks: true,
+        mockReset: true,
+
+        watch: false,
+
+        coverage: {
+          provider: "v8",
+
+          reporter: ["text", "html"],
+
+          include: ["extensions/**/*.ts"],
+
+          exclude: [
+            "extensions/**/*.test.ts",
+            "extensions/**/*.d.ts"
+          ]
+        }
+      }
+    });`,
   },
   jest: {
     file: "jest.config.cjs",
     content: `/** @type {import('jest').Config} */
-        module.exports = {
-          testEnvironment: 'node',
+    module.exports = {
+      testEnvironment: "node",
 
-          extensionsToTreatAsEsm: ['.ts'],
+      extensionsToTreatAsEsm: [".ts"],
 
-          transform: {
-            '^.+\\.ts$': [
-              'ts-jest',
-              {
-                useESM: true,
-                tsconfig: './tsconfig.spec.json'
-              }
-            ]
-          },
+      transform: {
+        "^.+\\.ts$": [
+          "ts-jest",
+          {
+            useESM: true,
+            tsconfig: "./tsconfig.spec.json"
+          }
+        ]
+      },
 
-          moduleNameMapper: {
-            '^(\\.{1,2}/.*)\\.js$': '$1'
-            },
+      moduleNameMapper: {
+        "^(\\.{1,2}/.*)\\.js$": "$1"
+      },
 
-          testMatch: ['**/*.test.ts']
-          };`,
+      testMatch: ["**/*.test.ts"],
+
+      clearMocks: true,
+      restoreMocks: true,
+
+      collectCoverageFrom: [
+        "extensions/**/*.ts",
+        "!extensions/**/*.d.ts"
+      ],
+
+      coverageDirectory: "coverage",
+
+      testPathIgnorePatterns: [
+        "/node_modules/",
+        "/dist/"
+      ],
+
+      moduleFileExtensions: ["ts", "js", "json"],
+
+      verbose: true
+    };`,
   },
 };
 
