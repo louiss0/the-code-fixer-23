@@ -1,9 +1,14 @@
 {
   "name": "@code-fixer-23/create-pi-package",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "type": "module",
   "description": "Scaffold PI packages with prompts, skills, and extensions.",
-  "keywords": ["cli", "generator", "pi-package", "scaffold"],
+  "keywords": [
+    "cli",
+    "generator",
+    "pi-package",
+    "scaffold"
+  ],
   "main": "./dist/index",
   "module": "./dist/index",
   "types": "./dist/index.d.ts",
@@ -18,7 +23,10 @@
     },
     "./package.json": "./package.json"
   },
-  "files": ["dist", "!**/*.tsbuildinfo"],
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
   "publishConfig": {
     "access": "public"
   },
