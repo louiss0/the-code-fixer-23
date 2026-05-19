@@ -3,7 +3,7 @@ import { dirname, join } from "node:path";
 import type { AllowedFolderChioceValues, AllowedTestRunnerChioces } from "./options";
 
 const extensionContent = `
-  import { type ExtensionAPI  } from "@earndil-works/pi-coding-agent";
+  import { type ExtensionAPI  } from "@earendil-works/pi-coding-agent";
   export default function (pi:ExtensionAPI) {
 
       }`;
@@ -440,6 +440,9 @@ function createPackageJson(
   return {
     type: "module",
     scripts: Object.fromEntries(scripts),
+    dependencies: {
+      "@earendil-works/pi-coding-agent": "latest",
+    },
     devDependencies: {
       typescript: "latest",
       tsx: "latest",
