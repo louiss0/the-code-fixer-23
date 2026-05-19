@@ -4,12 +4,23 @@ Scaffold PI packages with the familiar `create-*` flow.
 
 `create-pi-package` asks which PI resource folders you want, creates the matching starter files, adds a `scripts/create-*` helper for each selected resource, and optionally sets up extension testing.
 
+## Feature highlights
+
+- Uses a familiar `create-*` scaffolding flow for PI packages
+- Lets you choose one or many resource folders in a single run
+- Generates starter files for `extensions`, `prompts`, `skills`, and `themes`
+- Adds matching `scripts/create-*` helpers for every selected resource
+- Sets up extension testing with either `jest` or `vitest`
+- Generates a strict `tsconfig.json` when extension tooling is needed
+- Creates a ready-to-edit `package.json` for extension packages
+- Can also create `AGENTS.md` and `CLAUDE.md`
+
 ## Usage
 
 ```sh
-pnpm create-pi-package
-pnpm create-pi-package my-pi-package
-pnpm create-pi-package my-pi-package --project-folders extensions prompts --runner vitest
+pnpm create pi-package
+pnpm create pi-package my-pi-package
+pnpm create pi-package my-pi-package --project-folders extensions prompts --runner vitest
 ```
 
 ## What it generates
@@ -79,7 +90,7 @@ You can select one or many. For every selected folder, `create-pi-package` creat
 Example:
 
 ```sh
-pnpm create-pi-package my-pi-package --project-folders extensions prompts skills
+pnpm create pi-package my-pi-package --project-folders extensions prompts skills
 ```
 
 ### Step 2 — Choose a test runner
@@ -107,7 +118,39 @@ A strict `tsconfig.json` is also generated for extension packages.
 Example:
 
 ```sh
-pnpm create-pi-package my-pi-package --project-folders extensions --runner vitest
+pnpm create pi-package my-pi-package --project-folders extensions --runner vitest
+```
+
+## Non-interactive examples
+
+Bypass the folder selection step:
+
+```sh
+pnpm create pi-package my-pi-package --project-folders prompts themes
+```
+
+Bypass the test runner step for an extension package:
+
+```sh
+pnpm create pi-package my-pi-package --project-folders extensions --runner jest
+```
+
+Bypass both interactive steps at once:
+
+```sh
+pnpm create pi-package my-pi-package --project-folders extensions prompts skills themes --runner vitest
+```
+
+Add agent instruction files without prompts:
+
+```sh
+pnpm create pi-package my-pi-package --project-folders prompts --instructions
+```
+
+Skip dependency installation for extension scaffolds:
+
+```sh
+pnpm create pi-package my-pi-package --project-folders extensions --runner vitest --no-install
 ```
 
 ## CLI options
@@ -116,12 +159,3 @@ pnpm create-pi-package my-pi-package --project-folders extensions --runner vites
 - `--runner <runner>` test runner to use when `extensions` is selected
 - `--instructions` also create `AGENTS.md` and `CLAUDE.md`
 - `--no-install` skip dependency installation
-
-## Development
-
-```sh
-pnpm --dir packages/create-pi-package run test
-pnpm --dir packages/create-pi-package run typecheck
-pnpm --dir packages/create-pi-package run lint
-pnpm --dir packages/create-pi-package run build
-```
