@@ -1,4 +1,5 @@
 import { execFile } from "node:child_process";
+import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 
 import { Command } from "@commander-js/extra-typings";
@@ -105,7 +106,6 @@ interface Deps {
   logger: Logger;
 }
 
-
 export function detectInvokedPackageManager(
   commandSignal = [
     process.env.npm_config_user_agent,
@@ -161,6 +161,10 @@ interface HandlerOptions {
   runner?: AllowedTestRunnerChioces;
 }
 
+function isDevelopmentBuild() {
+  return import.meta.env.MODE === "development";
+}
+
 export async function handler(object: HandlerOptions, deps: Deps) {
   const { logger, prompter } = deps;
   if (!object.projectFolders) logger.warn("Asking which PI package folders to create.");
@@ -168,7 +172,10 @@ export async function handler(object: HandlerOptions, deps: Deps) {
   const choices: AllowedFolderChioceValues =
     object.projectFolders ?? (await prompter.askForWhatTheyWantToMake());
 
-  const fileCreator = deps.createFileCreator(object.packageFolder);
+  const packageRoot = isDevelopmentBuild()
+    ? resolve(tmpdir(), object.packageFolder ?? "")
+    : object.packageFolder;
+  const fileCreator = deps.createFileCreator(packageRoot);
 
   logger.message(`Creating PI package folders: ${choices.join(", ")}`);
   fileCreator.createPiFoldersBasedOnChoices(choices);
@@ -224,7 +231,10 @@ export function setupRunCli(
 
 function getInstallCommand(packageManager: AllowedPackageManagers) {
   if (packageManager === "pnpm") {
-    return [packageManager, ["install", "--ignore-workspace", "--config.strictDepBuilds=false"]] as const;
+    return [
+      packageManager,
+      ["install", "--ignore-workspace", "--config.strictDepBuilds=false"],
+    ] as const;
   }
 
   return [packageManager, ["install"]] as const;
@@ -248,7 +258,7 @@ export async function installPackages(
   packageManager: AllowedPackageManagers,
   directory?: string,
 ) {
-  const rootDir = process.cwd();
+  const rootDir = isDevelopmentBuild() ? tmpdir() : process.cwd();
   const cwd = directory ? resolve(rootDir, directory) : rootDir;
   const [command, args] = getInstallCommand(packageManager);
 
@@ -263,6 +273,4 @@ const deps: Deps = {
   installPackages,
 };
 
-if (!import.meta.env.DEV) {
-  setupRunCli(handler, deps)(...process.argv.slice(2));
-}
+setupRunCli(handler, deps)(...process.argv.slice(2));

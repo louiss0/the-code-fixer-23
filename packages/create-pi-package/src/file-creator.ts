@@ -154,7 +154,7 @@ writeFileSync(file, ${JSON.stringify(extensionContent)});
 `,
   },
   prompts: {
-    file: "scripts/create-prompt.ts",
+    file: "create-prompt.ts",
     folder: "scripts/",
     content: `import { join } from "node:path";
 import { mkdirSync, writeFileSync } from "node:fs";
