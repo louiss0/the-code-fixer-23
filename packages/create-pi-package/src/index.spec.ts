@@ -72,7 +72,10 @@ const expectedStarterFiles = {
   },
 } as const;
 
-function expectCreatedStarterFile(choice: keyof typeof expectedStarterFiles, directory = "") {
+function expectCreatedStarterFile(
+  choice: keyof typeof expectedStarterFiles,
+  directory = "",
+) {
   const file = directory
     ? `${directory}/${expectedStarterFiles[choice].file}`
     : expectedStarterFiles[choice].file;
@@ -115,7 +118,10 @@ describe("createFileCreator", () => {
     fileCreator.createFile("prompts/example.md", "Prompt content");
 
     expect(mkdirSync).toBeCalledWith("prompts", { recursive: true });
-    expect(writeFileSync).toBeCalledWith("prompts/example.md", "Prompt content");
+    expect(writeFileSync).toBeCalledWith(
+      "prompts/example.md",
+      "Prompt content",
+    );
     expect(readCreatedFile("prompts/example.md")).toBe("Prompt content");
   });
 
@@ -163,14 +169,19 @@ describe("createFileCreator", () => {
 
     fileCreator.createFile("prompts/example.md", "Prompt content");
 
-    expect(mkdirSync).toBeCalledWith(expect.stringMatching(/my-pi-package[\\/]prompts/), {
-      recursive: true,
-    });
+    expect(mkdirSync).toBeCalledWith(
+      expect.stringMatching(/my-pi-package[\\/]prompts/),
+      {
+        recursive: true,
+      },
+    );
     expect(writeFileSync).toBeCalledWith(
       expect.stringMatching(/my-pi-package[\\/]prompts[\\/]example\.md/),
       "Prompt content",
     );
-    expect(readCreatedFile("my-pi-package/prompts/example.md")).toBe("Prompt content");
+    expect(readCreatedFile("my-pi-package/prompts/example.md")).toBe(
+      "Prompt content",
+    );
   });
 });
 
@@ -228,9 +239,11 @@ describe("handler", () => {
     );
 
     expectCreatedStarterFile("prompts", join(tempDirectory, "my-pi-package"));
-    expect(hasCreatedFile(join(tempDirectory, "my-pi-package/scripts/create-prompt.ts"))).toBe(
-      true,
-    );
+    expect(
+      hasCreatedFile(
+        join(tempDirectory, "my-pi-package/scripts/create-prompt.ts"),
+      ),
+    ).toBe(true);
   });
 
   it("translates a dot package directory to the cwd", async () => {
@@ -248,8 +261,12 @@ describe("handler", () => {
       },
     );
 
-    expect(hasCreatedFile(join(tempDirectory, "prompts/example.md"))).toBe(true);
-    expect(hasCreatedFile(join(tempDirectory, "scripts/create-prompt.ts"))).toBe(true);
+    expect(hasCreatedFile(join(tempDirectory, "prompts/example.md"))).toBe(
+      true,
+    );
+    expect(
+      hasCreatedFile(join(tempDirectory, "scripts/create-prompt.ts")),
+    ).toBe(true);
   });
 
   it("logs the development temp directory", async () => {
@@ -268,7 +285,9 @@ describe("handler", () => {
       },
     );
 
-    expect(message).toBeCalledWith(`Development mode: generating files in ${tempDirectory}`);
+    expect(message).toBeCalledWith(
+      `Development mode: generating files in ${tempDirectory}`,
+    );
   });
 
   it("creates instructions when requested", async () => {
@@ -286,12 +305,19 @@ describe("handler", () => {
       },
     );
 
-    expect(readCreatedFile(join(tempDirectory, "AGENTS.md"))).toContain("coding agents");
-    expect(readCreatedFile(join(tempDirectory, "CLAUDE.md"))).toContain("Claude");
+    expect(readCreatedFile(join(tempDirectory, "AGENTS.md"))).toContain(
+      "coding agents",
+    );
+    expect(readCreatedFile(join(tempDirectory, "CLAUDE.md"))).toContain(
+      "Claude",
+    );
   });
 
   it("creates extension tooling and installs with the invoked package manager", async () => {
-    vi.stubEnv("npm_config_user_agent", "pnpm/10.0.0 npm/? node/v22.0.0 win32 x64");
+    vi.stubEnv(
+      "npm_config_user_agent",
+      "pnpm/10.0.0 npm/? node/v22.0.0 win32 x64",
+    );
     const installPackages = vi.fn();
     const askForWhichTestRunner = vi
       .spyOn(prompter, "askForWhichTestRunner")
@@ -311,7 +337,9 @@ describe("handler", () => {
     );
 
     expect(askForWhichTestRunner).toBeCalled();
-    expect(readCreatedFile(join(tempDirectory, "jest.config.cjs"))).toContain("ts-jest");
+    expect(readCreatedFile(join(tempDirectory, "jest.config.cjs"))).toContain(
+      "ts-jest",
+    );
     expect(command).toBeCalledWith("pnpm install");
     expect(installPackages).toBeCalledWith("pnpm", tempDirectory);
   });
@@ -338,7 +366,9 @@ describe("handler", () => {
 
   it("warns when test runner selection is cancelled and still creates package files", async () => {
     const warn = vi.spyOn(logger, "warn");
-    vi.spyOn(prompter, "askForWhichTestRunner").mockResolvedValue(undefined as never);
+    vi.spyOn(prompter, "askForWhichTestRunner").mockResolvedValue(
+      undefined as never,
+    );
 
     await handler(
       {
@@ -473,7 +503,10 @@ describe("setupRunCli", () => {
       logger,
       prompter,
     });
-    const askForWhatTheyWantToMake = vi.spyOn(prompter, "askForWhatTheyWantToMake");
+    const askForWhatTheyWantToMake = vi.spyOn(
+      prompter,
+      "askForWhatTheyWantToMake",
+    );
 
     await runCli("--project-folders", "themes", "skills", "--no-install");
 

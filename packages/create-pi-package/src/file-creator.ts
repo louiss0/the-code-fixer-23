@@ -1,9 +1,9 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import type {
   AllowedFolderChioceValues,
   AllowedTestRunnerChioces,
-} from './options';
+} from "./options";
 
 const extensionContent = `export default function (pi:ExtensionAPI) {
 
@@ -129,17 +129,17 @@ const fileByFolderChoice: Record<
   { file: string; folder: `${string}/`; content: string }
 > = {
   extensions: {
-    file: 'index.ts',
-    folder: 'extensions/',
+    file: "index.ts",
+    folder: "extensions/",
     content: extensionContent,
   },
-  prompts: { file: 'example.md', folder: 'prompts/', content: promptContent },
+  prompts: { file: "example.md", folder: "prompts/", content: promptContent },
   skills: {
-    file: 'SKILL.md',
-    folder: 'skills/example/',
+    file: "SKILL.md",
+    folder: "skills/example/",
     content: skillContent,
   },
-  themes: { file: 'theme.json', folder: 'themes/', content: themeContent },
+  themes: { file: "theme.json", folder: "themes/", content: themeContent },
 };
 
 const scriptByFolderChoice: Record<
@@ -147,8 +147,8 @@ const scriptByFolderChoice: Record<
   { file: string; folder: `${string}/`; content: string }
 > = {
   extensions: {
-    file: 'create-extension.ts',
-    folder: 'scripts/',
+    file: "create-extension.ts",
+    folder: "scripts/",
     content: `import { dirname, join } from "node:path";
 import { mkdirSync, writeFileSync } from "node:fs";
 
@@ -165,8 +165,8 @@ writeFileSync(file, ${JSON.stringify(extensionContent)});
 `,
   },
   prompts: {
-    file: 'create-prompt.ts',
-    folder: 'scripts/',
+    file: "create-prompt.ts",
+    folder: "scripts/",
     content: `import { join } from "node:path";
 import { mkdirSync, writeFileSync } from "node:fs";
 
@@ -181,8 +181,8 @@ writeFileSync(join("prompts", fileName), ${JSON.stringify(promptContent)});
 `,
   },
   skills: {
-    file: 'create-skill.ts',
-    folder: 'scripts/',
+    file: "create-skill.ts",
+    folder: "scripts/",
     content: `import { join } from "node:path";
 import { mkdirSync, writeFileSync } from "node:fs";
 
@@ -199,8 +199,8 @@ writeFileSync(join(directory, "SKILL.md"), ${JSON.stringify(skillContent)});
 `,
   },
   themes: {
-    file: 'create-theme.ts',
-    folder: 'scripts/',
+    file: "create-theme.ts",
+    folder: "scripts/",
     content: `import { join } from "node:path";
 import { mkdirSync, writeFileSync } from "node:fs";
 
@@ -221,7 +221,7 @@ const testRunnerConfigByChoice: Record<
   { file: string; content: string }
 > = {
   vitest: {
-    file: 'vitest.config.ts',
+    file: "vitest.config.ts",
     content: `// vitest.config.ts
         import { defineConfig } from 'vitest/config';
 
@@ -237,7 +237,7 @@ const testRunnerConfigByChoice: Record<
         });`,
   },
   jest: {
-    file: 'jest.config.cjs',
+    file: "jest.config.cjs",
     content: `/** @type {import('jest').Config} */
         module.exports = {
           testEnvironment: 'node',
@@ -277,12 +277,12 @@ export interface FileCreator {
 }
 
 class DefaultFileCreator implements FileCreator {
-  constructor(private readonly directory = '') {}
+  constructor(private readonly directory = "") {}
 
   private getTargetFile(file: string, folder?: `${string}/`) {
-    const rootDirectory = this.directory === '.' ? '' : this.directory;
+    const rootDirectory = this.directory === "." ? "" : this.directory;
 
-    return join(rootDirectory, folder ?? '', file);
+    return join(rootDirectory, folder ?? "", file);
   }
 
   createPiFoldersBasedOnChoices(choices: AllowedFolderChioceValues) {
@@ -300,8 +300,8 @@ class DefaultFileCreator implements FileCreator {
   }
 
   createAgentInstructions() {
-    this.createFile('AGENTS.md', agentsContent);
-    this.createFile('CLAUDE.md', claudeContent);
+    this.createFile("AGENTS.md", agentsContent);
+    this.createFile("CLAUDE.md", claudeContent);
   }
 
   createTestRunnerConfig(testRunner: AllowedTestRunnerChioces) {
@@ -310,7 +310,7 @@ class DefaultFileCreator implements FileCreator {
   }
 
   createTsConfig() {
-    this.createFile('tsconfig.json', JSON.stringify(createTsConfig(), null, 2));
+    this.createFile("tsconfig.json", JSON.stringify(createTsConfig(), null, 2));
   }
 
   createPackageJson(
@@ -318,7 +318,7 @@ class DefaultFileCreator implements FileCreator {
     choices: AllowedFolderChioceValues,
   ) {
     this.createFile(
-      'package.json',
+      "package.json",
       JSON.stringify(createPackageJson(testRunner, choices), null, 2),
     );
   }
@@ -331,23 +331,23 @@ class DefaultFileCreator implements FileCreator {
   }
 }
 
-export function createFileCreator(directory = ''): FileCreator {
+export function createFileCreator(directory = ""): FileCreator {
   return new DefaultFileCreator(directory);
 }
 
 function createTsConfig() {
   return {
     compilerOptions: {
-      target: 'ES2022',
-      module: 'ESNext',
-      moduleResolution: 'Bundler',
+      target: "ES2022",
+      module: "ESNext",
+      moduleResolution: "Bundler",
       strict: true,
       esModuleInterop: true,
       skipLibCheck: true,
       declaration: true,
-      outDir: 'dist',
+      outDir: "dist",
     },
-    include: ['extensions/**/*.ts'],
+    include: ["extensions/**/*.ts"],
   };
 }
 
@@ -363,16 +363,16 @@ function createPackageJson(
   });
 
   if (testRunner)
-    scripts.test = testRunner === 'vitest' ? 'vitest run' : 'jest';
+    scripts.test = testRunner === "vitest" ? "vitest run" : "jest";
 
   return {
-    type: 'module',
+    type: "module",
     scripts,
     devDependencies: {
-      typescript: 'latest',
-      tsx: 'latest',
-      ...(testRunner === 'vitest' ? { vitest: 'latest' } : {}),
-      ...(testRunner === 'jest' ? { jest: 'latest', 'ts-jest': 'latest' } : {}),
+      typescript: "latest",
+      tsx: "latest",
+      ...(testRunner === "vitest" ? { vitest: "latest" } : {}),
+      ...(testRunner === "jest" ? { jest: "latest", "ts-jest": "latest" } : {}),
     },
   };
 }

@@ -1,37 +1,37 @@
-import { execFile } from 'node:child_process';
-import { tmpdir } from 'node:os';
-import { resolve } from 'node:path';
+import { execFile } from "node:child_process";
+import { tmpdir } from "node:os";
+import { resolve } from "node:path";
 
-import { Command } from '@commander-js/extra-typings';
-import { checkbox, select } from '@inquirer/prompts';
-import signaleLogger from 'signale';
-import { optional, parse, pipe, regex, string } from 'valibot';
+import { Command } from "@commander-js/extra-typings";
+import { checkbox, select } from "@inquirer/prompts";
+import signaleLogger from "signale";
+import { optional, parse, pipe, regex, string } from "valibot";
 
-import { createFileCreator, type FileCreator } from './file-creator';
+import { createFileCreator, type FileCreator } from "./file-creator";
 import {
   allowedFolderChioces,
   allowedTestRunnerChioces,
   folderChoicesSchema,
   runnerChiocesSchema,
-} from './options';
+} from "./options";
 import type {
   AllowedFolderChioceValues,
   AllowedPackageManagers,
   AllowedTestRunnerChioces,
-} from './options';
+} from "./options";
 
-export { createFileCreator } from './file-creator';
-export type { FileCreator } from './file-creator';
+export { createFileCreator } from "./file-creator";
+export type { FileCreator } from "./file-creator";
 export {
   allowedFolderChioces,
   allowedPackageManagers,
   allowedTestRunnerChioces,
-} from './options';
+} from "./options";
 export type {
   AllowedFolderChioceValues,
   AllowedPackageManagers,
   AllowedTestRunnerChioces,
-} from './options';
+} from "./options";
 
 const folderPathSchema = optional(
   pipe(
@@ -45,7 +45,7 @@ const folderPathSchema = optional(
 
 type SignaleLogger = Pick<
   typeof signaleLogger,
-  'start' | 'success' | 'warn' | 'error'
+  "start" | "success" | "warn" | "error"
 >;
 
 export class Logger {
@@ -71,7 +71,7 @@ export class Logger {
 export class Prompter {
   async askForWhatTheyWantToMake(): Promise<AllowedFolderChioceValues> {
     const answer = await checkbox({
-      message: 'What do you want to include in this PI package?',
+      message: "What do you want to include in this PI package?",
       choices: allowedFolderChioces.map((choice) => ({
         value: choice,
         name: choice,
@@ -83,7 +83,7 @@ export class Prompter {
 
   async askForWhichTestRunner(): Promise<AllowedTestRunnerChioces> {
     const answer = await select({
-      message: 'Which test runner do you want to use?',
+      message: "Which test runner do you want to use?",
       choices: allowedTestRunnerChioces.map((choice) => ({
         value: choice,
         name: choice,
@@ -97,7 +97,7 @@ export class Prompter {
     packageManagers: AllowedPackageManagers[],
   ): Promise<AllowedPackageManagers> {
     const answer = await select({
-      message: 'Which package manager do you want to use?',
+      message: "Which package manager do you want to use?",
       choices: packageManagers.map((manager) => ({
         value: manager,
         name: manager,
@@ -128,27 +128,27 @@ export function detectInvokedPackageManager(
   const command = commandSignal?.toLowerCase();
 
   if (!command) return undefined;
-  if (command.includes('pnpm')) return 'pnpm';
-  if (command.includes('yarn')) return 'yarn';
-  if (command.includes('bun')) return 'bun';
-  if (command.includes('npm')) return 'npm';
+  if (command.includes("pnpm")) return "pnpm";
+  if (command.includes("yarn")) return "yarn";
+  if (command.includes("bun")) return "bun";
+  if (command.includes("npm")) return "npm";
 
   return undefined;
 }
 
 export async function resolvePackageManager(
-  _prompter: Pick<Prompter, 'askForWhichPackageManager'>,
+  _prompter: Pick<Prompter, "askForWhichPackageManager">,
 ) {
-  return detectInvokedPackageManager() ?? 'npm';
+  return detectInvokedPackageManager() ?? "npm";
 }
 
 const program = new Command()
-  .argument('[packageFolder]', 'Package folder to create', (value) => {
+  .argument("[packageFolder]", "Package folder to create", (value) => {
     return parse(folderPathSchema, value);
   })
   .option(
-    '--project-folders <project-folders...>',
-    'PI package folders to create',
+    "--project-folders <project-folders...>",
+    "PI package folders to create",
     (
       value: string,
       previous: AllowedFolderChioceValues | string | undefined,
@@ -166,14 +166,14 @@ const program = new Command()
     },
   )
   .option(
-    '--runner <runner>',
-    'Test runner to use when extensions are selected',
+    "--runner <runner>",
+    "Test runner to use when extensions are selected",
     (value) => {
       return parse(runnerChiocesSchema, value);
     },
   )
-  .option('--instructions', 'Generate AGENTS.md and CLAUDE.md files')
-  .option('--no-install', 'Skip installing generated package dependencies');
+  .option("--instructions", "Generate AGENTS.md and CLAUDE.md files")
+  .option("--no-install", "Skip installing generated package dependencies");
 
 interface HandlerOptions {
   install?: boolean;
@@ -184,47 +184,47 @@ interface HandlerOptions {
 }
 
 function isDevelopmentBuild() {
-  return import.meta.env.MODE === 'development';
+  return import.meta.env.MODE === "development";
 }
 
 export async function handler(object: HandlerOptions, deps: Deps) {
   const { logger, prompter } = deps;
   if (!object.projectFolders)
-    logger.warn('Asking which PI package folders to create.');
+    logger.warn("Asking which PI package folders to create.");
 
   const choices: AllowedFolderChioceValues =
     object.projectFolders ?? (await prompter.askForWhatTheyWantToMake());
 
   const packageRoot = isDevelopmentBuild()
-    ? resolve(tmpdir(), object.packageFolder ?? '')
+    ? resolve(tmpdir(), object.packageFolder ?? "")
     : object.packageFolder;
   const fileCreator = deps.createFileCreator(packageRoot);
 
-  logger.message(`Creating PI package folders: ${choices.join(', ')}`);
+  logger.message(`Creating PI package folders: ${choices.join(", ")}`);
   fileCreator.createPiFoldersBasedOnChoices(choices);
   fileCreator.createScriptsBasedOnChoices(choices);
-  logger.message('Created PI package starter files.');
+  logger.message("Created PI package starter files.");
 
   if (object.instructions === true) {
-    logger.message('Creating agent instruction files.');
+    logger.message("Creating agent instruction files.");
     fileCreator.createAgentInstructions();
   }
 
-  if (choices.includes('extensions')) {
+  if (choices.includes("extensions")) {
     if (!object.runner)
-      logger.warn('Asking which test runner to use for extension tooling.');
+      logger.warn("Asking which test runner to use for extension tooling.");
 
     const testRunner =
       object.runner ?? (await prompter.askForWhichTestRunner());
 
     if (!testRunner) {
       logger.warn(
-        'No test runner selected. PI package starter files were still generated.',
+        "No test runner selected. PI package starter files were still generated.",
       );
     }
 
     logger.message(
-      `Creating extension tooling${testRunner ? ` with ${testRunner}` : ''}.`,
+      `Creating extension tooling${testRunner ? ` with ${testRunner}` : ""}.`,
     );
     if (testRunner) fileCreator.createTestRunnerConfig(testRunner);
     fileCreator.createTsConfig();
@@ -235,7 +235,7 @@ export async function handler(object: HandlerOptions, deps: Deps) {
 
       try {
         const [command, args] = getInstallCommand(packageManager);
-        logger.command(`${command} ${args.join(' ')}`);
+        logger.command(`${command} ${args.join(" ")}`);
         await deps.installPackages(packageManager, object.packageFolder);
       } catch (error) {
         logger.error(`Failed to install dependencies with ${packageManager}.`);
@@ -250,7 +250,7 @@ export function setupRunCli(
   deps: Deps,
 ) {
   return async (...args: string[]) => {
-    const parsedProgram = program.parse(args, { from: 'user' });
+    const parsedProgram = program.parse(args, { from: "user" });
     const flags = parsedProgram.opts();
     const packageFolder = parsedProgram.args[0];
 
@@ -259,14 +259,14 @@ export function setupRunCli(
 }
 
 function getInstallCommand(packageManager: AllowedPackageManagers) {
-  if (packageManager === 'pnpm') {
+  if (packageManager === "pnpm") {
     return [
       packageManager,
-      ['install', '--ignore-workspace', '--config.strictDepBuilds=false'],
+      ["install", "--ignore-workspace", "--config.strictDepBuilds=false"],
     ] as const;
   }
 
-  return [packageManager, ['install']] as const;
+  return [packageManager, ["install"]] as const;
 }
 
 async function runCommand(
