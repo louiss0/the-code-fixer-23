@@ -37,7 +37,7 @@
     "format": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm --dir packages/enums run format"
+        "command": "pnpm --workspace-root exec biome format --write packages/enums"
       }
     }
   },

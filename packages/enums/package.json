@@ -24,7 +24,7 @@
     "typecheck": "tsc -p tsconfig.lib.json --noEmit",
     "test": "vitest run --config vitest.config.ts",
     "lint": "eslint .",
-    "format": "biome format --write .",
+    "format": "pnpm --workspace-root exec biome format --write packages/enums",
     "check": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build"
   },
   "dependencies": {
