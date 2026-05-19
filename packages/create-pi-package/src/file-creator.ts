@@ -1,11 +1,10 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import type {
-  AllowedFolderChioceValues,
-  AllowedTestRunnerChioces,
-} from "./options";
+import type { AllowedFolderChioceValues, AllowedTestRunnerChioces } from "./options";
 
-const extensionContent = `export default function (pi:ExtensionAPI) {
+const extensionContent = `
+  import { type ExtensionAPI  } from "@earndil-works/pi-coding-agent";
+  export default function (pi:ExtensionAPI) {
 
       }`;
 
@@ -53,7 +52,7 @@ const skillContent = `---
     - No extra commentary`;
 
 const themeContent = `{
-      "$schema": "https://raw.githubusercontent.com/badlogic/pi-mono/main/packages/coding-agent/src/modes/interactive/theme/theme-schema.json",
+      "$schema": "https://raw.githubusercontent.com/badlogic/pi-mono/main/packages/coding-agent/extensions/modes/interactive/theme/theme-schema.json",
       "name": "my-theme",
       "vars": {
         "primary": "#00aaff",
@@ -223,43 +222,87 @@ const testRunnerConfigByChoice: Record<
   vitest: {
     file: "vitest.config.ts",
     content: `// vitest.config.ts
-        import { defineConfig } from 'vitest/config';
+    import { defineConfig } from "vitest/config";
 
-        export default defineConfig({
-          test: {
-            environment: 'node',
-            include: ['src/**/*.test.ts'],
-            coverage: {
-              provider: 'v8',
-              reporter: ['text', 'html']
-            }
-          }
-        });`,
+    export default defineConfig({
+      test: {
+        environment: "node",
+
+        include: ["extensions/**/*.test.ts"],
+
+        exclude: [
+          "node_modules",
+          "dist",
+          ".idea",
+          ".git"
+        ],
+
+        globals: true,
+
+        clearMocks: true,
+        restoreMocks: true,
+        mockReset: true,
+
+        watch: false,
+
+        coverage: {
+          provider: "v8",
+
+          reporter: ["text", "html"],
+
+          include: ["extensions/**/*.ts"],
+
+          exclude: [
+            "extensions/**/*.test.ts",
+            "extensions/**/*.d.ts"
+          ]
+        }
+      }
+    });`,
   },
   jest: {
     file: "jest.config.cjs",
     content: `/** @type {import('jest').Config} */
-        module.exports = {
-          testEnvironment: 'node',
+    module.exports = {
+      testEnvironment: "node",
 
-          extensionsToTreatAsEsm: ['.ts'],
+      extensionsToTreatAsEsm: [".ts"],
 
-          transform: {
-            '^.+\\.ts$': [
-              'ts-jest',
-              {
-                useESM: true,
-                tsconfig: './tsconfig.spec.json'
-              }
-            ]
-          },
+      transform: {
+        "^.+\\.ts$": [
+          "ts-jest",
+          {
+            useESM: true,
+            tsconfig: "./tsconfig.spec.json"
+          }
+        ]
+      },
 
-          moduleNameMapper: {
-            '^(\\.{1,2}/.*)\\.js$': '$1'
-            },
+      moduleNameMapper: {
+        "^(\\.{1,2}/.*)\\.js$": "$1"
+      },
 
-          testMatch: ['**/*.test.ts']
-          };`,
+      testMatch: ["**/*.test.ts"],
+
+      clearMocks: true,
+      restoreMocks: true,
+
+      collectCoverageFrom: [
+        "extensions/**/*.ts",
+        "!extensions/**/*.d.ts"
+      ],
+
+      coverageDirectory: "coverage",
+
+      testPathIgnorePatterns: [
+        "/node_modules/",
+        "/dist/"
+      ],
+
+      moduleFileExtensions: ["ts", "js", "json"],
+
+      verbose: true
+    };`,
   },
 };
 
@@ -343,9 +386,22 @@ function createTsConfig() {
       moduleResolution: "Bundler",
       strict: true,
       esModuleInterop: true,
-      skipLibCheck: true,
       declaration: true,
-      outDir: "dist",
+      declarationMap: true,
+      sourceMap: true,
+      verbatimModuleSyntax: true,
+      isolatedModules: true,
+      skipLibCheck: true,
+      noUncheckedIndexedAccess: true,
+      exactOptionalPropertyTypes: true,
+      resolveJsonModule: true,
+      forceConsistentCasingInFileNames: true,
+      noImplicitOverride: true,
+      noPropertyAccessFromIndexSignature: true,
+      useUnknownInCatchVariables: true,
+      noFallthroughCasesInSwitch: true,
+      noImplicitReturns: true,
+      noImplicitThis: true,
     },
     include: ["extensions/**/*.ts"],
   };
@@ -355,19 +411,35 @@ function createPackageJson(
   testRunner: AllowedTestRunnerChioces | undefined,
   choices: AllowedFolderChioceValues,
 ) {
-  const scripts: Record<string, string> = {};
+  const scripts = new Map<string, string>();
 
   choices.forEach((choice) => {
-    scripts[`create:${choice.slice(0, -1)}`] =
-      `tsx scripts/create-${choice.slice(0, -1)}.ts`;
+    scripts.set(
+      `create:${choice.slice(0, -1)}`,
+      `tsx scripts/create-${choice.slice(0, -1)}.ts`,
+    );
   });
 
-  if (testRunner)
-    scripts.test = testRunner === "vitest" ? "vitest run" : "jest";
+  switch (testRunner) {
+    case "vitest":
+      scripts
+        .set("test", "vitest run")
+        .set("test:watch", "vitest watch")
+        .set("test:coverage", "vitest run --coverage")
+        .set("test:ui", "vitest ui");
+      break;
+    case "jest":
+      scripts
+        .set("test", "jest")
+        .set("test:watch", "jest --watch")
+        .set("test:coverage", "jest --coverage")
+        .set("test:ui", "jest --watch");
+      break;
+  }
 
   return {
     type: "module",
-    scripts,
+    scripts: Object.fromEntries(scripts),
     devDependencies: {
       typescript: "latest",
       tsx: "latest",
