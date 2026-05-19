@@ -1,11 +1,11 @@
-import { promises as fs, existsSync } from 'node:fs';
-import { join, parse, relative, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
-import type { ExecutorContext } from '@nx/devkit';
-import { logger } from '@nx/devkit';
-import type { Format, Options as TsupOptions } from 'tsup';
-import { build as tsupBuild } from 'tsup';
-import type { BuildExecutorSchema } from './schema.d.ts';
+import { promises as fs, existsSync } from "node:fs";
+import { join, parse, relative, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+import type { ExecutorContext } from "@nx/devkit";
+import { logger } from "@nx/devkit";
+import type { Format, Options as TsupOptions } from "tsup";
+import { build as tsupBuild } from "tsup";
+import type { BuildExecutorSchema } from "./schema.d.ts";
 
 type TsupConfig =
   | TsupOptions
@@ -22,7 +22,7 @@ export default async function runExecutor(
 ): Promise<{ success: boolean }> {
   try {
     const root = context.root || process.cwd();
-    const projectName = context.projectName || '';
+    const projectName = context.projectName || "";
     const projectConfig =
       context.projectsConfigurations?.projects?.[projectName];
     const projectRoot = projectConfig?.root
@@ -31,7 +31,7 @@ export default async function runExecutor(
 
     // Validate required options
     if (!options.outDir || !options.main || !options.tsConfig) {
-      logger.error('Missing required options: outDir, main, tsConfig');
+      logger.error("Missing required options: outDir, main, tsConfig");
       return { success: false };
     }
 
@@ -113,12 +113,12 @@ export default async function runExecutor(
  */
 function findTsupConfig(projectRoot: string): string | undefined {
   const configNames = [
-    'tsup.config.ts',
-    'tsup.config.mts',
-    'tsup.config.cts',
-    'tsup.config.js',
-    'tsup.config.mjs',
-    'tsup.config.cjs',
+    "tsup.config.ts",
+    "tsup.config.mts",
+    "tsup.config.cts",
+    "tsup.config.js",
+    "tsup.config.mjs",
+    "tsup.config.cjs",
   ];
 
   for (const name of configNames) {
@@ -145,11 +145,11 @@ async function loadTsupConfig(
     // Normalize config
     let normalized: TsupOptions | TsupOptions[];
 
-    if (typeof config === 'function') {
+    if (typeof config === "function") {
       const result = await config({
         watch: env.watch,
         format: env.format,
-        mode: process.env.NODE_ENV || 'production',
+        mode: process.env.NODE_ENV || "production",
       });
       normalized = result;
     } else {
@@ -179,7 +179,7 @@ async function importConfigModule(configPath: string) {
  * project.json takes precedence over config file
  */
 function toTsupPath(path: string): string {
-  return path.replaceAll('\\', '/');
+  return path.replaceAll("\\", "/");
 }
 
 async function mergeOptions(params: {
@@ -273,7 +273,7 @@ async function mergeOptions(params: {
       context: { format: Format },
     ) => {
       // Apply base config first if it's a function
-      if (typeof baseEsbuildOptions === 'function') {
+      if (typeof baseEsbuildOptions === "function") {
         baseEsbuildOptions(esbuildConfig, context);
       } else if (baseEsbuildOptions) {
         Object.assign(esbuildConfig, baseEsbuildOptions);
@@ -322,7 +322,7 @@ async function mergeOptions(params: {
 
   const existingEsbuildOptions = merged.esbuildOptions;
   merged.esbuildOptions = (esbuildConfig: any, context: { format: Format }) => {
-    if (typeof existingEsbuildOptions === 'function') {
+    if (typeof existingEsbuildOptions === "function") {
       existingEsbuildOptions(esbuildConfig, context);
     } else if (existingEsbuildOptions) {
       Object.assign(esbuildConfig, existingEsbuildOptions);
@@ -333,7 +333,7 @@ async function mergeOptions(params: {
 
   // Validate outDir is present
   if (!merged.outDir) {
-    throw new Error('outDir is required but was not provided');
+    throw new Error("outDir is required but was not provided");
   }
 
   return merged;
@@ -346,7 +346,7 @@ async function copyAssets(root: string, assets: string[], outDir: string) {
   for (const rel of assets) {
     const src = resolve(root, rel);
     const dest = resolve(outDir, rel);
-    await fs.mkdir(resolve(dest, '..'), { recursive: true });
+    await fs.mkdir(resolve(dest, ".."), { recursive: true });
     await fs.cp(src, dest, { recursive: true, force: true });
   }
 }

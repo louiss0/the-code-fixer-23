@@ -1,15 +1,15 @@
-import type { ExecutorContext } from '@nx/devkit';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import executor from './build';
-import type { BuildExecutorSchema } from './schema';
+import type { ExecutorContext } from "@nx/devkit";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import executor from "./build";
+import type { BuildExecutorSchema } from "./schema";
 
 // Mock tsup
-vi.mock('tsup', () => ({
+vi.mock("tsup", () => ({
   build: vi.fn().mockResolvedValue(undefined),
 }));
 
 // Mock node:fs module to be mockable
-vi.mock('node:fs', () => ({
+vi.mock("node:fs", () => ({
   existsSync: vi.fn(),
   readdirSync: vi.fn(),
   promises: {
@@ -18,34 +18,34 @@ vi.mock('node:fs', () => ({
   },
 }));
 
-const mockTsupBuild = vi.mocked((await import('tsup')).build);
-const mockFs = vi.mocked(await import('node:fs'));
+const mockTsupBuild = vi.mocked((await import("tsup")).build);
+const mockFs = vi.mocked(await import("node:fs"));
 
-describe('Build Executor', () => {
+describe("Build Executor", () => {
   let context: ExecutorContext;
   let options: BuildExecutorSchema;
 
   beforeEach(() => {
     context = {
-      root: '/workspace',
-      cwd: '/workspace',
+      root: "/workspace",
+      cwd: "/workspace",
       isVerbose: false,
-      projectName: 'test-lib',
+      projectName: "test-lib",
       projectsConfigurations: {
         version: 2,
         projects: {
-          'test-lib': {
-            root: 'packages/test-lib',
+          "test-lib": {
+            root: "packages/test-lib",
           },
         },
       },
     };
 
     options = {
-      outDir: 'packages/test-lib/dist',
-      main: 'packages/test-lib/src/index.ts',
-      tsConfig: 'packages/test-lib/tsconfig.lib.json',
-      format: ['esm'],
+      outDir: "packages/test-lib/dist",
+      main: "packages/test-lib/src/index.ts",
+      tsConfig: "packages/test-lib/tsconfig.lib.json",
+      format: ["esm"],
       dts: true,
       clean: true,
       sourcemap: false,
@@ -62,31 +62,31 @@ describe('Build Executor', () => {
     vi.clearAllMocks();
   });
 
-  describe('Basic Validation', () => {
-    it('should validate required option: outDir', async () => {
-      const invalidOptions = { ...options, outDir: '' };
+  describe("Basic Validation", () => {
+    it("should validate required option: outDir", async () => {
+      const invalidOptions = { ...options, outDir: "" };
       const result = await executor(invalidOptions, context);
 
       expect(result.success).toBe(false);
     });
 
-    it('should validate required option: main', async () => {
-      const invalidOptions = { ...options, main: '' };
+    it("should validate required option: main", async () => {
+      const invalidOptions = { ...options, main: "" };
       const result = await executor(invalidOptions, context);
 
       expect(result.success).toBe(false);
     });
 
-    it('should validate required option: tsConfig', async () => {
-      const invalidOptions = { ...options, tsConfig: '' };
+    it("should validate required option: tsConfig", async () => {
+      const invalidOptions = { ...options, tsConfig: "" };
       const result = await executor(invalidOptions, context);
 
       expect(result.success).toBe(false);
     });
 
-    it('should fail when entry file does not exist', async () => {
+    it("should fail when entry file does not exist", async () => {
       mockFs.existsSync.mockImplementation((p: unknown) => {
-        return !String(p).includes('index.ts');
+        return !String(p).includes("index.ts");
       });
 
       const result = await executor(options, context);
@@ -94,9 +94,9 @@ describe('Build Executor', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should fail when tsconfig does not exist', async () => {
+    it("should fail when tsconfig does not exist", async () => {
       mockFs.existsSync.mockImplementation((p: unknown) => {
-        return !String(p).includes('tsconfig');
+        return !String(p).includes("tsconfig");
       });
 
       const result = await executor(options, context);
@@ -105,14 +105,14 @@ describe('Build Executor', () => {
     });
   });
 
-  describe('Config File Discovery', () => {
-    it('should find tsup.config.ts', async () => {
+  describe("Config File Discovery", () => {
+    it("should find tsup.config.ts", async () => {
       mockFs.existsSync.mockImplementation((p: unknown) => {
         const str = String(p);
         return (
-          str.includes('tsup.config.ts') ||
-          str.includes('index.ts') ||
-          str.includes('tsconfig')
+          str.includes("tsup.config.ts") ||
+          str.includes("index.ts") ||
+          str.includes("tsconfig")
         );
       });
 
@@ -121,13 +121,13 @@ describe('Build Executor', () => {
       expect(mockTsupBuild).toHaveBeenCalled();
     });
 
-    it('should find tsup.config.js', async () => {
+    it("should find tsup.config.js", async () => {
       mockFs.existsSync.mockImplementation((p: unknown) => {
         const str = String(p);
         return (
-          str.includes('tsup.config.js') ||
-          str.includes('index.ts') ||
-          str.includes('tsconfig')
+          str.includes("tsup.config.js") ||
+          str.includes("index.ts") ||
+          str.includes("tsconfig")
         );
       });
 
@@ -136,10 +136,10 @@ describe('Build Executor', () => {
       expect(mockTsupBuild).toHaveBeenCalled();
     });
 
-    it('should work without config file (project.json only)', async () => {
+    it("should work without config file (project.json only)", async () => {
       mockFs.existsSync.mockImplementation((p: unknown) => {
         const str = String(p);
-        return str.includes('index.ts') || str.includes('tsconfig');
+        return str.includes("index.ts") || str.includes("tsconfig");
       });
 
       const result = await executor(options, context);
@@ -149,40 +149,40 @@ describe('Build Executor', () => {
     });
   });
 
-  describe('Options Merging - Primitives', () => {
-    it('should pass outDir to tsup', async () => {
+  describe("Options Merging - Primitives", () => {
+    it("should pass outDir to tsup", async () => {
       await executor(options, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
         expect.objectContaining({
-          outDir: 'dist',
+          outDir: "dist",
         }),
       );
     });
 
-    it('should pass main as entry map to tsup', async () => {
+    it("should pass main as entry map to tsup", async () => {
       await executor(options, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
         expect.objectContaining({
           entry: expect.objectContaining({
-            index: expect.stringContaining('index.ts'),
+            index: expect.stringContaining("index.ts"),
           }),
         }),
       );
     });
 
-    it('should pass tsConfig to tsup as tsconfig', async () => {
+    it("should pass tsConfig to tsup as tsconfig", async () => {
       await executor(options, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
         expect.objectContaining({
-          tsconfig: expect.stringContaining('tsconfig.lib.json'),
+          tsconfig: expect.stringContaining("tsconfig.lib.json"),
         }),
       );
     });
 
-    it('should merge dts option', async () => {
+    it("should merge dts option", async () => {
       await executor({ ...options, dts: true }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
@@ -190,7 +190,7 @@ describe('Build Executor', () => {
       );
     });
 
-    it('should merge clean option', async () => {
+    it("should merge clean option", async () => {
       await executor({ ...options, clean: false }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
@@ -198,7 +198,7 @@ describe('Build Executor', () => {
       );
     });
 
-    it('should merge minify option', async () => {
+    it("should merge minify option", async () => {
       await executor({ ...options, minify: true }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
@@ -206,7 +206,7 @@ describe('Build Executor', () => {
       );
     });
 
-    it('should merge sourcemap option', async () => {
+    it("should merge sourcemap option", async () => {
       await executor({ ...options, sourcemap: true }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
@@ -214,17 +214,17 @@ describe('Build Executor', () => {
       );
     });
 
-    it('should merge sourcemap as inline string', async () => {
-      await executor({ ...options, sourcemap: 'inline' }, context);
+    it("should merge sourcemap as inline string", async () => {
+      await executor({ ...options, sourcemap: "inline" }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ sourcemap: 'inline' }),
+        expect.objectContaining({ sourcemap: "inline" }),
       );
     });
   });
 
-  describe('Options Merging - New Tsup Options', () => {
-    it('should merge splitting option', async () => {
+  describe("Options Merging - New Tsup Options", () => {
+    it("should merge splitting option", async () => {
       await executor({ ...options, splitting: true }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
@@ -232,7 +232,7 @@ describe('Build Executor', () => {
       );
     });
 
-    it('should merge treeshake option as boolean', async () => {
+    it("should merge treeshake option as boolean", async () => {
       await executor({ ...options, treeshake: true }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
@@ -240,34 +240,34 @@ describe('Build Executor', () => {
       );
     });
 
-    it('should merge treeshake option as string', async () => {
-      await executor({ ...options, treeshake: 'smallest' }, context);
+    it("should merge treeshake option as string", async () => {
+      await executor({ ...options, treeshake: "smallest" }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ treeshake: 'smallest' }),
+        expect.objectContaining({ treeshake: "smallest" }),
       );
     });
 
-    it('should merge target option', async () => {
-      await executor({ ...options, target: 'esnext' }, context);
+    it("should merge target option", async () => {
+      await executor({ ...options, target: "esnext" }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ target: 'esnext' }),
+        expect.objectContaining({ target: "esnext" }),
       );
     });
 
-    it('should merge platform option', async () => {
-      await executor({ ...options, platform: 'browser' }, context);
+    it("should merge platform option", async () => {
+      await executor({ ...options, platform: "browser" }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ platform: 'browser' }),
+        expect.objectContaining({ platform: "browser" }),
       );
     });
   });
 
-  describe('Options Merging - Arrays', () => {
-    it('should merge external array option', async () => {
-      const externalDeps = ['react', 'react-dom'];
+  describe("Options Merging - Arrays", () => {
+    it("should merge external array option", async () => {
+      const externalDeps = ["react", "react-dom"];
       await executor({ ...options, external: externalDeps }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
@@ -275,8 +275,8 @@ describe('Build Executor', () => {
       );
     });
 
-    it('should merge noExternal array option', async () => {
-      const noExternalDeps = ['lodash'];
+    it("should merge noExternal array option", async () => {
+      const noExternalDeps = ["lodash"];
       await executor({ ...options, noExternal: noExternalDeps }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
@@ -284,8 +284,8 @@ describe('Build Executor', () => {
       );
     });
 
-    it('should merge inject array option', async () => {
-      const injectFiles = ['./polyfills.ts'];
+    it("should merge inject array option", async () => {
+      const injectFiles = ["./polyfills.ts"];
       await executor({ ...options, inject: injectFiles }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
@@ -294,9 +294,9 @@ describe('Build Executor', () => {
     });
   });
 
-  describe('Options Merging - Objects', () => {
-    it('should merge banner object', async () => {
-      const banner = { js: '// Custom banner', css: '/* CSS banner */' };
+  describe("Options Merging - Objects", () => {
+    it("should merge banner object", async () => {
+      const banner = { js: "// Custom banner", css: "/* CSS banner */" };
       await executor({ ...options, banner }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
@@ -304,8 +304,8 @@ describe('Build Executor', () => {
       );
     });
 
-    it('should merge footer object', async () => {
-      const footer = { js: '// Custom footer' };
+    it("should merge footer object", async () => {
+      const footer = { js: "// Custom footer" };
       await executor({ ...options, footer }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
@@ -313,10 +313,10 @@ describe('Build Executor', () => {
       );
     });
 
-    it('should merge env object', async () => {
+    it("should merge env object", async () => {
       const env = {
-        NODE_ENV: 'production',
-        API_URL: 'https://api.example.com',
+        NODE_ENV: "production",
+        API_URL: "https://api.example.com",
       };
       await executor({ ...options, env }, context);
 
@@ -325,8 +325,8 @@ describe('Build Executor', () => {
       );
     });
 
-    it('should merge define object', async () => {
-      const define = { __VERSION__: '"1.0.0"', __DEBUG__: 'false' };
+    it("should merge define object", async () => {
+      const define = { __VERSION__: '"1.0.0"', __DEBUG__: "false" };
       await executor({ ...options, define }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
@@ -334,18 +334,18 @@ describe('Build Executor', () => {
       );
     });
 
-    it('should merge esbuildOptions object', async () => {
-      const esbuildOptions = { keepNames: true, legalComments: 'none' };
+    it("should merge esbuildOptions object", async () => {
+      const esbuildOptions = { keepNames: true, legalComments: "none" };
       await executor({ ...options, esbuildOptions }, context);
 
       const call = mockTsupBuild.mock.calls[0][0];
       expect(call.esbuildOptions).toBeDefined();
-      expect(typeof call.esbuildOptions).toBe('function');
+      expect(typeof call.esbuildOptions).toBe("function");
     });
   });
 
-  describe('CLI-only Flags', () => {
-    it('should apply watch flag at runtime', async () => {
+  describe("CLI-only Flags", () => {
+    it("should apply watch flag at runtime", async () => {
       await executor({ ...options, watch: true }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
@@ -353,15 +353,15 @@ describe('Build Executor', () => {
       );
     });
 
-    it('should apply format flag at runtime', async () => {
-      await executor({ ...options, format: ['esm', 'cjs'] }, context);
+    it("should apply format flag at runtime", async () => {
+      await executor({ ...options, format: ["esm", "cjs"] }, context);
 
       expect(mockTsupBuild).toHaveBeenCalledWith(
-        expect.objectContaining({ format: ['esm', 'cjs'] }),
+        expect.objectContaining({ format: ["esm", "cjs"] }),
       );
     });
 
-    it('should not pass watch if false', async () => {
+    it("should not pass watch if false", async () => {
       await executor({ ...options, watch: false }, context);
 
       const call = mockTsupBuild.mock.calls[0][0];
@@ -369,36 +369,36 @@ describe('Build Executor', () => {
     });
   });
 
-  describe('Error Handling', () => {
-    it('should return success false when tsup build fails', async () => {
-      mockTsupBuild.mockRejectedValueOnce(new Error('Build failed'));
+  describe("Error Handling", () => {
+    it("should return success false when tsup build fails", async () => {
+      mockTsupBuild.mockRejectedValueOnce(new Error("Build failed"));
 
       const result = await executor(options, context);
 
       expect(result.success).toBe(false);
     });
 
-    it('should handle missing outDir after merge', async () => {
+    it("should handle missing outDir after merge", async () => {
       // This shouldn't happen due to validation, but test the merge logic
-      const invalidOptions = { ...options, outDir: '' };
+      const invalidOptions = { ...options, outDir: "" };
       const result = await executor(invalidOptions, context);
 
       expect(result.success).toBe(false);
     });
   });
 
-  describe('Asset Copying', () => {
-    it('should copy assets when specified', async () => {
+  describe("Asset Copying", () => {
+    it("should copy assets when specified", async () => {
       mockFs.promises.cp.mockResolvedValue(undefined);
       mockFs.promises.mkdir.mockResolvedValue(undefined);
 
-      await executor({ ...options, assets: ['README.md', 'LICENSE'] }, context);
+      await executor({ ...options, assets: ["README.md", "LICENSE"] }, context);
 
       expect(mockFs.promises.mkdir).toHaveBeenCalled();
       expect(mockFs.promises.cp).toHaveBeenCalled();
     });
 
-    it('should not copy assets when array is empty', async () => {
+    it("should not copy assets when array is empty", async () => {
       mockFs.promises.cp.mockClear();
 
       await executor({ ...options, assets: [] }, context);
@@ -407,14 +407,14 @@ describe('Build Executor', () => {
     });
   });
 
-  describe('Build Success', () => {
-    it('should return success true when build succeeds', async () => {
+  describe("Build Success", () => {
+    it("should return success true when build succeeds", async () => {
       const result = await executor(options, context);
 
       expect(result.success).toBe(true);
     });
 
-    it('should call tsup.build with merged options', async () => {
+    it("should call tsup.build with merged options", async () => {
       await executor(options, context);
 
       expect(mockTsupBuild).toHaveBeenCalledTimes(1);

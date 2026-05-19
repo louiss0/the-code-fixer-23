@@ -1,9 +1,9 @@
-import { execSync } from 'child_process';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { join } from 'path';
-import { type ExecutorContext, type PromiseExecutor, logger } from '@nx/devkit';
-import * as semver from 'semver';
-import type { VersionExecutorSchema } from './schema.d.ts';
+import { execSync } from "child_process";
+import { existsSync, readFileSync, writeFileSync } from "fs";
+import { join } from "path";
+import { type ExecutorContext, type PromiseExecutor, logger } from "@nx/devkit";
+import * as semver from "semver";
+import type { VersionExecutorSchema } from "./schema.d.ts";
 
 interface JsrConfig {
   name: string;
@@ -17,12 +17,12 @@ const runExecutor: PromiseExecutor<VersionExecutorSchema> = async (
 ) => {
   const projectRoot = options.packageRoot;
   if (!projectRoot) {
-    logger.error('packageRoot option is required');
+    logger.error("packageRoot option is required");
     return { success: false };
   }
 
   if (!options.version) {
-    logger.error('version option is required (e.g., 1.2.3)');
+    logger.error("version option is required (e.g., 1.2.3)");
     return { success: false };
   }
 
@@ -41,7 +41,7 @@ const runExecutor: PromiseExecutor<VersionExecutorSchema> = async (
     return { success: false };
   }
 
-  const jsrJsonPath = join(absolutePackageRoot, 'jsr.json');
+  const jsrJsonPath = join(absolutePackageRoot, "jsr.json");
   if (!existsSync(jsrJsonPath)) {
     logger.error(
       `jsr.json not found in ${absolutePackageRoot}. This is required for versioning.`,
@@ -50,7 +50,7 @@ const runExecutor: PromiseExecutor<VersionExecutorSchema> = async (
   }
 
   // Read current jsr.json
-  const jsrConfig: JsrConfig = JSON.parse(readFileSync(jsrJsonPath, 'utf-8'));
+  const jsrConfig: JsrConfig = JSON.parse(readFileSync(jsrJsonPath, "utf-8"));
   const currentVersion = jsrConfig.version;
 
   if (!currentVersion || !semver.valid(currentVersion)) {
@@ -65,29 +65,29 @@ const runExecutor: PromiseExecutor<VersionExecutorSchema> = async (
 
   // Update jsr.json
   jsrConfig.version = newVersion;
-  writeFileSync(jsrJsonPath, JSON.stringify(jsrConfig, null, 2) + '\n');
+  writeFileSync(jsrJsonPath, JSON.stringify(jsrConfig, null, 2) + "\n");
   logger.info(`✓ Updated ${jsrJsonPath} to version ${newVersion}`);
 
   if (options.push) {
     try {
       // Ensure working tree is clean (no auto-commit here)
-      const status = execSync('git status --porcelain', {
+      const status = execSync("git status --porcelain", {
         cwd: workspaceRoot,
-        encoding: 'utf-8',
+        encoding: "utf-8",
       }).trim();
       if (status) {
         logger.error(
-          'Working tree has uncommitted changes. Commit changes before tagging/pushing.',
+          "Working tree has uncommitted changes. Commit changes before tagging/pushing.",
         );
         logger.info(
-          'Hint: commit jsr.json and try again without --push, or tag manually.',
+          "Hint: commit jsr.json and try again without --push, or tag manually.",
         );
         return { success: false };
       }
 
-      const tagName = `${options.tagPrefix || 'v'}${newVersion}`;
-      execSync(`git tag ${tagName}`, { cwd: workspaceRoot, stdio: 'inherit' });
-      execSync('git push --tags', { cwd: workspaceRoot, stdio: 'inherit' });
+      const tagName = `${options.tagPrefix || "v"}${newVersion}`;
+      execSync(`git tag ${tagName}`, { cwd: workspaceRoot, stdio: "inherit" });
+      execSync("git push --tags", { cwd: workspaceRoot, stdio: "inherit" });
       logger.info(`✓ Created and pushed tag ${tagName}`);
     } catch (error) {
       const errorMessage =
@@ -96,16 +96,16 @@ const runExecutor: PromiseExecutor<VersionExecutorSchema> = async (
       return { success: false };
     }
   } else {
-    logger.info('');
-    logger.info('📝 Next steps:');
-    logger.info('  1. Review the version change in jsr.json');
+    logger.info("");
+    logger.info("📝 Next steps:");
+    logger.info("  1. Review the version change in jsr.json");
     logger.info(
       `  2. Commit the change: git add ${projectRoot}/jsr.json && git commit -m "chore(release): ${newVersion}"`,
     );
     logger.info(
-      `  3. Create a git tag: git tag ${options.tagPrefix || 'v'}${newVersion}`,
+      `  3. Create a git tag: git tag ${options.tagPrefix || "v"}${newVersion}`,
     );
-    logger.info('  4. Push to GitHub: git push && git push --tags');
+    logger.info("  4. Push to GitHub: git push && git push --tags");
   }
 
   return { success: true };

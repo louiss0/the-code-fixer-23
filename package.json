@@ -8,8 +8,8 @@
     "typecheck": "pnpm nx run-many -t typecheck",
     "test": "pnpm nx run-many -t test",
     "lint": "pnpm nx run-many -t lint",
-    "format": "biome format --write .",
-    "format:check": "biome format .",
+    "format": "pnpm exec biome format --write .",
+    "format:check": "pnpm exec biome format .",
     "check": "pnpm run format:check && pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build",
     "create-pi-package:local": "pnpm --filter @code-fixer-23/create-pi-package build && pnpm --package ./packages/create-pi-package dlx create-pi-package"
   },

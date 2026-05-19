@@ -1,5 +1,5 @@
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   type Tree,
   addProjectConfiguration,
@@ -11,23 +11,23 @@ import {
   logger,
   names,
   offsetFromRoot,
-} from '@nx/devkit';
+} from "@nx/devkit";
 import {
   detectFormatterFromRootPackageJson,
   detectLinterFromRootPackageJson,
   detectTestRunnerFromRootPackageJson,
-} from './detect.js';
-import { isInteractive, selectOrDefault } from './prompt.js';
+} from "./detect.js";
+import { isInteractive, selectOrDefault } from "./prompt.js";
 import type {
   Formatter,
   LibraryGeneratorSchema,
   Linter,
   TestRunner,
-} from './schema.d.ts';
+} from "./schema.d.ts";
 
 const generatorFilesPath = join(
   dirname(fileURLToPath(import.meta.url)),
-  'files',
+  "files",
 );
 
 export async function libraryGenerator(
@@ -35,9 +35,9 @@ export async function libraryGenerator(
   options: LibraryGeneratorSchema,
 ) {
   const name = names(options.name).fileName;
-  const dir = options.directory ?? 'packages';
+  const dir = options.directory ?? "packages";
   const projectRoot = joinPathFragments(dir, name);
-  const sourceRoot = joinPathFragments(projectRoot, 'src');
+  const sourceRoot = joinPathFragments(projectRoot, "src");
 
   const resolvedTestRunner: TestRunner = await resolveTestRunner(
     tree,
@@ -52,7 +52,7 @@ export async function libraryGenerator(
 
   addProjectConfiguration(tree, name, {
     root: projectRoot,
-    projectType: 'library',
+    projectType: "library",
     sourceRoot,
     targets: {},
     tags: [],
@@ -61,8 +61,8 @@ export async function libraryGenerator(
   // Templates
   generateFiles(tree, generatorFilesPath, projectRoot, {
     ...options,
-    description: options.description || 'A TypeScript library built with Tsup.',
-    tmpl: '',
+    description: options.description || "A TypeScript library built with Tsup.",
+    tmpl: "",
     name,
     offsetFromRoot: offsetFromRoot(projectRoot),
     testRunner: resolvedTestRunner,
@@ -82,22 +82,22 @@ export async function libraryGenerator(
   );
   createReadme(tree, projectRoot, options, resolvedTestRunner);
 
-  if (resolvedTestRunner === 'vitest') {
+  if (resolvedTestRunner === "vitest") {
     createVitestConfig(tree, projectRoot);
     createExampleTest(tree, projectRoot, resolvedTestRunner);
-  } else if (resolvedTestRunner === 'jest') {
+  } else if (resolvedTestRunner === "jest") {
     createJestConfig(tree, projectRoot);
     createExampleTest(tree, projectRoot, resolvedTestRunner);
   }
 
-  if (resolvedLinter === 'eslint') {
+  if (resolvedLinter === "eslint") {
     createEslintConfig(tree, projectRoot, resolvedFormatter);
-  } else if (resolvedLinter === 'biome') {
+  } else if (resolvedLinter === "biome") {
     createBiomeConfig(tree, projectRoot);
   }
 
   // Create formatter configs
-  if (resolvedFormatter === 'prettier') {
+  if (resolvedFormatter === "prettier") {
     createPrettierConfig(tree, projectRoot);
   }
 
@@ -117,16 +117,16 @@ async function resolveTestRunner(
   if (candidates.length === 2) {
     if (isInteractive()) {
       const choice = (await selectOrDefault(
-        'Both Jest and Vitest are detected in the workspace. Choose a test runner:',
-        ['jest', 'vitest'],
-        'jest',
+        "Both Jest and Vitest are detected in the workspace. Choose a test runner:",
+        ["jest", "vitest"],
+        "jest",
       )) as TestRunner;
       return choice;
     }
-    return 'jest';
+    return "jest";
   }
   if (detected) return detected as TestRunner;
-  return 'jest';
+  return "jest";
 }
 
 async function resolveLinter(tree: Tree, option?: Linter): Promise<Linter> {
@@ -135,16 +135,16 @@ async function resolveLinter(tree: Tree, option?: Linter): Promise<Linter> {
   if (candidates.length === 2) {
     if (isInteractive()) {
       const choice = (await selectOrDefault(
-        'Both ESLint and Biome are detected in the workspace. Choose a linter:',
-        ['eslint', 'biome'],
-        'eslint',
+        "Both ESLint and Biome are detected in the workspace. Choose a linter:",
+        ["eslint", "biome"],
+        "eslint",
       )) as Linter;
       return choice;
     }
-    return 'eslint';
+    return "eslint";
   }
   if (detected) return detected as Linter;
-  return 'eslint';
+  return "eslint";
 }
 
 async function resolveFormatter(
@@ -153,17 +153,17 @@ async function resolveFormatter(
   linter: Linter,
 ): Promise<Formatter> {
   // If biome is the linter, default to biome formatter unless explicitly overridden
-  if (linter === 'biome' && option === undefined) {
-    return 'biome';
+  if (linter === "biome" && option === undefined) {
+    return "biome";
   }
 
   if (option !== undefined) {
     // Validate: eslint-stylistic requires eslint as linter
-    if (option === 'eslint-stylistic' && linter !== 'eslint') {
+    if (option === "eslint-stylistic" && linter !== "eslint") {
       logger.warn(
-        'ESLint Stylistic requires ESLint as the linter. Falling back to prettier.',
+        "ESLint Stylistic requires ESLint as the linter. Falling back to prettier.",
       );
-      return 'prettier';
+      return "prettier";
     }
     return option;
   }
@@ -172,13 +172,13 @@ async function resolveFormatter(
 
   // Filter out eslint-stylistic if eslint is not the linter
   const validCandidates = candidates.filter(
-    (c: string) => c !== 'eslint-stylistic' || linter === 'eslint',
+    (c: string) => c !== "eslint-stylistic" || linter === "eslint",
   );
 
   if (validCandidates.length >= 2) {
     if (isInteractive()) {
       const choice = (await selectOrDefault(
-        'Multiple formatters detected. Choose one:',
+        "Multiple formatters detected. Choose one:",
         validCandidates,
         validCandidates[0],
       )) as Formatter;
@@ -192,7 +192,7 @@ async function resolveFormatter(
   }
 
   // Default: prettier for eslint, none for others
-  return linter === 'eslint' ? 'prettier' : 'none';
+  return linter === "eslint" ? "prettier" : "none";
 }
 
 function createTsConfig(tree: Tree, projectRoot: string) {
@@ -204,8 +204,8 @@ function createTsConfig(tree: Tree, projectRoot: string) {
       declaration: true,
       types: [],
     },
-    include: ['src/**/*.ts'],
-    exclude: ['src/**/*.spec.ts', 'src/**/*.test.ts'],
+    include: ["src/**/*.ts"],
+    exclude: ["src/**/*.spec.ts", "src/**/*.test.ts"],
   };
 
   tree.write(
@@ -218,7 +218,7 @@ function createTsConfig(tree: Tree, projectRoot: string) {
     files: [],
     references: [
       {
-        path: './tsconfig.lib.json',
+        path: "./tsconfig.lib.json",
       },
     ],
   };
@@ -234,22 +234,22 @@ function createTsSpecConfig(
   projectRoot: string,
   testRunner: TestRunner,
 ) {
-  if (testRunner === 'none') {
+  if (testRunner === "none") {
     return;
   }
 
   const rootOffset = offsetFromRoot(projectRoot);
   const types =
-    testRunner === 'vitest'
-      ? ['vitest/globals', 'vitest/importMeta', 'vite/client', 'node']
-      : ['jest', 'node'];
+    testRunner === "vitest"
+      ? ["vitest/globals", "vitest/importMeta", "vite/client", "node"]
+      : ["jest", "node"];
   const tsconfigSpec = {
-    extends: './tsconfig.json',
+    extends: "./tsconfig.json",
     compilerOptions: {
       outDir: `${rootOffset}dist/out-tsc`,
       types,
     },
-    include: ['src/**/*.spec.ts', 'src/**/*.test.ts', 'src/**/*.d.ts'],
+    include: ["src/**/*.spec.ts", "src/**/*.test.ts", "src/**/*.d.ts"],
   };
 
   tree.write(
@@ -283,88 +283,88 @@ function createPackageJson(
     devDependencies: Record<string, string>;
   } = {
     name: options.importPath,
-    version: '0.0.0',
-    type: 'module',
-    main: './dist/index.js',
-    module: './dist/index.js',
-    types: './dist/index.d.ts',
+    version: "0.0.0",
+    type: "module",
+    main: "./dist/index.js",
+    module: "./dist/index.js",
+    types: "./dist/index.d.ts",
     exports: {
-      '.': {
-        types: './dist/index.d.ts',
-        import: './dist/index.js',
-        default: './dist/index.js',
+      ".": {
+        types: "./dist/index.d.ts",
+        import: "./dist/index.js",
+        default: "./dist/index.js",
       },
     },
-    files: ['dist'],
+    files: ["dist"],
     scripts: {
-      build: 'tsup',
-      dev: 'tsup --watch',
-      typecheck: 'tsc -p tsconfig.lib.json --noEmit',
+      build: "tsup",
+      dev: "tsup --watch",
+      typecheck: "tsc -p tsconfig.lib.json --noEmit",
     },
     dependencies: {
-      tslib: '^2.6.2',
+      tslib: "^2.6.2",
     },
     devDependencies: {},
   };
 
-  if (testRunner === 'vitest') {
-    pkg.scripts.test = 'vitest run';
-    pkg.devDependencies.vitest = getDependencyVersion(tree, 'vitest');
-    pkg.devDependencies['@vitest/ui'] = getDependencyVersion(
+  if (testRunner === "vitest") {
+    pkg.scripts.test = "vitest run";
+    pkg.devDependencies.vitest = getDependencyVersion(tree, "vitest");
+    pkg.devDependencies["@vitest/ui"] = getDependencyVersion(
       tree,
-      '@vitest/ui',
+      "@vitest/ui",
     );
-    pkg.devDependencies['happy-dom'] = getDependencyVersion(tree, 'happy-dom');
-  } else if (testRunner === 'jest') {
-    pkg.scripts.test = 'jest';
-    pkg.devDependencies.jest = getDependencyVersion(tree, 'jest');
-    pkg.devDependencies['ts-jest'] = getDependencyVersion(tree, 'ts-jest');
-    pkg.devDependencies['@types/jest'] = getDependencyVersion(
+    pkg.devDependencies["happy-dom"] = getDependencyVersion(tree, "happy-dom");
+  } else if (testRunner === "jest") {
+    pkg.scripts.test = "jest";
+    pkg.devDependencies.jest = getDependencyVersion(tree, "jest");
+    pkg.devDependencies["ts-jest"] = getDependencyVersion(tree, "ts-jest");
+    pkg.devDependencies["@types/jest"] = getDependencyVersion(
       tree,
-      '@types/jest',
+      "@types/jest",
     );
   }
 
-  if (linter === 'eslint') {
-    pkg.scripts.lint = 'eslint .';
-    pkg.scripts['configure:eslint'] =
+  if (linter === "eslint") {
+    pkg.scripts.lint = "eslint .";
+    pkg.scripts["configure:eslint"] =
       `${packageManagerCommand.dlx} @eslint/create-config@latest`;
-    pkg.devDependencies.eslint = getDependencyVersion(tree, 'eslint');
-    pkg.devDependencies['@eslint/js'] = getDependencyVersion(
+    pkg.devDependencies.eslint = getDependencyVersion(tree, "eslint");
+    pkg.devDependencies["@eslint/js"] = getDependencyVersion(
       tree,
-      '@eslint/js',
+      "@eslint/js",
     );
-  } else if (linter === 'biome') {
-    pkg.scripts.lint = 'biome lint .';
-    pkg.devDependencies['@biomejs/biome'] = getDependencyVersion(
+  } else if (linter === "biome") {
+    pkg.scripts.lint = "biome lint .";
+    pkg.devDependencies["@biomejs/biome"] = getDependencyVersion(
       tree,
-      '@biomejs/biome',
+      "@biomejs/biome",
     );
   }
 
-  if (formatter === 'prettier') {
-    pkg.devDependencies.prettier = '^3.0.0';
-    pkg.scripts.format = 'prettier --write .';
-  } else if (formatter === 'biome' && linter !== 'biome') {
+  if (formatter === "prettier") {
+    pkg.devDependencies.prettier = "^3.0.0";
+    pkg.scripts.format = "prettier --write .";
+  } else if (formatter === "biome" && linter !== "biome") {
     // Only add if not already added by linter
-    pkg.devDependencies['@biomejs/biome'] = '^1.8.3';
-    pkg.scripts.format = 'biome format --write .';
-  } else if (formatter === 'eslint-stylistic') {
-    pkg.devDependencies['@stylistic/eslint-plugin'] = '^2.0.0';
-    pkg.devDependencies['eslint-config-prettier'] = '^9.0.0';
-    pkg.scripts.format = 'eslint --fix .';
-  } else if (formatter === 'biome' && linter === 'biome') {
+    pkg.devDependencies["@biomejs/biome"] = "^1.8.3";
+    pkg.scripts.format = "biome format --write .";
+  } else if (formatter === "eslint-stylistic") {
+    pkg.devDependencies["@stylistic/eslint-plugin"] = "^2.0.0";
+    pkg.devDependencies["eslint-config-prettier"] = "^9.0.0";
+    pkg.scripts.format = "eslint --fix .";
+  } else if (formatter === "biome" && linter === "biome") {
     // biome does both, add format script
-    pkg.scripts.format = 'biome format --write .';
+    pkg.scripts.format = "biome format --write .";
   }
 
-  pkg.devDependencies.tsup = getDependencyVersion(tree, 'tsup');
+  pkg.devDependencies.tsup = getDependencyVersion(tree, "tsup");
 
   tree.write(`${projectRoot}/package.json`, JSON.stringify(pkg, null, 2));
 }
 
 function getDependencyVersion(tree: Tree, name: string): string {
-  return getDependencyVersionFromPackageJson(tree, name) ?? 'latest';
+  return getDependencyVersionFromPackageJson(tree, name) ?? "latest";
 }
 
 function detectPackageManagerFromCommand() {
@@ -378,13 +378,13 @@ function detectPackageManagerFromCommand() {
     const command = commandSignal?.toLowerCase();
     if (!command) continue;
 
-    if (command.includes('pnpm')) return 'pnpm';
-    if (command.includes('yarn')) return 'yarn';
-    if (command.includes('bun')) return 'bun';
-    if (command.includes('npm')) return 'npm';
+    if (command.includes("pnpm")) return "pnpm";
+    if (command.includes("yarn")) return "yarn";
+    if (command.includes("bun")) return "bun";
+    if (command.includes("npm")) return "npm";
   }
 
-  return 'npm';
+  return "npm";
 }
 
 function createVitestConfig(tree: Tree, projectRoot: string) {
@@ -434,7 +434,7 @@ function createExampleTest(
   runner: TestRunner,
 ) {
   const testContent =
-    runner === 'vitest'
+    runner === "vitest"
       ? `import { describe, it, expect } from 'vitest';
 import { hello } from './index';
 
@@ -463,7 +463,7 @@ function createEslintConfig(
 ) {
   let content: string;
 
-  if (formatter === 'eslint-stylistic') {
+  if (formatter === "eslint-stylistic") {
     content = `import eslint from '@eslint/js';
 import stylistic from '@stylistic/eslint-plugin';
 import prettier from 'eslint-config-prettier';
@@ -535,15 +535,15 @@ function createReadme(
   const packageManagerCommand = getPackageManagerCommand(packageManager);
   const installCommand = `${packageManagerCommand.add} ${options.importPath}`;
   const testingInfo =
-    testRunner !== 'none' ? `**Testing**: ${testRunner}\n\n` : '';
+    testRunner !== "none" ? `**Testing**: ${testRunner}\n\n` : "";
   const testCommand =
-    testRunner !== 'none'
-      ? `\n# Run tests\n${packageManagerCommand.run('test')}\n`
-      : '';
+    testRunner !== "none"
+      ? `\n# Run tests\n${packageManagerCommand.run("test")}\n`
+      : "";
 
   const content = `# ${options.importPath}
 
-${options.description || 'A TypeScript library built with Tsup'}
+${options.description || "A TypeScript library built with Tsup"}
 
 ${testingInfo}## Installation
 
@@ -563,15 +563,15 @@ console.log(hello());
 
 \`\`\`sh
 # Build the library
-${packageManagerCommand.run('build')}
+${packageManagerCommand.run("build")}
 
 # Watch for changes
-${packageManagerCommand.run('dev')}
+${packageManagerCommand.run("dev")}
 
 # Run type checking
-${packageManagerCommand.run('typecheck')}${testCommand}
+${packageManagerCommand.run("typecheck")}${testCommand}
 # Lint
-${packageManagerCommand.run('lint')}
+${packageManagerCommand.run("lint")}
 \`\`\`
 `;
 

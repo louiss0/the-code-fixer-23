@@ -1,15 +1,15 @@
-import { execSync } from 'child_process';
-import { existsSync } from 'fs';
-import { join } from 'path';
+import { execSync } from "child_process";
+import { existsSync } from "fs";
+import { join } from "path";
 import {
   type ExecutorContext,
   type PromiseExecutor,
   detectPackageManager,
   getPackageManagerCommand,
   logger,
-} from '@nx/devkit';
-import { config as dotenvConfig } from 'dotenv';
-import type { PublishExecutorSchema } from './schema.d.ts';
+} from "@nx/devkit";
+import { config as dotenvConfig } from "dotenv";
+import type { PublishExecutorSchema } from "./schema.d.ts";
 
 const runExecutor: PromiseExecutor<PublishExecutorSchema> = async (
   options,
@@ -29,14 +29,14 @@ const runExecutor: PromiseExecutor<PublishExecutorSchema> = async (
           context.projectsConfigurations.projects[context.projectName].root;
         logger.info(`Inferred packageRoot from project config: ${projectRoot}`);
       } else {
-        projectRoot = '.';
+        projectRoot = ".";
         logger.info(
-          'No project context found; defaulting packageRoot to current directory',
+          "No project context found; defaulting packageRoot to current directory",
         );
       }
     } catch {
-      projectRoot = '.';
-      logger.info('Defaulting packageRoot to current directory');
+      projectRoot = ".";
+      logger.info("Defaulting packageRoot to current directory");
     }
   }
 
@@ -49,7 +49,7 @@ const runExecutor: PromiseExecutor<PublishExecutorSchema> = async (
     return { success: false };
   }
 
-  const jsrJsonPath = join(absolutePackageRoot, 'jsr.json');
+  const jsrJsonPath = join(absolutePackageRoot, "jsr.json");
   if (!existsSync(jsrJsonPath)) {
     logger.error(
       `jsr.json not found in ${absolutePackageRoot}. This is required for JSR publishing.`,
@@ -58,27 +58,27 @@ const runExecutor: PromiseExecutor<PublishExecutorSchema> = async (
   }
 
   // Load .env (package then workspace) for JSR_TOKEN
-  dotenvConfig({ path: join(absolutePackageRoot, '.env') });
-  dotenvConfig({ path: join(workspaceRoot, '.env') });
+  dotenvConfig({ path: join(absolutePackageRoot, ".env") });
+  dotenvConfig({ path: join(workspaceRoot, ".env") });
 
   logger.info(`Publishing package from: ${projectRoot}`);
 
-  const jsrArgs = ['jsr', 'publish'];
+  const jsrArgs = ["jsr", "publish"];
 
   if (options.dryRun) {
-    jsrArgs.push('--dry-run');
-    logger.info('Running in dry-run mode');
+    jsrArgs.push("--dry-run");
+    logger.info("Running in dry-run mode");
   }
 
   if (options.allowDirty) {
-    jsrArgs.push('--allow-dirty');
+    jsrArgs.push("--allow-dirty");
   }
 
   const env = { ...process.env } as NodeJS.ProcessEnv;
   const token = options.token ?? env.JSR_TOKEN;
   if (!options.dryRun && !token) {
     logger.error(
-      'Missing JSR token. Provide --token, set JSR_TOKEN env var, or define it in .env',
+      "Missing JSR token. Provide --token, set JSR_TOKEN env var, or define it in .env",
     );
     return { success: false };
   }
@@ -88,17 +88,17 @@ const runExecutor: PromiseExecutor<PublishExecutorSchema> = async (
     const packageManagerCommands = getPackageManagerCommand(
       detectPackageManager(workspaceRoot),
     );
-    const command = `${packageManagerCommands.exec} ${jsrArgs.join(' ')}`;
+    const command = `${packageManagerCommands.exec} ${jsrArgs.join(" ")}`;
     logger.info(`Executing: ${command}`);
 
     execSync(command, {
       cwd: absolutePackageRoot,
-      stdio: 'inherit',
+      stdio: "inherit",
       env,
     });
 
     logger.info(
-      `Successfully ${options.dryRun ? 'validated' : 'published'} package`,
+      `Successfully ${options.dryRun ? "validated" : "published"} package`,
     );
     return { success: true };
   } catch (error) {

@@ -1,12 +1,12 @@
-import type { Tree } from '@nx/devkit';
+import type { Tree } from "@nx/devkit";
 
-export type DetectedTestRunner = 'jest' | 'vitest';
-export type DetectedLinter = 'eslint' | 'biome';
-export type DetectedFormatter = 'prettier' | 'biome' | 'eslint-stylistic';
+export type DetectedTestRunner = "jest" | "vitest";
+export type DetectedLinter = "eslint" | "biome";
+export type DetectedFormatter = "prettier" | "biome" | "eslint-stylistic";
 
 function readRootPackageJson(tree: Tree): Record<string, unknown> | null {
   try {
-    const raw = tree.read('package.json', 'utf-8');
+    const raw = tree.read("package.json", "utf-8");
     if (!raw) return null;
     return JSON.parse(raw) as Record<string, unknown>;
   } catch {
@@ -26,8 +26,8 @@ export function detectTestRunnerFromRootPackageJson(tree: Tree): {
 } {
   const pkg = readRootPackageJson(tree) ?? {};
   const candidates: DetectedTestRunner[] = [];
-  if (hasDep(pkg, 'jest')) candidates.push('jest');
-  if (hasDep(pkg, 'vitest')) candidates.push('vitest');
+  if (hasDep(pkg, "jest")) candidates.push("jest");
+  if (hasDep(pkg, "vitest")) candidates.push("vitest");
 
   if (candidates.length === 1) {
     return { detected: candidates[0], candidates };
@@ -41,8 +41,8 @@ export function detectLinterFromRootPackageJson(tree: Tree): {
 } {
   const pkg = readRootPackageJson(tree) ?? {};
   const candidates: DetectedLinter[] = [];
-  if (hasDep(pkg, 'eslint')) candidates.push('eslint');
-  if (hasDep(pkg, '@biomejs/biome')) candidates.push('biome');
+  if (hasDep(pkg, "eslint")) candidates.push("eslint");
+  if (hasDep(pkg, "@biomejs/biome")) candidates.push("biome");
 
   if (candidates.length === 1) {
     return { detected: candidates[0], candidates };
@@ -56,10 +56,10 @@ export function detectFormatterFromRootPackageJson(tree: Tree): {
 } {
   const pkg = readRootPackageJson(tree) ?? {};
   const candidates: DetectedFormatter[] = [];
-  if (hasDep(pkg, 'prettier')) candidates.push('prettier');
-  if (hasDep(pkg, '@biomejs/biome')) candidates.push('biome');
-  if (hasDep(pkg, '@stylistic/eslint-plugin'))
-    candidates.push('eslint-stylistic');
+  if (hasDep(pkg, "prettier")) candidates.push("prettier");
+  if (hasDep(pkg, "@biomejs/biome")) candidates.push("biome");
+  if (hasDep(pkg, "@stylistic/eslint-plugin"))
+    candidates.push("eslint-stylistic");
 
   if (candidates.length === 1) {
     return { detected: candidates[0], candidates };

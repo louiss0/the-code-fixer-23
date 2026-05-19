@@ -1,10 +1,10 @@
-import type { Tree } from '@nx/devkit';
+import type { Tree } from "@nx/devkit";
 import {
   formatFiles,
   getProjects,
   logger,
   updateProjectConfiguration,
-} from '@nx/devkit';
+} from "@nx/devkit";
 
 /**
  * Migration to rename 'outputPath' to 'outDir' in all nx-tsup build targets
@@ -27,11 +27,11 @@ export default async function renameOutputPathToOutDir(tree: Tree) {
     )) {
       // Check if this target uses the nx-tsup build executor
       if (
-        targetConfig.executor === '@code-fixer-23/nx-tsup:build' &&
+        targetConfig.executor === "@code-fixer-23/nx-tsup:build" &&
         targetConfig.options
       ) {
         // Check if outputPath exists
-        if ('outputPath' in targetConfig.options) {
+        if ("outputPath" in targetConfig.options) {
           const outputPath = targetConfig.options.outputPath;
 
           // Rename outputPath to outDir
@@ -54,18 +54,18 @@ export default async function renameOutputPathToOutDir(tree: Tree) {
   }
 
   if (modifiedCount > 0) {
-    logger.info('');
-    logger.info('✓ Migration complete!');
+    logger.info("");
+    logger.info("✓ Migration complete!");
     logger.info(`  Modified ${modifiedCount} project(s):`);
     modifiedProjects.forEach((name) => {
       logger.info(`    - ${name}`);
     });
-    logger.info('');
+    logger.info("");
 
     await formatFiles(tree);
   } else {
-    logger.info('');
-    logger.info('✓ No projects found using outputPath - migration skipped');
-    logger.info('');
+    logger.info("");
+    logger.info("✓ No projects found using outputPath - migration skipped");
+    logger.info("");
   }
 }

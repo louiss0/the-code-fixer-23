@@ -6,8 +6,8 @@ on:
       - main
   pull_request:
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+# env:
+#   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 permissions:
   actions: read
@@ -22,30 +22,30 @@ jobs:
   main:
     runs-on: ubuntu-latest
     env:
-      NX_INTERACTIVE: 'false'
-      NX_TASKS_RUNNER: 'local'
-      NX_CLOUD: 'false'
+      NX_INTERACTIVE: "false"
+      NX_TASKS_RUNNER: "local"
+      NX_CLOUD: "false"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           filter: tree:0
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         name: Install pnpm
         with:
           version: 10.15.1
           run_install: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
-          cache: 'pnpm'
+          node-version: 24
+          cache: "pnpm"
 
       - run: pnpm install --frozen-lockfile
 
       - name: Set Nx SHAs
-        uses: nrwl/nx-set-shas@v4
+        uses: nrwl/nx-set-shas@v5
 
       - name: Check formatting
         run: pnpm run format:check
