@@ -162,6 +162,18 @@ describe("createFileCreator", () => {
     expect(readCreatedFile("package.json")).toContain('"vitest": "latest"');
   });
 
+  it("uses the package directory name in package.json", () => {
+    const fileCreator = createFileCreator("packages/my-pi-package/");
+
+    fileCreator.createPackageJson("vitest", ["extensions"]);
+
+    expect(
+      JSON.parse(readCreatedFile("packages/my-pi-package/package.json")),
+    ).toMatchObject({
+      name: "my-pi-package",
+    });
+  });
+
   it("creates agent instruction files", () => {
     const fileCreator = createFileCreator();
 
@@ -362,6 +374,9 @@ describe("handler", () => {
     expect(readCreatedFile("package.json")).toContain(
       '"create:extension": "tsx scripts/create-extension.ts"',
     );
+    expect(JSON.parse(readCreatedFile("package.json"))).toMatchObject({
+      name: "the-code-fixer-23",
+    });
     expect(readCreatedFile("package.json")).not.toContain('"jest": "latest"');
     expect(readCreatedFile("package.json")).not.toContain('"vitest": "latest"');
     expect(warn).toBeCalledWith(

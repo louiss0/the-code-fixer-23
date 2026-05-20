@@ -1,6 +1,12 @@
 import { mkdirSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import type { AllowedFolderChioceValues, AllowedTestRunnerChioces } from "./options";
+import { basename, dirname, join, resolve } from "node:path";
+
+import { keyHint } from "@mariozechner/pi-coding-agent";
+
+import type {
+  AllowedFolderChioceValues,
+  AllowedTestRunnerChioces,
+} from "./options";
 
 const extensionContent = `
   import { type ExtensionAPI  } from "@earendil-works/pi-coding-agent";
@@ -322,6 +328,10 @@ export interface FileCreator {
 class DefaultFileCreator implements FileCreator {
   constructor(private readonly directory = "") {}
 
+  private get packageName() {
+    return basename(resolve(this.directory || "."));
+  }
+
   private getTargetFile(file: string, folder?: `${string}/`) {
     const rootDirectory = this.directory === "." ? "" : this.directory;
 
@@ -362,7 +372,11 @@ class DefaultFileCreator implements FileCreator {
   ) {
     this.createFile(
       "package.json",
-      JSON.stringify(createPackageJson(testRunner, choices), null, 2),
+      JSON.stringify(
+        createPackageJson(this.packageName, testRunner, choices),
+        null,
+        2,
+      ),
     );
   }
 
@@ -408,6 +422,7 @@ function createTsConfig() {
 }
 
 function createPackageJson(
+  packageName: string,
   testRunner: AllowedTestRunnerChioces | undefined,
   choices: AllowedFolderChioceValues,
 ) {
@@ -438,11 +453,14 @@ function createPackageJson(
   }
 
   return {
+    name: packageName,
     type: "module",
+    version: "0.1.0",
     scripts: Object.fromEntries(scripts),
     dependencies: {
       "@earendil-works/pi-coding-agent": "latest",
     },
+    keywords: ["pi-package"],
     devDependencies: {
       typescript: "latest",
       tsx: "latest",
