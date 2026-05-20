@@ -1,6 +1,6 @@
 {
   "name": "@code-fixer-23/nx-tsup",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "An Nx plugin for generating and building TypeScript libraries with Tsup.",
   "license": "MIT",
   "type": "module",

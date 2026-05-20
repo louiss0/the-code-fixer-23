@@ -1,3 +1,13 @@
+## 1.0.3 (2026-05-20)
+
+### 🩹 Fixes
+
+- **format:** use workspace biome commands ([cc9db22](https://github.com/louiss0/the-code-fixer-23/commit/cc9db22))
+
+### ❤️ Thank You
+
+- louiss0 @louiss0
+
 ## 1.0.2 (2026-05-12)
 
 ### 🚀 Features

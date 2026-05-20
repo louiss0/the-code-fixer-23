@@ -1,3 +1,14 @@
+## 1.2.1 (2026-05-20)
+
+### 🩹 Fixes
+
+- **create-pi-package:** pass release validation ([a4805f7](https://github.com/louiss0/the-code-fixer-23/commit/a4805f7))
+- **create-pi-package:** add generated package name ([a672485](https://github.com/louiss0/the-code-fixer-23/commit/a672485))
+
+### ❤️ Thank You
+
+- louiss0 @louiss0
+
 ## 1.2.0 (2026-05-19)
 
 ### 🚀 Features

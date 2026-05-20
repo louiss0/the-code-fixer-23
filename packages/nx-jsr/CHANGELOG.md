@@ -1,3 +1,13 @@
+## 1.3.1 (2026-05-20)
+
+### 🩹 Fixes
+
+- **testing:** reduce nx test log noise ([8b39b6a](https://github.com/louiss0/the-code-fixer-23/commit/8b39b6a))
+
+### ❤️ Thank You
+
+- louiss0 @louiss0
+
 ## 1.3.0 (2026-05-01)
 
 ### 🚀 Features
