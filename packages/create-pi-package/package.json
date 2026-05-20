@@ -3,12 +3,7 @@
   "version": "1.2.3",
   "type": "module",
   "description": "Scaffold PI packages with prompts, skills, and extensions.",
-  "keywords": [
-    "cli",
-    "generator",
-    "pi-package",
-    "scaffold"
-  ],
+  "keywords": ["cli", "generator", "pi-package", "scaffold"],
   "main": "./dist/index",
   "module": "./dist/index",
   "types": "./dist/index.d.ts",
@@ -23,11 +18,7 @@
     },
     "./package.json": "./package.json"
   },
-  "files": [
-    "dist",
-    "!dist/package.json",
-    "!**/*.tsbuildinfo"
-  ],
+  "files": ["dist", "!dist/package.json", "!**/*.tsbuildinfo"],
   "publishConfig": {
     "access": "public"
   },
