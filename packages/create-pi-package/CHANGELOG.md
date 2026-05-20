@@ -1,3 +1,13 @@
+## 1.2.2 (2026-05-20)
+
+### 🩹 Fixes
+
+- **create-pi-package:** exclude nested publish manifest ([38c2fcc](https://github.com/louiss0/the-code-fixer-23/commit/38c2fcc))
+
+### ❤️ Thank You
+
+- louiss0 @louiss0
+
 ## 1.2.1 (2026-05-20)
 
 ### 🩹 Fixes
