@@ -1,3 +1,13 @@
+## 1.2.3 (2026-05-20)
+
+### 🩹 Fixes
+
+- **create-pi-package:** normalize bin path for npm ([22e589e](https://github.com/louiss0/the-code-fixer-23/commit/22e589e))
+
+### ❤️ Thank You
+
+- louiss0 @louiss0
+
 ## 1.2.2 (2026-05-20)
 
 ### 🩹 Fixes
