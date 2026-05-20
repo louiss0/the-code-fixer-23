@@ -1,8 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 
-import { keyHint } from "@mariozechner/pi-coding-agent";
-
 import type {
   AllowedFolderChioceValues,
   AllowedTestRunnerChioces,
